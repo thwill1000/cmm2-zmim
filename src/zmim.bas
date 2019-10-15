@@ -4,12 +4,13 @@
 
 Mode 1
 
-PAGE_SIZE = 1024
+PAGE_SIZE = 1024 ' TODO: 512
 MEM_SIZE = 64 * PAGE_SIZE
 MAX_WORD = 256 * 256 - 1
 ALPHABET$ =             " 123[]abcdefghijklmnopqrstuvwxyz"
 ALPHABET$ = ALPHABET$ + " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALPHABET$ = ALPHABET$ + " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
+MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
 FORM_LONG = 1
 FORM_SHORT = 2
 FORM_VARIABLE = 3
@@ -28,8 +29,8 @@ op = 0
 op_code = 0
 op_form = 0
 op_num_operands = 0
-Dim op_type(7) ' Do we need support for 8 operands?
-Dim op_value(7)
+Dim op_type(MAX_NUM_OPERANDS)
+Dim op_value(MAX_NUM_OPERANDS)
 
 Sub check_bounds(value, min, max, emsg$)
   If value < min Or value > max Then
@@ -63,6 +64,8 @@ End Function
 
 ' Prints 'count' bytes from 'mem' starting at 'addr'
 Sub mem_dump(addr, count)
+  Local i, s$
+
   For i = 0 To count - 1
     s$ = Hex$(readb(addr + i))
     If Len(s$) = 1 Then
@@ -78,10 +81,13 @@ End Sub
 
 ' Loads bytes from 'file$' into 'mem'
 Sub mem_load(file$, page)
+  Local addr, i, j
+
   Open file$ For random As #1
   Seek #1, page * PAGE_SIZE + 1
   addr = page * PAGE_SIZE
   For i = 1 To (PAGE_SIZE / 128)
+    ' TODO: load the maximum 255 characters at a time
     tmp$ = Input$(128, 1)
     ' Note first byte of string is its length
     For j = 1 To Len(tmp$)
@@ -94,6 +100,8 @@ End Sub
 
 ' Prints zmachine header from start of 'mem$'
 Sub dump_header
+  Local i, serial$
+
   Print "Version      =";  readb(&H0)
   Print "Flags1       = "; Bin$(readb(&H1))
   Print "Release      =";  readw(&H2)
@@ -116,6 +124,8 @@ Sub dump_header
 End Sub
 
 Sub dump_zstring(addr2)
+  Local tmp_addr, end_bit, alph, val, j
+
   Print Hex$(addr2)
   tmp_addr = addr2
   end_bit = 0
@@ -145,6 +155,9 @@ Sub dump_zstring(addr2)
   Loop
 End Sub
 
+' TODO: extract constants for shifts, e.g.
+' SHIFT_1_BIT = 2
+' SHIFT_2_BIT = 4
 Function rshift(v, num)
   rshift = v\(2^num)
 End Function
@@ -156,6 +169,8 @@ Sub prompt
 End Sub
 
 Sub dump_dictionary
+  Local addr_dict, n, i
+
   addr_dict = readw(&h8)
   ' mem_dump(addr_dict, 127)
   Print ""8
@@ -182,6 +197,8 @@ Sub dump_dictionary
 End Sub
 
 Sub dump_abbreviations
+  Local i, addr_abbr
+
   addr_abbr = readw(&h18)
   For i = 0 To 95
     tmp = readw(addr_abbr + i * 2)
@@ -191,25 +208,31 @@ Sub dump_abbreviations
 End Sub
 
 Sub dump_global_vars
+  Local i
+
   For i = 1 To 240
     Print "Global var"; i; " ="; get_global_var(i - 1)
   Next
 End Sub
 
 Function get_global_var(index)
-  addr = readw(&hc) - &h10
+  Local base
+
+  base = readw(&hc) - &h10
   get_global_var = readw(base + index * 2)
 End Function
 
 ' Decodes instruction at 'pc' to 'op_*' vars
 Sub decode_op()
+  Local i
+
   op = readb(pc)
   pc = pc + 1
 
   If op <= &h7F Then
 
     op_form = FORM_LONG
-    op_code = byte And &b00011111
+    op_code = op And &b00011111
     op_num_operands = 2
 
     If op <= &h1F Then
@@ -229,7 +252,7 @@ Sub decode_op()
   ElseIf op <= &hBF Then
 
     op_form = FORM_SHORT
-    op_code = byte And &b00001111
+    op_code = op And &b00001111
     op_num_operands = 1
 
     If op <= &h8F Then
@@ -271,6 +294,8 @@ End Sub
 
 ' Returns a string representation of the last decoded instruction
 Function format_op$()
+  Local i
+
   format_op$ = Hex2$(op) + " "
 
   If op_num_operands = 0 Then
@@ -311,6 +336,8 @@ Function Hex2$(byte)
 End Function
 
 Sub main_loop()
+  Local k
+
   pc = readw(&h6)
   mem_dump(pc, 64)
   For k = 0 To 15
@@ -322,6 +349,8 @@ Sub main_loop()
 End Sub
 
 Sub zload(file$)
+  Local p
+
   Print "Loading "; file$
   For p = 0 To 31
     Print "  Page"; p; " ..."
@@ -333,8 +362,8 @@ End Sub
 Memory
 Print ""
 
-zload("B:\ZMIM\dat\advent.Z3")
-' zload("B:\ZMIM\ZORK1\DATA\ZORK1.DAT")
+zload("B:\zmim\dat\advent.Z3")
+' zload("B:\zmim\dat\ZORK1\DATA\ZORK1.DAT")
 dump_header
 prompt
 
