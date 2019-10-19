@@ -4,12 +4,17 @@
 
 Mode 1
 
+' By convention variables declared in UPPER CASE are constant
+'  - this is not enforced by the language!
 PAGE_SIZE = 1024 ' TODO: 512
-MEM_SIZE = 64 * PAGE_SIZE
+MEM_SIZE = 50 * PAGE_SIZE
 MAX_WORD = 256 * 256 - 1
 ALPHABET$ =             " 123[]abcdefghijklmnopqrstuvwxyz"
 ALPHABET$ = ALPHABET$ + " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALPHABET$ = ALPHABET$ + " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
+ALPHABET_0_OFFSET = 1
+ALPHABET_1_OFFSET = 33
+ALPHABET_2_OFFSET = 65
 MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
 FORM_LONG = 1
 FORM_SHORT = 2
@@ -62,16 +67,27 @@ Function readw(addr)
   readw = Peek(Var mem(0), addr) * 256 + Peek(Var mem(0), addr + 1)
 End Function
 
-' Prints 'count' bytes from 'mem' starting at 'addr'
-Sub mem_dump(addr, count)
-  Local i, s$
+' TODO: extract constants for shifts, e.g.
+' SHIFT_1_BIT = 2
+' SHIFT_2_BIT = 4
+Function rshift(v, num)
+  rshift = v\(2^num)
+End Function
 
-  For i = 0 To count - 1
-    s$ = Hex$(readb(addr + i))
-    If Len(s$) = 1 Then
-      Print "0";
-    EndIf
-    Print s$; " ";
+Function hex2$(byte)
+  If byte <= &hF Then
+    hex2$ = "0"
+  EndIf
+  hex2$ = hex2$ + Hex$(byte)
+End Function
+
+' Prints 'sz' bytes from 'mem' starting at 'addr'
+Sub dump_mem(addr, sz)
+  Local i, x
+
+  For i = 0 To sz - 1
+    x = readb(addr + i)
+    Print hex2$(x); " ";
     If (i + 1) Mod 16 = 0 Then
       Print ""
     EndIf
@@ -81,20 +97,24 @@ End Sub
 
 ' Loads bytes from 'file$' into 'mem'
 Sub mem_load(file$, page)
-  Local addr, i, j
+  Local ad, buf$, buf_size, i, to_read
 
   Open file$ For random As #1
   Seek #1, page * PAGE_SIZE + 1
-  addr = page * PAGE_SIZE
-  For i = 1 To (PAGE_SIZE / 128)
-    ' TODO: load the maximum 255 characters at a time
-    tmp$ = Input$(128, 1)
-    ' Note first byte of string is its length
-    For j = 1 To Len(tmp$)
-      Poke Var mem(0), addr, Peek(Var tmp$, j)
-      addr = addr + 1
-    Next j
-  Next i
+  ad = page * PAGE_SIZE
+  to_read = PAGE_SIZE
+  buf_size = 255
+  Do While to_read > 0
+    If to_read < 255 Then
+      buf_size = to_read
+    EndIf
+    buf$ = Input$(buf_size, 1)
+    For i = 1 To buf_size
+      Poke Var mem(0), ad, Peek(Var buf$, i)
+      ad = ad + 1
+    Next
+    to_read = to_read - buf_size
+  Loop
   Close #1
 End Sub
 
@@ -123,44 +143,76 @@ Sub dump_header
   Print "Std revision ="; readw(&H32)
 End Sub
 
-Sub dump_zstring(addr2)
-  Local tmp_addr, end_bit, alph, val, j
+' Returns the number of bytes read
+Function dump_zstring(addr)
+  Local abbrv, ad, al, ch, i, x, z0, z1, z2
 
-  Print Hex$(addr2)
-  tmp_addr = addr2
-  end_bit = 0
-  alph = 0
-  Do While end_bit = 0
-    val = readw(tmp_addr)
-    zchar(2) = val And &b11111
-    val = rshift(val, 5)
-    zchar(1) = val And &b11111
-    val = rshift(val, 5)
-    zchar(0) = val And &b11111
-    val = rshift(val, 5)
-    end_bit = val
-    For j = 0 To 2
-      If zchar(j) = 1 Or zchar(j) = 2 Or zchar(j) = 3 Then
-        Print "{"; Str$(zchar(j)); "}";
-      ElseIf zchar(j) = 4 Then
-        alph = 1
-      ElseIf zchar(j) = 5 Then
-        alph = 2
+  abbrv = 0
+  ad = addr
+  al = ALPHABET_0_OFFSET
+  x = 0
+  ' Should be 'Do While x = 0' but seems to be an issue
+  ' using Do While in recursive functions.
+  start_loop:
+    If x > 0 Then GoTo exit_loop
+
+    x = readw(ad)
+
+    For i = 2 To 0 Step -1
+      zchar(i) = x And &b11111
+      x = rshift(x, 5)
+    Next i
+
+    ' x is now the top-bit of the word. If x = 1 then we have reached the end
+    ' of the string and will exit the loop after this iteration.
+
+    For i = 0 To 2
+      ch = zchar(i)
+      If abbrv > 0 Then
+        ' Make local copy of 'zchar' because we will
+        ' be making a recursive call into dump_zstring
+        z0 = zchar(0) : z1 = zchar(1) : z2 = zchar(2)
+        dump_abbrv((abbrv - 1) * 32 + ch)
+        zchar(0) = z0 : zchar(1) = z1 : zchar(2) = z2
+        abbrv = 0
+      ElseIf ch > 0 And ch < 4 Then
+        abbrv = ch
+      ElseIf ch = 4 Then
+        al = ALPHABET_1_OFFSET
+      ElseIf ch = 5 Then
+        al = ALPHABET_2_OFFSET
       Else
-        Print Chr$(Peek(Var ALPHABET$, zchar(j) + alph * 32 + 1));
-        alph = 0
+        Print Mid$(ALPHABET$, ch + al, 1);
+        al = ALPHABET_0_OFFSET
       EndIf
-    Next
-    tmp_addr = tmp_addr + 2
-  Loop
+    Next i
+
+    ad = ad + 2
+    GoTo start_loop
+  exit_loop:
+
+  dump_zstring = ad - addr
+End Function
+
+Sub dump_abbrv(idx)
+  Local ad, null, x
+
+  ad = readw(&h18)
+  x = readw(ad + idx * 2)
+  null = dump_zstring(x * 2)
 End Sub
 
-' TODO: extract constants for shifts, e.g.
-' SHIFT_1_BIT = 2
-' SHIFT_2_BIT = 4
-Function rshift(v, num)
-  rshift = v\(2^num)
-End Function
+Sub dump_all_abbrv
+  Local i
+  For i = 0 To 95
+    Print Str$(i); ": {";
+    dump_abbrv(i)
+    Print "}"
+    If ((i + 1) Mod 20) = 0 Then
+      prompt()
+    EndIf
+  Next i
+End Sub
 
 Sub prompt
   Print ""
@@ -172,7 +224,6 @@ Sub dump_dictionary
   Local addr_dict, n, i
 
   addr_dict = readw(&h8)
-  ' mem_dump(addr_dict, 127)
   Print ""8
   n = readb(addr_dict)
   Print "n = "; n; ""
@@ -192,17 +243,6 @@ Sub dump_dictionary
     dump_zstring(addr_entries)
     dump_zstring(addr_entries + 2)
     addr_entries = addr_entries + entry_length
-    Print ""
-  Next
-End Sub
-
-Sub dump_abbreviations
-  Local i, addr_abbr
-
-  addr_abbr = readw(&h18)
-  For i = 0 To 95
-    tmp = readw(addr_abbr + i * 2)
-    dump_zstring(tmp * 2)
     Print ""
   Next
 End Sub
@@ -292,27 +332,50 @@ Sub decode_op()
 
 End Sub
 
+Function rpad$(s$, i)
+  Local a
+  a = Len(s$)
+  If (a < i) Then
+    rpad$ = s$ + Space$(i - a)
+  Else
+    rpad$ = s$
+  EndIf
+End Function
+
 ' Returns a string representation of the last decoded instruction
 Function format_op$()
-  Local i
+  Local i, x$, y$
 
-  format_op$ = Hex2$(op) + " "
+  x$ = hex2$(op) + " "
 
   If op_num_operands = 0 Then
-    format_op$ = format_op$ + "0OP"
+    x$ = x$ + "0OP"
   ElseIf op_num_operands = 1 Then
-    format_op$ = format_op$ + "1OP"
+    x$ = x$ + "1OP"
   ElseIf op_num_operands = 2 Then
-    format_op$ = format_op$ + "2OP"
+    x$ = x$ + "2OP"
   Else
-    format_op$ = format_op$ + "VAR"
+    x$ = x$ + "VAR"
   EndIf
 
-  format_op$ = format_op$ + ":" + Str$(op)
+  x$ = rpad$(x$ + ":" + Str$(op), 10)
 
   For i = 0 To op_num_operands - 1
-    format_op$ = format_op$ + " " + Str$(op_value(i))
+    If op_type(i) = OT_LARGE_CONST Then
+      y$ = " L,"
+    ElseIf op_type(i) = OT_SMALL_CONST Then
+      y$ = " S,"
+    ElseIf op_type(i) = OT_VARIABLE Then
+      y$ = " V,"
+    Else
+      y$ = " O,"
+    EndIf
+
+    y$ = y$ + Str$(op_value(i))
+    x$ = x$ + rpad$(y$, 7)
   Next
+
+  format_op$ = x$
 
 End Function
 
@@ -322,29 +385,23 @@ Sub perform_op
   Print format_op$()
 
   If op = 178 Then ' print
-'    Print read_zstring$(pc)
-    dump_zstring(pc)
+    pc = pc + dump_zstring(pc)
+    Print ""
   EndIf
 
 End Sub
 
-Function Hex2$(byte)
-  If byte <= &hF Then
-    Hex2$ = "0"
-  EndIf
-  hex2$ = hex2$ + Hex$(byte)
-End Function
-
 Sub main_loop()
-  Local k
+  Local i
 
   pc = readw(&h6)
-  mem_dump(pc, 64)
-  For k = 0 To 15
-    Print "pc = "; pc
+  For i = 0 To 100
+    Print "{"; Hex$(pc); "} ";
     decode_op()
     perform_op()
-    prompt()
+    If (i + 1) Mod 20 = 0 Then
+      prompt()
+    EndIf
   Next
 End Sub
 
@@ -352,8 +409,12 @@ Sub zload(file$)
   Local p
 
   Print "Loading "; file$
+  Print "  Pages ";
   For p = 0 To 31
-    Print "  Page"; p; " ..."
+    If p > 0 Then
+      Print ", ";
+    EndIf
+    Print Str$(p);
     mem_load(file$, p)
   Next
   Print ""
@@ -363,14 +424,14 @@ Memory
 Print ""
 
 zload("B:\zmim\dat\advent.Z3")
-' zload("B:\zmim\dat\ZORK1\DATA\ZORK1.DAT")
-dump_header
-prompt
+'zload("B:\zmim\dat\ZORK1\DATA\ZORK1.DAT")
+Print ""
 
+'dump_header
+'prompt
 'dump_zstring(&h44EF)
-'Print ""
-'Print ""
 
 main_loop
 
+Print ""
 Memory
