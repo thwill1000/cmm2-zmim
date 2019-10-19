@@ -4,7 +4,7 @@ A Z-Machine Interpreter for the Colour Maximite
 ZMIM is an attempt to write a Z-Machine Interpreter<sup>1</sup> that runs on the
 [Colour Maximite](https://geoffg.net/maximite.html) computer.
 
-**It is in its very early stages and completely unusuable at the moment.**
+**It is in its very early stages and completely unusable at the moment.**
 
 The Colour Maximite is an unusual computer in that it is a 32-bit PIC
 microcontroller (+ support components) that has been persuaded to
