@@ -423,8 +423,8 @@ End Sub
 Memory
 Print ""
 
-zload("B:\zmim\dat\advent.Z3")
-'zload("B:\zmim\dat\ZORK1\DATA\ZORK1.DAT")
+zload("B:\zmim\examples\advent.Z3")
+'zload("B:\zmim\examples\ZORK1\DATA\ZORK1.DAT")
 Print ""
 
 'dump_header

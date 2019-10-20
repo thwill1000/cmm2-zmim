@@ -1,4 +1,3 @@
-ZORK1/
-ZORK2/
-ZORK3/
 dat/
+examples/*
+!examples/minizork.z3
