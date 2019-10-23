@@ -191,7 +191,6 @@ End Function
 ' Prints 'sz' bytes from 'mem' starting at 'addr'
 Sub dump_mem(addr, sz)
   Local i, x
-
   For i = 0 To sz - 1
     x = readb(addr + i)
     Print hex2$(x); " ";
@@ -202,7 +201,6 @@ End Sub
 
 Sub dump_mem_map
   Local i
-
   For i = 0 To NUM_PAGES - 1
     Print Str$(i); " -> "; Str$(Peek(Var mem_map(0), i))
     If (i + 1) Mod 20 = 0 Then more()
@@ -288,7 +286,6 @@ End Function
 
 Sub dump_abbrv(idx)
   Local ad, x
-
   ad = readw(&h18)
   x = readw(ad + idx * 2)
   devnull = dump_zstring(x * 2)
@@ -306,7 +303,6 @@ End Sub
 
 Sub more
   Local a$
-
   Print ""
   Input "More...", a$
   Print ""
@@ -420,7 +416,6 @@ End Sub
 
 Function rpad$(s$, i)
   Local a
-
   a = Len(s$)
   If (a < i) Then
     rpad$ = s$ + Space$(i - a)
@@ -532,19 +527,13 @@ End Function
 
 Sub add
   Local a, b, dest, result
-
   Print "  add:";
-
   a = get_op(0)
   b = get_op(1)
-
   dest = readb(pc)
   pc = pc + 1
-
   Print " -> "; Str$(dest)
-
   set_var(dest, a + b)
-
   Print "  result ="; get_var(dest)
 End Sub
 
@@ -566,67 +555,46 @@ End Sub
 
 Sub dec_chk
   Local a, b, x
-
   Print "  dec_chk:";
-
   a = get_op(0)
   b = get_op(1)
-
   Print ""
-
   x = get_var(a)
   set_var(a, x - 1)
-
   branch(x < b)
 End Sub
 
 Sub inc
   Local a
-
   Print "  inc:";
-
   a = get_op(0)
-
   Print ""
-
   x = get_var(a)
   set_var(a, x + 1)
 End Sub
 
 Sub je
   Local a, b
-
   Print "  je:";
-
   a = get_op(0)
   b = get_op(1)
-
   Print ""
-
   branch(a = b)
 End Sub
 
 Sub jump
   Local a
-
   Print "  jump:";
-
   a = get_op(0) ' TODO: interpret as SIGNED
-
   Print ""
-
   pc = pc + a - 2
 End Sub
 
 Sub jz
   Local a
-
   Print "jz:";
-
   a = get_op(0)
-
   Print ""
-
   branch(a = 0)
 End Sub
 
@@ -641,14 +609,10 @@ End Sub
 
 Sub store
   Local a, b
-
   Print "store:";
-
   a = get_op(0)
   b = get_op(1)
-
   Print ""
-
   set_var(a, b)
 End Sub
 
