@@ -11,9 +11,9 @@ file$ = "B:\zmim\examples\minizork.z3"
 
 ' By convention variables declared in UPPER CASE are constant
 '  - this is not enforced by the language!
-NUM_PAGES = 50
 PAGE_SIZE = 1024 ' TODO: 512
-MEM_SIZE = NUM_PAGES * PAGE_SIZE ' in bytes
+NUM_PHYSICAL_PAGES = 50
+NUM_VIRTUAL_PAGES = 128 * 1024 / PAGE_SIZE
 
 ' Memory addresses below this are read on startup and not swapped in/out
 ' - not properly set until the z-machine header is read
@@ -21,6 +21,7 @@ BASE_STATIC = PAGE_SIZE
 
 FILE_LEN = PAGE_SIZE
 GLOBAL_VAR = 0
+FIRST_SWAP_PAGE = -1
 
 MAX_WORD = 256 * 256 - 1
 ALPHABET$ =             " 123[]abcdefghijklmnopqrstuvwxyz"
@@ -38,19 +39,20 @@ OT_SMALL_CONST = &b01
 OT_VARIABLE = &b10
 OT_OMITTED = &b11
 
-Dim mem(NUM_PAGES * PAGE_SIZE \ 4)
+Dim mem(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
 
-' Map of virtual pages -> physical pages such that the
-' n'th byte is the physical page of the n'th virtual page
-Dim mem_map(128 * 1024 \ PAGE_SIZE)
+' Map of physical pages -> virtual pages
+Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)
+
+' Map of virtual pages -> physical pages
+Dim vp_to_pp(NUM_VIRTUAL_PAGES - 1)
 
 next_page = 0
 
+page_faults = 0
+
 Dim stack(511)
 sp = 0
-
-' TODO: I have recently found I can use a Local variable for this
-Dim zchar(2)
 
 ' Variable to assign unused result of a Function call to
 devnull = 0
@@ -78,21 +80,24 @@ Function paddr(va)
 
   vp = va \ PAGE_SIZE
   of = va Mod PAGE_SIZE
-  pp = Peek(Var mem_map(0), vp)
-  If pp = 0 Then pp = load_page(vp)
+  pp = vp_to_pp(vp)
+  If pp = 0 Then
+    pp = mem_load(vp)
+    page_faults = page_faults + 1
+  EndIf
 
   paddr = pp * PAGE_SIZE + of
 End Function
 
 Function readb(ad)
-  If ad < 0 Or ad >= FILE_LEN Then Error
+  If ad < 0 Or ad >= FILE_LEN Then Error Hex$(ad)
   readb = Peek(Var mem(0), paddr(ad))
 End Function
 
 Function readw(ad)
   Local pa1, pa2
 
-  If ad < 0 Or ad >= FILE_LEN - 1 Then Error
+  If ad < 0 Or ad >= FILE_LEN - 1 Then Error Hex$(ad)
 
   pa1 = paddr(ad)
   pa2 = paddr(ad + 1)
@@ -105,26 +110,35 @@ Function readw(ad)
 End Function
 
 Sub writeb(ad, x)
-  If ad < 0 Or ad >= BASE_STATIC Then Error
-  If x < 0 Or ad > 255 Then Error
+  If ad < 0 Or ad >= BASE_STATIC Then Error Hex$(ad)
+  If x < 0 Or x > 255 Then Error Str$(x)
   Poke Var mem(0), ad, x
 End Sub
 
 Sub writew(ad, x)
-  If ad < 0 Or ad >= BASE_STATIC - 1 Then Error
-  If x < 0 Or ad > MAX_WORD Then Error
+  If ad < 0 Or ad >= BASE_STATIC - 1 Then Error Hex$(ad)
+  If x < 0 Or x > MAX_WORD Then Error Str$(x)
   Poke Var mem(0), ad, x \ 256
   Poke Var mem(0), ad + 1, x Mod 256
 End Sub
 
-' Loads 'src' page of 'file$' into 'dest' page of 'mem'
+' Loads 'src' page of 'file$' into 'mem'
+' Returns destination / physical page number
 ' TODO: open the file once globally and keep it open until exit
-Sub mem_load(src, dest)
-  Local ad, buf$, buf_size, i, to_read
+Function mem_load(vp)
+  Local ad, buf$, buf_size, i, pp, to_read
+
+  pp = next_page
+
+  ' TODO: Implement some form of Least Recently Used algorithm
+  next_page = next_page + 1
+  If next_page = NUM_PHYSICAL_PAGES Then
+    next_page = FIRST_SWAP_PAGE
+  EndIf
 
   Open file$ For random As #1
-  Seek #1, src * PAGE_SIZE + 1
-  ad = dest * PAGE_SIZE
+  Seek #1, vp * PAGE_SIZE + 1
+  ad = pp * PAGE_SIZE
   to_read = PAGE_SIZE
   buf_size = 255
   Do While to_read > 0
@@ -138,16 +152,11 @@ Sub mem_load(src, dest)
   Loop
   Close #1
 
-  Poke Var mem_map(0), src, dest
-End Sub
+  vp_to_pp(pp_to_vp(pp)) = 0
+  vp_to_pp(vp) = pp
+  pp_to_vp(pp) = vp
 
-Function load_page(p)
-  mem_load(p, next_page)
-  load_page = next_page
-  next_page = next_page + 1
-
-  ' TODO: Handle reusing an existing page
-  If next_page = NUM_PAGES Then Error "No more pages"
+  mem_load = pp
 End Function
 
 Function get_var(i)
@@ -194,15 +203,23 @@ Sub dump_mem(addr, sz)
   For i = 0 To sz - 1
     x = readb(addr + i)
     Print hex2$(x); " ";
-    If (i + 1) Mod 16 = 0 Then Print ""
+    If (i + 1) Mod 16 = 0 Then Print
   Next i
-  Print ""
+  Print
 End Sub
 
 Sub dump_mem_map
   Local i
-  For i = 0 To NUM_PAGES - 1
-    Print Str$(i); " -> "; Str$(Peek(Var mem_map(0), i))
+
+  Print "Physical page -> Virtual page"
+  For i = 0 To NUM_PHYSICAL_PAGES - 1
+    Print Str$(i); " -> "; Str$(pp_to_vp(i))
+    If (i + 1) Mod 20 = 0 Then more()
+  Next i
+
+  Print "Virtual page -> Physical page"
+  For i = 0 To NUM_VIRTUAL_PAGES - 1
+    Print Str$(i); " -> "; Str$(vp_to_pp(i))
     If (i + 1) Mod 20 = 0 Then more()
   Next i
 End Sub
@@ -235,7 +252,7 @@ End Sub
 
 ' Returns the number of bytes read
 Function dump_zstring(addr)
-  Local abbrv, ad, al, ch, i, x, z0, z1, z2
+  Local abbrv, ad, al, ch, i, x, zchar(2)
 
   abbrv = 0
   ad = addr
@@ -259,11 +276,7 @@ Function dump_zstring(addr)
     For i = 0 To 2
       ch = zchar(i)
       If abbrv > 0 Then
-        ' Make local copy of 'zchar' because we will
-        ' be making a recursive call into dump_zstring
-        z0 = zchar(0) : z1 = zchar(1) : z2 = zchar(2)
         dump_abbrv((abbrv - 1) * 32 + ch)
-        zchar(0) = z0 : zchar(1) = z1 : zchar(2) = z2
         abbrv = 0
       ElseIf ch > 0 And ch < 4 Then
         abbrv = ch
@@ -303,16 +316,16 @@ End Sub
 
 Sub more
   Local a$
-  Print ""
+  Print
   Input "More...", a$
-  Print ""
+  Print
 End Sub
 
 Sub dump_dictionary
   Local addr_dict, n, i
 
   addr_dict = readw(&h8)
-  Print ""
+  Print
   n = readb(addr_dict)
   Print "n = "; n; ""
   codes$ = Space$(n)
@@ -331,7 +344,7 @@ Sub dump_dictionary
     dump_zstring(addr_entries)
     dump_zstring(addr_entries + 2)
     addr_entries = addr_entries + entry_length
-    Print ""
+    Print
   Next i
 End Sub
 
@@ -550,7 +563,7 @@ Sub call
     pc = pc + 2
     Print x; ", ";
   Next i
-  Print ""
+  Print
 End Sub
 
 Sub dec_chk
@@ -558,7 +571,7 @@ Sub dec_chk
   Print "  dec_chk:";
   a = get_op(0)
   b = get_op(1)
-  Print ""
+  Print
   x = get_var(a)
   set_var(a, x - 1)
   branch(x < b)
@@ -568,7 +581,7 @@ Sub inc
   Local a
   Print "  inc:";
   a = get_op(0)
-  Print ""
+  Print
   x = get_var(a)
   set_var(a, x + 1)
 End Sub
@@ -578,7 +591,7 @@ Sub je
   Print "  je:";
   a = get_op(0)
   b = get_op(1)
-  Print ""
+  Print
   branch(a = b)
 End Sub
 
@@ -586,7 +599,7 @@ Sub jump
   Local a
   Print "  jump:";
   a = get_op(0) ' TODO: interpret as SIGNED
-  Print ""
+  Print
   pc = pc + a - 2
 End Sub
 
@@ -594,17 +607,17 @@ Sub jz
   Local a
   Print "jz:";
   a = get_op(0)
-  Print ""
+  Print
   branch(a = 0)
 End Sub
 
 Sub newline
-  Print ""
+  Print
 End Sub
 
 Sub print_
   pc = pc + dump_zstring(pc)
-  Print ""
+  Print
 End Sub
 
 Sub store
@@ -612,14 +625,15 @@ Sub store
   Print "store:";
   a = get_op(0)
   b = get_op(1)
-  Print ""
+  Print
   set_var(a, b)
 End Sub
 
-Sub main_loop
+Sub main
   Local i
 
-  pc = readw(&h6)
+  init()
+
   For i = 0 To 10
     Print "{"; Hex$(pc); "} ";
     decode_op()
@@ -629,40 +643,100 @@ Sub main_loop
   Next i
 End Sub
 
-Sub zload
-  Local i, num_pages
+Sub init
+  Local i
 
   Print "Loading "; file$
 
-  ' Load page 0 / the header
+  ' Load page 0 which contains the header
   Print "  Header page: 0"
-  devnull = load_page(0)
-  'dump_header()
+  If (mem_load(0) <> 0) Then Error
+
+  ' Read header data
+  pc = readw(&h06)
   GLOBAL_VAR = readw(&h0C)
   BASE_STATIC = readw(&h0E)
   FILE_LEN = readw(&h1A) * 2
 
-  num_pages = BASE_STATIC \ PAGE_SIZE
-  If BASE_STATIC Mod PAGE_SIZE > 0 Then num_pages = num_pages + 1
-
+  ' Initialise dynamic memory
+  FIRST_SWAP_PAGE = BASE_STATIC \ PAGE_SIZE
+  If BASE_STATIC Mod PAGE_SIZE > 0 Then FIRST_SWAP_PAGE = FIRST_SWAP_PAGE + 1
   Print "  Dynamic pages: ";
-  For i = 1 To num_pages
+  For i = 1 To FIRST_SWAP_PAGE - 1
     If i > 1 Then Print ", ";
     Print Str$(i);
-    devnull = load_page(i)
+    If (mem_load(i) <> i) Then Error
   Next i
-  Print ""
+  Print
+  Print "  Paged memory starts at page "; Str$(FIRST_SWAP_PAGE)
+End Sub
 
-  Print "  Paged memory starts at page "; Str$(num_pages + 1)
+Sub main_loop
+  Local i
+
+  For i = 0 To 10
+    Print "{"; Hex$(pc); "} ";
+    decode_op()
+    Print format_op$()
+    perform_op()
+    If (i + 1) Mod 20 = 0 Then more()
+  Next i
+End Sub
+
+Sub test_mem
+  Local ad, buf$, buf_sz, i, x
+
+  Print "Executing memory tests"
+
+  Open file$ For random As #2
+
+  Print "Testing sequential access:"
+  Timer = 0
+  Do While ad < FILE_LEN
+    Print ".";
+    Seek #2, ad + 1
+    buf$ = Input$(255, #2)
+    buf_sz = Len(buf$)
+    For i = 1 To buf_sz
+      If Peek(Var buf$, i) <> readb(ad) Then Error
+      ad = ad + 1
+    Next i
+  Loop
+  Print
+  Print "Time taken ="; Timer; " ms"
+
+  Print "Testing random access:"
+  Timer = 0
+  For i = 1 To 5000
+    If i Mod 50 = 0 Then Print ".";
+    ad = Fix(Rnd * FILE_LEN)
+    Seek #2, ad + 1
+    buf$ = Input$(1, #2)
+    If Peek(Var buf$, 1) <> readb(ad) Then Error
+  Next i
+  Print
+  Print "Time taken ="; Timer; " ms"
+
+  Print "Test read/write:"
+  Timer = 0
+  For i = 1 To 5000
+    If i Mod 50 = 0 Then Print ".";
+    ad = Fix(Rnd * BASE_STATIC)
+    x = Fix(Rnd * 255)
+    writeb(ad, x)
+    If x <> readb(ad) Then Error
+  Next i
+  Print
+  Print "Time taken ="; Timer; " ms"
+
+  Close #2
 End Sub
 
 Memory
-Print ""
-
-zload()
-Print ""
-
-main_loop
-
-Print ""
+Print
+init()
+Print
+main_loop()
+Print
+Print "Num page faults ="; page_faults
 Memory
