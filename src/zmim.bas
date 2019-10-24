@@ -24,12 +24,11 @@ GLOBAL_VAR = 0
 FIRST_SWAP_PAGE = -1
 
 MAX_WORD = 256 * 256 - 1
-ALPHABET$ =             " 123[]abcdefghijklmnopqrstuvwxyz"
-ALPHABET$ = ALPHABET$ + " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-ALPHABET$ = ALPHABET$ + " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
-ALPHABET_0_OFFSET = 1
-ALPHABET_1_OFFSET = 33
-ALPHABET_2_OFFSET = 65
+
+Dim ALPHABET$(2) LENGTH 32
+ALPHABET$(0) = " 123[]abcdefghijklmnopqrstuvwxyz"
+ALPHABET$(1) = " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ALPHABET$(2) = " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
 MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
 FORM_LONG = 1
 FORM_SHORT = 2
@@ -191,7 +190,7 @@ Function dmp_zstring(addr)
 
   abbrv = 0
   ad = addr
-  al = ALPHABET_0_OFFSET
+  al = 0
   x = 0
   ' Should be 'Do While x = 0' but seems to be an issue
   ' using Do While in recursive functions.
@@ -216,12 +215,12 @@ Function dmp_zstring(addr)
       ElseIf ch > 0 And ch < 4 Then
         abbrv = ch
       ElseIf ch = 4 Then
-        al = ALPHABET_1_OFFSET
+        al = 1
       ElseIf ch = 5 Then
-        al = ALPHABET_2_OFFSET
+        al = 2
       Else
-        Print Mid$(ALPHABET$, ch + al, 1);
-        al = ALPHABET_0_OFFSET
+        Print Mid$(ALPHABET$(al), ch + 1, 1);
+        al = 0
       EndIf
     Next i
 
