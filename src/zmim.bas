@@ -11,8 +11,8 @@ file$ = "B:\zmim\examples\minizork.z3"
 
 ' By convention variables declared in UPPER CASE are constant
 '  - this is not enforced by the language!
-PAGE_SIZE = 1024 ' TODO: 512
-NUM_PHYSICAL_PAGES = 50
+PAGE_SIZE = 512
+NUM_PHYSICAL_PAGES = 100
 NUM_VIRTUAL_PAGES = 128 * 1024 / PAGE_SIZE
 
 ' Memory addresses below this are read on startup and not swapped in/out
