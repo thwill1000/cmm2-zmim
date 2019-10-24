@@ -511,7 +511,7 @@ Sub init
 
   ' Load page 0 which contains the header
   Print "  Header page: 0"
-  If (mem_load(0) <> 0) Then Error
+  If mem_load(0) <> 0 Then Error
 
   ' Read header data
   pc = readw(&h06)
@@ -526,7 +526,7 @@ Sub init
   For i = 1 To FIRST_SWAP_PAGE - 1
     If i > 1 Then Print ", ";
     Print Str$(i);
-    If (mem_load(i) <> i) Then Error
+    If mem_load(i) <> i Then Error
   Next i
   Print
   Print "  Paged memory starts at page "; Str$(FIRST_SWAP_PAGE)
