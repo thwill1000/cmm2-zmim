@@ -1,9 +1,6 @@
 ' Copyright (c) 2019 Thomas Hugo Williams
 ' For Maximite BASIC v4.5C
 
-' TODO: extract constants for shifts, e.g.
-' SHIFT_1_BIT = 2
-' SHIFT_2_BIT = 4
 Function rshift(v, num)
   rshift = v\(2^num)
 End Function
