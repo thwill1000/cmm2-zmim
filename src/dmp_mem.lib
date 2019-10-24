@@ -6,8 +6,7 @@ Sub dmp_mem(ad, sz)
   Local i, x
   For i = 0 To sz - 1
     x = readb(ad + i)
-    If x <= &hF Then Print "0";
-    Print Hex$(x); " ";
+    Print lpad$(Hex$(x), 2, "0"); " ";
     If (i + 1) Mod 16 = 0 Then Print
   Next i
   Print

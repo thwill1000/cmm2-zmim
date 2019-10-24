@@ -13,12 +13,16 @@ Function hex2$(x)
   hex2$ = hex2$ + Hex$(x)
 End Function
 
-Function rpad$(s$, i)
+Function lpad$(s$, i, c$)
   Local a
   a = Len(s$)
-  If (a < i) Then
-    rpad$ = s$ + Space$(i - a)
-  Else
-    rpad$ = s$
-  EndIf
+  If c$ = "" Then c$ = " "
+  If a < i Then lpad$ = String$(i - a, c$) + s$ Else lpad$ = s$
+End Function
+
+Function rpad$(s$, i, c$)
+  Local a
+  a = Len(s$)
+  If c$ = "" Then c$ = " "
+  If a < i Then rpad$ = s$ + String$(i - a, c$) Else rpad$ = s$
 End Function

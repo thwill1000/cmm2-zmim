@@ -7,7 +7,7 @@ Function fmt_op$
 
   x$ = "VAR:"
   If op_num < 3 Then x$ = Str$(op_num) + "OP:"
-  x$ = hex2$(op_code) + " " + x$ + Str$(op)
+  x$ = lpad$(Hex$(op_code), 2, "0") + " " + x$ + Str$(op)
   x$ = rpad$(x$, 10)
 
   For i = 0 To op_num - 1
