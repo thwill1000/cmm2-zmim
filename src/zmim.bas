@@ -126,7 +126,7 @@ End Sub
 ' Returns destination / physical page number
 ' TODO: open the file once globally and keep it open until exit
 Function mem_load(vp)
-  Local ad, buf$, buf_size, i, pp, to_read
+  Local ad, buf$, buf_sz, i, pp, to_read
 
   pp = next_page
 
@@ -140,15 +140,15 @@ Function mem_load(vp)
   Seek #1, vp * PAGE_SIZE + 1
   ad = pp * PAGE_SIZE
   to_read = PAGE_SIZE
-  buf_size = 255
+  buf_sz = 255
   Do While to_read > 0
-    If to_read < 255 Then buf_size = to_read
-    buf$ = Input$(buf_size, 1)
-    For i = 1 To buf_size
+    If to_read < 255 Then buf_sz = to_read
+    buf$ = Input$(buf_sz, 1)
+    For i = 1 To buf_sz
       Poke Var mem(0), ad, Peek(Var buf$, i)
       ad = ad + 1
     Next i
-    to_read = to_read - buf_size
+    to_read = to_read - buf_sz
   Loop
   Close #1
 
