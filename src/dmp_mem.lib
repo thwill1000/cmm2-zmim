@@ -1,0 +1,14 @@
+' Copyright (c) 2019 Thomas Hugo Williams
+' For Maximite BASIC v4.5C
+
+' Prints 'sz' bytes from 'mem' starting at 'ad'
+Sub dmp_mem(ad, sz)
+  Local i, x
+  For i = 0 To sz - 1
+    x = readb(ad + i)
+    If x <= &hF Then Print "0";
+    Print Hex$(x); " ";
+    If (i + 1) Mod 16 = 0 Then Print
+  Next i
+  Print
+End Sub

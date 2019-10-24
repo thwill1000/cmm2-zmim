@@ -1,0 +1,29 @@
+' Copyright (c) 2019 Thomas Hugo Williams
+' For Maximite BASIC v4.5C
+
+Sub dmp_dict
+  Local addr_dict, n, i
+
+  addr_dict = readw(&h8)
+  Print
+  n = readb(addr_dict)
+  Print "n = "; n; ""
+  codes$ = Space$(n)
+  For i = 1 To n
+    Poke Var codes$, i, readb(addr_dict + i)
+  Next i
+  Print "codes        = "; codes$
+  entry_length = readb(addr_dict + n * 2 + 1)
+  Print "entry length = "; entry_length
+  num_entries = readb(addr_dict + n * 2 + 2 + 2)
+  Print "num entries  = "; num_entries
+  addr_entries = addr_dict + n * 2 + 4 + 4
+  Print Hex$(addr_entries)
+  more()
+  For i = 0 To num_entries
+    dump_zstring(addr_entries)
+    dump_zstring(addr_entries + 2)
+    addr_entries = addr_entries + entry_length
+    Print
+  Next i
+End Sub

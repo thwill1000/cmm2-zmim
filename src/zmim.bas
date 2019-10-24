@@ -185,73 +185,8 @@ Sub set_var(i, x)
   EndIf
 End Sub
 
-' TODO: extract constants for shifts, e.g.
-' SHIFT_1_BIT = 2
-' SHIFT_2_BIT = 4
-Function rshift(v, num)
-  rshift = v\(2^num)
-End Function
-
-Function hex2$(byte)
-  If byte <= &hF Then hex2$ = "0"
-  hex2$ = hex2$ + Hex$(byte)
-End Function
-
-' Prints 'sz' bytes from 'mem' starting at 'addr'
-Sub dump_mem(addr, sz)
-  Local i, x
-  For i = 0 To sz - 1
-    x = readb(addr + i)
-    Print hex2$(x); " ";
-    If (i + 1) Mod 16 = 0 Then Print
-  Next i
-  Print
-End Sub
-
-Sub dump_mem_map
-  Local i
-
-  Print "Physical page -> Virtual page"
-  For i = 0 To NUM_PHYSICAL_PAGES - 1
-    Print Str$(i); " -> "; Str$(pp_to_vp(i))
-    If (i + 1) Mod 20 = 0 Then more()
-  Next i
-
-  Print "Virtual page -> Physical page"
-  For i = 0 To NUM_VIRTUAL_PAGES - 1
-    Print Str$(i); " -> "; Str$(vp_to_pp(i))
-    If (i + 1) Mod 20 = 0 Then more()
-  Next i
-End Sub
-
-' Prints zmachine header from start of 'mem$'
-Sub dump_header
-  Local i, serial$
-
-  Print "Version      =";  readb(&h00)
-  Print "Flags1       = "; Bin$(readb(&h01))
-  Print "Release      =";  readw(&h02)
-  Print "Base high    = "; Hex$(readw(&h04))
-  Print "Initial PC   = "; Hex$(readw(&h06))
-  Print "Dictionary   = "; Hex$(readw(&h08))
-  Print "Object tbl   = "; Hex$(readw(&h0A))
-  Print "Glob var tbl = "; Hex$(readw(&h0C))
-  Print "Base static  = "; Hex$(readw(&h0E))
-  Print "Flags2       = "; Bin$(readb(&h10))
-  serial$ = "000000"
-  For i = 0 To 5
-    Poke Var serial$, i + 1, readb(&H12 + i)
-  Next i
-  Print "Serial num   = "; serial$
-  Print "Abbrv tbl    = "; Hex$(readw(&H18))
-  Print "File length  ="; 2 * readw(&H1A)
-  Print "File chksum  ="; readw(&H1C)
-  Print "Std revision ="; readw(&H32)
-  more()
-End Sub
-
 ' Returns the number of bytes read
-Function dump_zstring(addr)
+Function dmp_zstring(addr)
   Local abbrv, ad, al, ch, i, x, zchar(2)
 
   abbrv = 0
@@ -276,7 +211,7 @@ Function dump_zstring(addr)
     For i = 0 To 2
       ch = zchar(i)
       If abbrv > 0 Then
-        dump_abbrv((abbrv - 1) * 32 + ch)
+        dmp_abrv((abbrv - 1) * 32 + ch)
         abbrv = 0
       ElseIf ch > 0 And ch < 4 Then
         abbrv = ch
@@ -294,24 +229,14 @@ Function dump_zstring(addr)
     GoTo start_loop
   exit_loop:
 
-  dump_zstring = ad - addr
+  dmp_zstring = ad - addr
 End Function
 
-Sub dump_abbrv(idx)
+Sub dmp_abrv(idx)
   Local ad, x
   ad = readw(&h18)
   x = readw(ad + idx * 2)
-  devnull = dump_zstring(x * 2)
-End Sub
-
-Sub dump_all_abbrv
-  Local i
-  For i = 0 To 95
-    Print Str$(i); ": {";
-    dump_abbrv(i)
-    Print "}"
-    If (i + 1) Mod 20 = 0 Then more()
-  Next i
+  devnull = dmp_zstring(x * 2)
 End Sub
 
 Sub more
@@ -321,35 +246,8 @@ Sub more
   Print
 End Sub
 
-Sub dump_dictionary
-  Local addr_dict, n, i
-
-  addr_dict = readw(&h8)
-  Print
-  n = readb(addr_dict)
-  Print "n = "; n; ""
-  codes$ = Space$(n)
-  For i = 1 To n
-    Poke Var codes$, i, readb(addr_dict + i)
-  Next i
-  Print "codes        = "; codes$
-  entry_length = readb(addr_dict + n * 2 + 1)
-  Print "entry length = "; entry_length
-  num_entries = readb(addr_dict + n * 2 + 2 + 2)
-  Print "num entries  = "; num_entries
-  addr_entries = addr_dict + n * 2 + 4 + 4
-  Print Hex$(addr_entries)
-  more()
-  For i = 0 To num_entries
-    dump_zstring(addr_entries)
-    dump_zstring(addr_entries + 2)
-    addr_entries = addr_entries + entry_length
-    Print
-  Next i
-End Sub
-
 ' Decodes instruction at 'pc' to 'op_*' vars
-Sub decode_op()
+Sub decode_op
   Local i, x
 
   op = readb(pc)
@@ -427,43 +325,6 @@ Sub decode_op()
 
 End Sub
 
-Function rpad$(s$, i)
-  Local a
-  a = Len(s$)
-  If (a < i) Then
-    rpad$ = s$ + Space$(i - a)
-  Else
-    rpad$ = s$
-  EndIf
-End Function
-
-' Returns a string representation of the last decoded instruction
-Function format_op$()
-  Local i, x$, y$
-
-  x$ = "VAR:"
-  If op_num < 3 Then x$ = Str$(op_num) + "OP:"
-  x$ = hex2$(op_code) + " " + x$ + Str$(op)
-  x$ = rpad$(x$, 10)
-
-  For i = 0 To op_num - 1
-    If op_type(i) = OT_LARGE_CONST Then
-      y$ = " L,"
-    ElseIf op_type(i) = OT_SMALL_CONST Then
-      y$ = " S,"
-    ElseIf op_type(i) = OT_VARIABLE Then
-      y$ = " V,"
-    Else
-      y$ = " O,"
-    EndIf
-
-    y$ = y$ + Str$(op_value(i))
-    x$ = x$ + rpad$(y$, 8)
-  Next i
-
-  format_op$ = x$
-End Function
-
 ' Performs the last decoded instruction
 Sub perform_op
   If op = 4 Then
@@ -485,7 +346,7 @@ Sub perform_op
   ElseIf op = 187 Then
     newline
   ElseIf op = 224 Then
-    call
+    call_
   Else
     Error "Unsupported instruction"
   EndIf
@@ -550,7 +411,7 @@ Sub add
   Print "  result ="; get_var(dest)
 End Sub
 
-Sub call
+Sub call_
   Local i, num_local, x
 
   Print "  call: "; Hex$(2 * op_value(0))
@@ -616,7 +477,7 @@ Sub newline
 End Sub
 
 Sub print_
-  pc = pc + dump_zstring(pc)
+  pc = pc + dmp_zstring(pc)
   Print
 End Sub
 
@@ -637,7 +498,7 @@ Sub main
   For i = 0 To 10
     Print "{"; Hex$(pc); "} ";
     decode_op()
-    Print format_op$()
+    Print fmt_op$()
     perform_op()
     If (i + 1) Mod 20 = 0 Then more()
   Next i
@@ -677,60 +538,15 @@ Sub main_loop
   For i = 0 To 10
     Print "{"; Hex$(pc); "} ";
     decode_op()
-    Print format_op$()
+    Print fmt_op$()
     perform_op()
     If (i + 1) Mod 20 = 0 Then more()
   Next i
 End Sub
 
-Sub test_mem
-  Local ad, buf$, buf_sz, i, x
-
-  Print "Executing memory tests"
-
-  Open file$ For random As #2
-
-  Print "Testing sequential access:"
-  Timer = 0
-  Do While ad < FILE_LEN
-    Print ".";
-    Seek #2, ad + 1
-    buf$ = Input$(255, #2)
-    buf_sz = Len(buf$)
-    For i = 1 To buf_sz
-      If Peek(Var buf$, i) <> readb(ad) Then Error
-      ad = ad + 1
-    Next i
-  Loop
-  Print
-  Print "Time taken ="; Timer; " ms"
-
-  Print "Testing random access:"
-  Timer = 0
-  For i = 1 To 5000
-    If i Mod 50 = 0 Then Print ".";
-    ad = Fix(Rnd * FILE_LEN)
-    Seek #2, ad + 1
-    buf$ = Input$(1, #2)
-    If Peek(Var buf$, 1) <> readb(ad) Then Error
-  Next i
-  Print
-  Print "Time taken ="; Timer; " ms"
-
-  Print "Test read/write:"
-  Timer = 0
-  For i = 1 To 5000
-    If i Mod 50 = 0 Then Print ".";
-    ad = Fix(Rnd * BASE_STATIC)
-    x = Fix(Rnd * 255)
-    writeb(ad, x)
-    If x <> readb(ad) Then Error
-  Next i
-  Print
-  Print "Time taken ="; Timer; " ms"
-
-  Close #2
-End Sub
+Library Load "util"
+Library Load "dmp_mem"
+Library Load "fmt_op"
 
 Memory
 Print
