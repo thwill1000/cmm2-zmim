@@ -38,6 +38,14 @@ OT_SMALL_CONST = &b01
 OT_VARIABLE = &b10
 OT_OMITTED = &b11
 
+BIT_6 = &b01000000
+BIT_7 = &b10000000
+BIT_15 = &b1000000000000000
+BTM_2_BITS = &b00000011
+BTM_4_BITS = &b00001111
+BTM_5_BITS = &b00011111
+BTM_6_BITS = &b00111111
+
 Dim mem(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
 
 ' Map of physical pages -> virtual pages
@@ -51,7 +59,10 @@ next_page = 0
 page_faults = 0
 
 Dim stack(511)
-sp = 0
+sp = -1
+
+' Current stack frame pointer
+fp = -1
 
 ' Variable to assign unused result of a Function call to
 devnull = 0
@@ -88,9 +99,19 @@ Function paddr(va)
   paddr = pp * PAGE_SIZE + of
 End Function
 
+Function pcreadb
+  pcreadb = readb(pc)
+  pc = pc + 1
+End Function
+
 Function readb(ad)
   If ad < 0 Or ad >= FILE_LEN Then Error Hex$(ad)
   readb = Peek(Var mem(0), paddr(ad))
+End Function
+
+Function pcreadw
+  pcreadw = readw(pc)
+  pc = pc + 2
 End Function
 
 Function readw(ad)
@@ -115,10 +136,39 @@ Sub writeb(ad, x)
 End Sub
 
 Sub writew(ad, x)
-  If ad < 0 Or ad >= BASE_STATIC - 1 Then Error Hex$(ad)
+  If ad < 0 Or ad >= BASE_STATIC - 1 Then
+    Error "Non dynamic mem write: " + Hex$(ad)
+  EndIf
   If x < 0 Or x > MAX_WORD Then Error Str$(x)
   Poke Var mem(0), ad, x \ 256
   Poke Var mem(0), ad + 1, x Mod 256
+End Sub
+
+' Pops a word from the stack
+Function pop
+  pop = stack(sp)
+  sp = sp - 1
+End Function
+
+' Pushes a word onto the stack
+Sub push(w)
+  sp = sp + 1
+  stack(sp) = w
+End Sub
+
+Sub dmp_stack
+If 0 Then
+  Local i
+  Print "TOP: ";
+  For i = sp To 0 Step -1
+    If i = fp Then
+      Print " --> ";
+    ElseIf i < sp Then
+      Print "     ";
+    EndIf
+    Print lpad$(Hex$(stack(i)), 4, "0")
+  Next i
+EndIf
 End Sub
 
 ' Loads 'src' page of 'file$' into 'mem'
@@ -160,10 +210,10 @@ End Function
 
 Function get_var(i)
   If i = 0 Then
-    ' TODO: Pop from stack
+    get_var = pop()
+    dmp_stack
   ElseIf i < &h10 Then
-    ' TODO: Local variable
-    get_var = stack(i)
+    get_var = stack(fp + i + 2)
   ElseIf i <= &hFF Then
     get_var = readw(GLOBAL_VAR + 2 * (i - &h10))
   Else
@@ -173,10 +223,11 @@ End Function
 
 Sub set_var(i, x)
   If i = 0 Then
-    ' TODO: Push to stack
+    push(x)
+    dmp_stack
   ElseIf i < &h10 Then
-    ' TODO: Local variable
-    stack(i) = x
+    stack(fp + i + 2) = x
+    dmp_stack
   ElseIf i < &hFF Then
     writew(GLOBAL_VAR + 2 * (i - &h10))
   Else
@@ -200,7 +251,7 @@ Function dmp_zstring(addr)
     x = readw(ad)
 
     For i = 2 To 0 Step -1
-      zchar(i) = x And &b11111
+      zchar(i) = x And BTM_5_BITS
       x = rshift(x, 5)
     Next i
 
@@ -218,6 +269,8 @@ Function dmp_zstring(addr)
         al = 1
       ElseIf ch = 5 Then
         al = 2
+      ElseIf ch = 7 And al = 2 Then
+        Print
       Else
         Print Mid$(ALPHABET$(al), ch + 1, 1);
         al = 0
@@ -249,13 +302,12 @@ End Sub
 Sub decode_op
   Local i, x
 
-  op = readb(pc)
-  pc = pc + 1
+  op = pcreadb()
 
   If op <= &h7F Then
 
     op_form = FORM_LONG
-    op_code = op And &b00011111
+    op_code = op And BTM_5_BITS
     op_num = 2
 
     If op <= &h1F Then
@@ -275,7 +327,7 @@ Sub decode_op
   ElseIf op <= &hBF Then
 
     op_form = FORM_SHORT
-    op_code = op And &b00001111
+    op_code = op And BTM_4_BITS
     op_num = 1
 
     If op <= &h8F Then
@@ -290,7 +342,7 @@ Sub decode_op
 
   Else
     op_form = FORM_VARIABLE
-    op_code = op And &b00011111
+    op_code = op And BTM_5_BITS
     op_num = 4
   '  If op <= &hDF Then
   '    op_num = 2
@@ -299,10 +351,9 @@ Sub decode_op
   '  EndIf
 
     ' Read operand types
-    x = readb(pc)
-    pc = pc + 1
+    x = pcreadb()
     For i = 3 To 0 Step -1
-      op_type(i) = x And &b00000011
+      op_type(i) = x And BTM_2_BITS
       If op_type(i) = OT_OMITTED Then op_num = op_num - 1
       x = rshift(x, 2)
     Next i
@@ -312,13 +363,11 @@ Sub decode_op
   ' Read operands
   For i = 0 To op_num - 1
     If op_type(i) = OT_LARGE_CONST Then
-      op_value(i) = readw(pc)
-      pc = pc + 2
+      op_value(i) = pcreadw()
     ElseIf op_type(i) = OT_OMITTED Then
       ' Do nothing
     Else
-      op_value(i) = readb(pc)
-      pc = pc + 1
+      op_value(i) = pcreadb()
     EndIf
   Next i
 
@@ -330,50 +379,58 @@ Sub perform_op
     dec_chk
   ElseIf op = 13 Or op = 77 Then
     store
+  ElseIf op = &h0F Or op = 79 Then
+    loadw
   ElseIf op = 84 Or op = 116 Then
     add
+  ElseIf op = 85 Then
+    sub_
   ElseIf op = 97 Then
     je
+  ElseIf op = &h6E Then
+    insert_obj
   ElseIf op = 140 Then
     jump
   ElseIf op = 160 Then
     jz
   ElseIf op = 165 Then
     inc
+  ElseIf op = 171 Then
+    ret
+  ElseIf op = &hAD Then
+    print_paddr
   ElseIf op = 178 Then
     print_
   ElseIf op = 187 Then
     newline
+  ElseIf op = &hC9 Then
+    and_
   ElseIf op = 224 Then
     call_
+  ElseIf op = 225 Then
+    storew
+  ElseIf op = &hE6 Then
+    print_num
   Else
-    Error "Unsupported instruction"
+    Error "Unsupported instruction " + Hex$(op)
   EndIf
 End Sub
 
 Sub branch(cond)
-  Local b1, b2, of
-  b1 = readb(pc)
-  pc = pc + 1
+  Local a, of
+  a = pcreadb()
 
-  If b1 And &b10000000 = 0 Then
-    Print "  branch on false, ";
-    Error "Not implemented yet"
-  Else
-    Print "  branch on true, ";
+  If a And BIT_7 Then Print " [TRUE] "; Else Print " [FALSE] ";
+
+  of = a And BTM_6_BITS
+  If a And BIT_6 = 0 Then
+    of = 256 * of + pcreadb()
+    If a And BIT_5 Then
+      of = of - 16384
+    EndIf
   EndIf
 
-  of = b1 And &b00111111
-  If b1 And &b01000000 = 1 Then
-    Print "1 byte";
-  Else
-    Print "2 byte";
-    b2 = readb(pc)
-    pc = pc + 1
-    of = 256 * of + b2
-    ' TODO: 'of' should be SIGNED!!!
-  EndIf
-  Print " offset = "; Str$(of)
+  Print Hex$(pc + of - 2)
 
   If cond Then
     pc = pc + of - 2
@@ -383,55 +440,119 @@ Sub branch(cond)
   '       of = 1 -> return true
 End Sub
 
-Function get_op(i)
-  Local a
-
-  a = op_value(i)
-  If op_type(i) = OT_VARIABLE Then
-    Print " ("; Str$(a); ":";
-    a = get_var(a)
-    Print " "; Str$(a); ")";
-  Else
-    Print " "; Str$(a);
+Function fmt_operand$(i)
+  Local a$, x
+  x = op_value(i)
+  If op_type(i) <> OT_VARIABLE Then
+    fmt_operand$ = "#" + lpad$(Hex$(x), 2, "0")
+    Exit Function
   EndIf
+  If x = 0 Then
+    a$ = "(SP)+"
+  ElseIf x < &h10 Then
+    a$ = "L" + lpad$(Hex$(x - 1), 2, "0")
+  Else
+    a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
+  EndIf
+  fmt_operand$ = a$
+End Function
 
-  get_op = a
+Function fmt_result$(x)
+  Local a$
+  If x = 0 Then
+    a$ = "-(SP)"
+  ElseIf x < &h10 Then
+    a$ = "L" + lpad$(Hex$(x - 1), 2, "0")
+  Else
+    a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
+  EndIf
+  fmt_result$ = a$
+End Function
+
+Sub dmp_mnemonic(m$)
+  Print rpad$(m$, 13);
+End Sub
+
+Function get_op(i, nc)
+  Local a
+  If i > 0 And nc = 0 Then Print ",";
+  Print fmt_operand$(i);
+  a = op_value(i)
+  If op_type(i) = OT_VARIABLE Then get_op = get_var(a) Else get_op = a
 End Function
 
 Sub add
-  Local a, b, dest, result
-  Print "  add:";
+  Local a, b, c
+  dmp_mnemonic("ADD")
   a = get_op(0)
   b = get_op(1)
-  dest = readb(pc)
-  pc = pc + 1
-  Print " -> "; Str$(dest)
-  set_var(dest, a + b)
-  Print "  result ="; get_var(dest)
+  c = pcreadb()
+  Print " -> "; fmt_result$(c)
+  set_var(c, a + b)
+End Sub
+
+Sub and_
+  Local a, b, c
+  dmp_mnemonic("AND")
+  a = get_op(0)
+  b = get_op(1)
+  c = pcreadb()
+  Print " -> "; fmt_result$(c)
+  set_var(c, a And b)
 End Sub
 
 Sub call_
-  Local i, num_local, x
+  Local arg(2), i, locals_sz, result, routine, x
+  dmp_mnemonic("CALL")
+  routine = 2 * op_value(0)
+  Print Hex$(routine); " (";
 
-  Print "  call: "; Hex$(2 * op_value(0))
-  pc = 2 * op_value(0)
-  num_local = readb(pc)
-  Print "  " + Str$(num_local); ":";
-  pc = pc + 1
-  For i = 0 To num_local - 1
-    x = readw(pc)
-    pc = pc + 2
-    Print x; ", ";
+  For i = 1 To op_num - 1
+    arg(i - 1) = get_op(i, i = 1)
   Next i
+
+  result = pcreadb()
+  Print ") -> "; fmt_result$(result)
+
   Print
+  Print "Routine "; Hex$(routine);
+
+  push(fp)
+  fp = sp
+  push(result)
+  push(pc)
+
+  pc = routine
+
+  locals_sz = pcreadb()
+  Print ", "; Str$(locals_sz); " locals (";
+
+  push(locals_sz)
+
+  For i = 0 To locals_sz - 1
+    x = pcreadw()
+    If i > 0 Then Print ", ";
+    Print lpad$(Hex$(x), 4, "0");
+
+    If i > op_num - 1 Then
+      push(x)
+    Else
+      push arg(i)
+    EndIf
+  Next i
+
+  Print ")"
+
+  Print
+
+  dmp_stack()
 End Sub
 
 Sub dec_chk
   Local a, b, x
-  Print "  dec_chk:";
+  dmp_mnemonic("DEC_CHK")
   a = get_op(0)
   b = get_op(1)
-  Print
   x = get_var(a)
   set_var(a, x - 1)
   branch(x < b)
@@ -439,36 +560,54 @@ End Sub
 
 Sub inc
   Local a
-  Print "  inc:";
+  dmp_mnemonic("INC")
   a = get_op(0)
-  Print
+  Print ""
   x = get_var(a)
   set_var(a, x + 1)
 End Sub
 
 Sub je
   Local a, b
-  Print "  je:";
+  dmp_mnemonic("JE")
   a = get_op(0)
   b = get_op(1)
-  Print
   branch(a = b)
 End Sub
 
 Sub jump
-  Local a
-  Print "  jump:";
-  a = get_op(0) ' TODO: interpret as SIGNED
-  Print
-  pc = pc + a - 2
+  Local of
+  dmp_mnemonic("JUMP")
+  of = op_value(i)
+  If op_type(i) = OT_VARIABLE Then of = get_var(of)
+  If of And BIT_15 Then of = of - 65536
+  Print Hex$(pc + of - 2)
+  pc = pc + of - 2
 End Sub
 
 Sub jz
   Local a
-  Print "jz:";
+  dmp_mnemonic("JZ")
   a = get_op(0)
-  Print
   branch(a = 0)
+End Sub
+
+Sub insert_obj
+  Local obj, dest
+  dmp_mnemonic("INSERT_OBJ")
+  obj = get_op(0)
+  dest = get_op(1)
+  Print " *TODO"
+End Sub
+
+Sub loadw
+  Local a, b, c
+  dmp_mnemonic("LOADW")
+  a = get_op(0)
+  b = get_op(1)
+  c = pcreadb()
+  Print " -> "; fmt_result$(c)
+  set_var(c, readw(a + 2 * b))
 End Sub
 
 Sub newline
@@ -476,31 +615,69 @@ Sub newline
 End Sub
 
 Sub print_
+  dmp_mnemonic("PRINT")
+  Print
   pc = pc + dmp_zstring(pc)
   Print
 End Sub
 
+Sub print_num
+  Local a
+  dmp_mnemonic("PRINT_NUM")
+  a = get_op(0)
+  Print
+  Print Str$(a)
+End Sub
+
+Sub print_paddr
+  Local a
+  dmp_mnemonic("PRINT_PADDR")
+  a = get_op(0)
+  Print
+  devnull = dmp_zstring(a * 2)
+  Print
+End Sub
+
+Sub ret
+  Local a, dest
+  dmp_mnemonic("RET")
+  a = get_op(0)
+  Print ""
+  Do While sp > fp + 2 : devnull = pop() : Loop
+  pc = pop()
+  dest = pop()
+  fp = pop()
+  dmp_stack
+  set_var(dest, a)
+End Sub
+
 Sub store
   Local a, b
-  Print "store:";
+  dmp_mnemonic("STORE")
   a = get_op(0)
   b = get_op(1)
   Print
   set_var(a, b)
 End Sub
 
-Sub main
-  Local i
+Sub storew
+  Local a, b, c
+  dmp_mnemonic("STOREW")
+  a = get_op(0)
+  b = get_op(1)
+  c = get_op(2)
+  Print
+  writew(a + 2 * b, c)
+End Sub
 
-  init()
-
-  For i = 0 To 10
-    Print "{"; Hex$(pc); "} ";
-    decode_op()
-    Print fmt_op$()
-    perform_op()
-    If (i + 1) Mod 20 = 0 Then more()
-  Next i
+Sub sub_
+  Local a, b, c
+  dmp_mnemonic("SUB")
+  a = get_op(0)
+  b = get_op(1)
+  c = pcreadb()
+  Print " -> "; fmt_result$(c)
+  set_var(c, a - b)
 End Sub
 
 Sub init
@@ -534,12 +711,12 @@ End Sub
 Sub main_loop
   Local i
 
-  For i = 0 To 10
-    Print "{"; Hex$(pc); "} ";
+  For i = 0 To 1000
+    Print Hex$(pc); ": ";
     decode_op()
-    Print fmt_op$()
+'    Print fmt_op$()
     perform_op()
-    If (i + 1) Mod 20 = 0 Then more()
+    If (i + 1) Mod 10 = 0 Then more()
   Next i
 End Sub
 
