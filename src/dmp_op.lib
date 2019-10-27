@@ -1,0 +1,69 @@
+' ZMIM a Z-Machine Interpreter for the Colour Maximite
+' Copyright (c) 2019 Thomas Hugo Williams
+
+Function fmt_mnemonic$(m$)
+  fmt_mnemonic$ = rpad$(m$, 13)
+End Function
+
+Function fmt_operand$(i)
+  Local a$, x
+  x = op_value(i)
+  If op_type(i) <> OT_VARIABLE Then
+    fmt_operand$ = "#" + lpad$(Hex$(x), 2, "0")
+    Exit Function
+  EndIf
+  If x = 0 Then
+    a$ = "(SP)+"
+  ElseIf x < &h10 Then
+    a$ = "L" + lpad$(Hex$(x - 1), 2, "0")
+  Else
+    a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
+  EndIf
+  fmt_operand$ = a$
+End Function
+
+Function fmt_result$(x)
+  Local a$
+  If x = 0 Then
+    a$ = "-(SP)"
+  ElseIf x < &h10 Then
+    a$ = "L" + lpad$(Hex$(x - 1), 2, "0")
+  Else
+    a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
+  EndIf
+  fmt_result$ = a$
+End Function
+
+Function fmt_branch$(branch)
+  If branch And BIT_15 Then Print " [TRUE] "; Else Print " [FALSE] ";
+  Print Hex$(branch And BTM_15_BITS);
+End Function
+
+Sub dmp_call(m$, result, branch)
+  Local i
+
+  Print fmt_mnemonic$(m$); Hex$(2 * op_value(0)); " (";
+  For i = 1 To op_num - 1
+    If i > 1 Then Print ", ";
+    Print fmt_operand$(i);
+  Next i
+  Print ")";
+  If result > -1 Then Print " -> "; fmt_result$(result);
+  If branch > 0 Then Error
+  Print
+End Sub
+
+Sub dmp_op(m$, result, branch)
+  Local i
+
+  If m$ = "CALL" Then dmp_call(m$, result, branch) : Exit Sub : EndIf
+
+  Print fmt_mnemonic$(m$);
+  For i = 0 To op_num - 1
+    If i > 0 Then Print ", ";
+    Print fmt_operand$(i);
+  Next i
+  If result > -1 Then Print " -> "; fmt_result$(result);
+  If branch > 0 Then Print fmt_branch$(branch);
+  Print
+End Sub

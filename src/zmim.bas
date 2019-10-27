@@ -38,13 +38,14 @@ OT_SMALL_CONST = &b01
 OT_VARIABLE = &b10
 OT_OMITTED = &b11
 
-BIT_6 = &b01000000
-BIT_7 = &b10000000
-BIT_15 = &b1000000000000000
-BTM_2_BITS = &b00000011
-BTM_4_BITS = &b00001111
-BTM_5_BITS = &b00011111
-BTM_6_BITS = &b00111111
+BIT_6       = &b01000000
+BIT_7       = &b10000000
+BIT_15      = &b1000000000000000
+BTM_2_BITS  = &b00000011
+BTM_4_BITS  = &b00001111
+BTM_5_BITS  = &b00011111
+BTM_6_BITS  = &b00111111
+BTM_15_BITS = &b0111111111111111
 
 Dim mem(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
 
@@ -76,6 +77,8 @@ op_form = 0
 op_num = 0 ' number of operands
 Dim op_type(MAX_NUM_OPERANDS)
 Dim op_value(MAX_NUM_OPERANDS)
+
+new_line = 0
 
 ' Converts a virtual address to a physical address
 Function paddr(va)
@@ -157,7 +160,6 @@ Sub push(w)
 End Sub
 
 Sub dmp_stack
-If 0 Then
   Local i
   Print "TOP: ";
   For i = sp To 0 Step -1
@@ -166,9 +168,18 @@ If 0 Then
     ElseIf i < sp Then
       Print "     ";
     EndIf
-    Print lpad$(Hex$(stack(i)), 4, "0")
+    Print lpad$(Hex$(stack(i)), 4, "0");
+    If i = fp Then
+      Print " previous fp";
+    ElseIf i = fp + 1 Then
+      Print " store result";
+    ElseIf i = fp + 2 Then
+      Print " return address";
+    ElseIf i = fp + 3 Then
+      Print " num locals";
+    EndIf
+    Print
   Next i
-EndIf
 End Sub
 
 ' Loads 'src' page of 'file$' into 'mem'
@@ -211,9 +222,8 @@ End Function
 Function get_var(i)
   If i = 0 Then
     get_var = pop()
-    dmp_stack
   ElseIf i < &h10 Then
-    get_var = stack(fp + i + 2)
+    get_var = stack(fp + i + 3)
   ElseIf i <= &hFF Then
     get_var = readw(GLOBAL_VAR + 2 * (i - &h10))
   Else
@@ -224,10 +234,8 @@ End Function
 Sub set_var(i, x)
   If i = 0 Then
     push(x)
-    dmp_stack
   ElseIf i < &h10 Then
-    stack(fp + i + 2) = x
-    dmp_stack
+    stack(fp + i + 3) = x
   ElseIf i < &hFF Then
     writew(GLOBAL_VAR + 2 * (i - &h10))
   Else
@@ -416,13 +424,11 @@ Sub perform_op
   EndIf
 End Sub
 
-Sub branch(cond)
+Function get_branch
   Local a, of
   a = pcreadb()
-
-  If a And BIT_7 Then Print " [TRUE] "; Else Print " [FALSE] ";
-
   of = a And BTM_6_BITS
+
   If a And BIT_6 = 0 Then
     of = 256 * of + pcreadb()
     If a And BIT_5 Then
@@ -430,154 +436,116 @@ Sub branch(cond)
     EndIf
   EndIf
 
-  Print Hex$(pc + of - 2)
-
-  If cond Then
-    pc = pc + of - 2
-  EndIf
+  get_branch = pc + of - 2
+  If a And BIT_7 Then get_branch = get_branch Or BIT_15
 
   ' TODO: of = 0 -> return false
   '       of = 1 -> return true
-End Sub
-
-Function fmt_operand$(i)
-  Local a$, x
-  x = op_value(i)
-  If op_type(i) <> OT_VARIABLE Then
-    fmt_operand$ = "#" + lpad$(Hex$(x), 2, "0")
-    Exit Function
-  EndIf
-  If x = 0 Then
-    a$ = "(SP)+"
-  ElseIf x < &h10 Then
-    a$ = "L" + lpad$(Hex$(x - 1), 2, "0")
-  Else
-    a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
-  EndIf
-  fmt_operand$ = a$
 End Function
 
-Function fmt_result$(x)
-  Local a$
-  If x = 0 Then
-    a$ = "-(SP)"
-  ElseIf x < &h10 Then
-    a$ = "L" + lpad$(Hex$(x - 1), 2, "0")
-  Else
-    a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
-  EndIf
-  fmt_result$ = a$
-End Function
-
-Sub dmp_mnemonic(m$)
-  Print rpad$(m$, 13);
-End Sub
-
-Function get_op(i, nc)
+Function get_op(i)
   Local a
-  If i > 0 And nc = 0 Then Print ",";
-  Print fmt_operand$(i);
   a = op_value(i)
   If op_type(i) = OT_VARIABLE Then get_op = get_var(a) Else get_op = a
 End Function
 
 Sub add
   Local a, b, c
-  dmp_mnemonic("ADD")
   a = get_op(0)
   b = get_op(1)
   c = pcreadb()
-  Print " -> "; fmt_result$(c)
+  dmp_op("ADD", c)
   set_var(c, a + b)
 End Sub
 
 Sub and_
   Local a, b, c
-  dmp_mnemonic("AND")
   a = get_op(0)
   b = get_op(1)
   c = pcreadb()
-  Print " -> "; fmt_result$(c)
+  dmp_op("AND", c)
   set_var(c, a And b)
 End Sub
 
-Sub call_
-  Local arg(2), i, locals_sz, result, routine, x
-  dmp_mnemonic("CALL")
-  routine = 2 * op_value(0)
-  Print Hex$(routine); " (";
+Sub dmp_routine(new_pc)
+  Local i, locals_sz
 
-  For i = 1 To op_num - 1
-    arg(i - 1) = get_op(i, i = 1)
-  Next i
-
-  result = pcreadb()
-  Print ") -> "; fmt_result$(result)
+  locals_sz = readb(new_pc)
 
   Print
-  Print "Routine "; Hex$(routine);
+  Print "Routine "; Hex$(new_pc); ", "; Str$(locals_sz); " locals (";
+  For i = 0 To locals_sz - 1
+    If i > 0 Then Print ", ";
+    x = readw(new_pc + 1 + i * 2)
+    Print lpad$(Hex$(x), 4, "0");
+  Next i
+  Print ")"
+  Print
+  dmp_stack()
+  Print""
+End Sub
+
+Sub call_
+  Local args(2), i, locals_sz, new_pc, x
+
+  new_pc = 2 * op_value(0)
+  For i = 1 To op_num - 1
+    args(i - 1) = get_op(i)
+  Next i
+  result = pcreadb()
+
+  dmp_op("CALL", result)
 
   push(fp)
   fp = sp
   push(result)
   push(pc)
-
-  pc = routine
-
+  pc = new_pc
   locals_sz = pcreadb()
-  Print ", "; Str$(locals_sz); " locals (";
-
   push(locals_sz)
-
   For i = 0 To locals_sz - 1
     x = pcreadw()
-    If i > 0 Then Print ", ";
-    Print lpad$(Hex$(x), 4, "0");
-
-    If i > op_num - 1 Then
-      push(x)
-    Else
-      push arg(i)
-    EndIf
+    If i > op_num - 1 Then push(x) Else push(args(i))
   Next i
 
-  Print ")"
-
-  Print
-
-  dmp_stack()
+  dmp_routine(new_pc)
 End Sub
 
 Sub dec_chk
-  Local a, b, x
-  dmp_mnemonic("DEC_CHK")
+  Local a, b, branch, x
   a = get_op(0)
   b = get_op(1)
+  branch = get_branch()
+  dmp_op("DEC_CHK", -1, branch)
   x = get_var(a)
   set_var(a, x - 1)
-  branch(x < b)
+  If x < b And (branch And BIT_15) Then
+    pc = branch And BTM_15_BITS
+  EndIf
 End Sub
 
 Sub inc
   Local a
-  dmp_mnemonic("INC")
   a = get_op(0)
-  Print ""
+  dmp_op("INC", -1)
   x = get_var(a)
   set_var(a, x + 1)
 End Sub
 
 Sub je
-  Local a, b
-  dmp_mnemonic("JE")
+  Local a, b, branch
   a = get_op(0)
   b = get_op(1)
-  branch(a = b)
+  branch = get_branch()
+  dmp_op("JE", -1, branch)
+  If a = b And (branch And BIT_15) Then
+    pc = branch And BTM_15_BITS
+  EndIf
 End Sub
 
 Sub jump
   Local of
-  dmp_mnemonic("JUMP")
+  dmp_op("JUMP", -1)
   of = op_value(i)
   If op_type(i) = OT_VARIABLE Then of = get_var(of)
   If of And BIT_15 Then of = of - 65536
@@ -586,27 +554,29 @@ Sub jump
 End Sub
 
 Sub jz
-  Local a
-  dmp_mnemonic("JZ")
+  Local a, branch
   a = get_op(0)
-  branch(a = 0)
+  branch = get_branch()
+  dmp_op("JZ", -1, branch)
+  If a = 0 And (branch And BIT_15) Then
+    pc = branch And BTM_15_BITS
+  EndIf
 End Sub
 
 Sub insert_obj
   Local obj, dest
-  dmp_mnemonic("INSERT_OBJ")
   obj = get_op(0)
   dest = get_op(1)
+  dmp_op("INSERT_OBJ", -1)
   Print " *TODO"
 End Sub
 
 Sub loadw
   Local a, b, c
-  dmp_mnemonic("LOADW")
   a = get_op(0)
   b = get_op(1)
   c = pcreadb()
-  Print " -> "; fmt_result$(c)
+  dmp_op("LOADW", c)
   set_var(c, readw(a + 2 * b))
 End Sub
 
@@ -615,68 +585,61 @@ Sub newline
 End Sub
 
 Sub print_
-  dmp_mnemonic("PRINT")
-  Print
+  dmp_op("PRINT", -1)
   pc = pc + dmp_zstring(pc)
-  Print
+  new_line = 1
 End Sub
 
 Sub print_num
   Local a
-  dmp_mnemonic("PRINT_NUM")
   a = get_op(0)
-  Print
-  Print Str$(a)
+  dmp_op("PRINT_NUM", -1)
+  Print Str$(a);
+  new_line = 1
 End Sub
 
 Sub print_paddr
   Local a
-  dmp_mnemonic("PRINT_PADDR")
   a = get_op(0)
-  Print
+  dmp_op("PRINT_PADDR", -1)
   devnull = dmp_zstring(a * 2)
-  Print
+  new_line = 1
 End Sub
 
 Sub ret
   Local a, dest
-  dmp_mnemonic("RET")
   a = get_op(0)
-  Print ""
+  dmp_op("RET", -1)
   Do While sp > fp + 2 : devnull = pop() : Loop
   pc = pop()
   dest = pop()
   fp = pop()
-  dmp_stack
   set_var(dest, a)
 End Sub
 
 Sub store
   Local a, b
-  dmp_mnemonic("STORE")
   a = get_op(0)
   b = get_op(1)
-  Print
+  dmp_op("STORE", -1)
   set_var(a, b)
 End Sub
 
 Sub storew
   Local a, b, c
-  dmp_mnemonic("STOREW")
   a = get_op(0)
   b = get_op(1)
   c = get_op(2)
-  Print
+  dmp_op("STOREW", -1)
   writew(a + 2 * b, c)
 End Sub
 
 Sub sub_
   Local a, b, c
-  dmp_mnemonic("SUB")
   a = get_op(0)
   b = get_op(1)
   c = pcreadb()
-  Print " -> "; fmt_result$(c)
+  dmp_op("SUB", c)
   set_var(c, a - b)
 End Sub
 
@@ -711,18 +674,19 @@ End Sub
 Sub main_loop
   Local i
 
-  For i = 0 To 1000
+  For i = 0 To 10
+    If new_line Then Print : new_line = 0
     Print Hex$(pc); ": ";
     decode_op()
-'    Print fmt_op$()
     perform_op()
-    If (i + 1) Mod 10 = 0 Then more()
+    If (i + 1) Mod 10 = 0 Then i = 0 : more()
   Next i
 End Sub
 
 Library Load "util"
 Library Load "dmp_mem"
-Library Load "fmt_op"
+Library Load "dmp_op"
+'Sub dmp_op(m$, ret, branch) : End Sub
 
 Memory
 Print
