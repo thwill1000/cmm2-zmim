@@ -80,7 +80,7 @@ Dim op_value(MAX_NUM_OPERANDS)
 
 new_line = 0
 
-' Converts a virtual address to a physical address
+' Converts a virtual address to a physical address.
 Function paddr(va)
   Local of, pp, vp
 
@@ -102,21 +102,25 @@ Function paddr(va)
   paddr = pp * PAGE_SIZE + of
 End Function
 
+' Reads a byte from 'pc' and increments 'pc'.
 Function pcreadb
   pcreadb = readb(pc)
   pc = pc + 1
 End Function
 
+' Reads a byte from 'ad'.
 Function readb(ad)
   If ad < 0 Or ad >= FILE_LEN Then Error Hex$(ad)
   readb = Peek(Var mem(0), paddr(ad))
 End Function
 
+' Reads a 16-bit word from 'pc' and increments 'bc' by 2.
 Function pcreadw
   pcreadw = readw(pc)
   pc = pc + 2
 End Function
 
+' Reads a 16-bit word from 'ad'.
 Function readw(ad)
   Local pa1, pa2
 
@@ -125,19 +129,20 @@ Function readw(ad)
   pa1 = paddr(ad)
   pa2 = paddr(ad + 1)
 
-  ' Does this ever happen?
-  ' If not then pa2 = pa + 1
+  ' Does this ever happen? If not then pa2 = pa + 1
   If pa1 + 1 <> pa2 Then Print "Unaligned word read!"
 
   readw = Peek(Var mem(0), pa1) * 256 + Peek(Var mem(0), pa2)
 End Function
 
+' Writes byte 'x' to 'ad'.
 Sub writeb(ad, x)
   If ad < 0 Or ad >= BASE_STATIC Then Error Hex$(ad)
   If x < 0 Or x > 255 Then Error Str$(x)
   Poke Var mem(0), ad, x
 End Sub
 
+' Writes 16-bit word 'x' to 'ad'.
 Sub writew(ad, x)
   If ad < 0 Or ad >= BASE_STATIC - 1 Then
     Error "Non dynamic mem write: " + Hex$(ad)
@@ -147,32 +152,32 @@ Sub writew(ad, x)
   Poke Var mem(0), ad + 1, x Mod 256
 End Sub
 
-' Pops a word from the stack
+' Pops a 16-bit word from the stack.
 Function pop
   pop = stack(sp)
   sp = sp - 1
 End Function
 
-' Pushes a word onto the stack
+' Pushes a 16-bit word onto the stack.
 Sub push(w)
   sp = sp + 1
   stack(sp) = w
 End Sub
 
-' Loads 'src' page of 'file$' into 'mem'
-' Returns destination / physical page number
-' TODO: open the file once globally and keep it open until exit
+' Loads virtual page 'vp' from '$file'.
+' @return physical page number
 Function mem_load(vp)
   Local ad, buf$, buf_sz, i, pp, to_read
 
   pp = next_page
 
-  ' TODO: Implement some form of Least Recently Used algorithm
+  ' TODO: Implement some form of Least Recently Used algorithm.
   next_page = next_page + 1
   If next_page = NUM_PHYSICAL_PAGES Then
     next_page = FIRST_SWAP_PAGE
   EndIf
 
+  ' TODO: Should the file be opened once globally and kept open until exit?
   Open file$ For random As #1
   Seek #1, vp * PAGE_SIZE + 1
   ad = pp * PAGE_SIZE
@@ -196,6 +201,8 @@ Function mem_load(vp)
   mem_load = pp
 End Function
 
+' Gets variable 'i'
+' If i = 0 then pops and returns the top value of the stack.
 Function get_var(i)
   If i = 0 Then
     get_var = pop()
@@ -208,6 +215,8 @@ Function get_var(i)
   EndIf
 End Function
 
+' Sets variable 'i'
+' If i = 0 then pushes the value onto the stack.
 Sub set_var(i, x)
   If i = 0 Then
     push(x)
@@ -220,7 +229,8 @@ Sub set_var(i, x)
   EndIf
 End Sub
 
-' Returns the number of bytes read
+' Prints ZString starting at 'addr'.
+' @return the number of bytes read.
 Function print_zstring(addr)
   Local abbrv, ad, al, ch, i, x, zchar(2)
 
@@ -269,10 +279,11 @@ Function print_zstring(addr)
   print_zstring = ad - addr
 End Function
 
-Sub print_abrv(idx)
+' Prints abbreviation 'i'.
+Sub print_abrv(i)
   Local ad, x
   ad = readw(&h18)
-  x = readw(ad + idx * 2)
+  x = readw(ad + i * 2)
   devnull = print_zstring(x * 2)
 End Sub
 
@@ -283,7 +294,7 @@ Sub more
   Print
 End Sub
 
-' Decodes instruction at 'pc' to 'op_*' vars
+' Decodes instruction at 'pc' into 'op_*' vars.
 Sub decode_op
   Local i, x
 
@@ -358,7 +369,7 @@ Sub decode_op
 
 End Sub
 
-' Performs the last decoded instruction
+' Performs the last decoded instruction.
 Sub perform_op
   If op = &h04 Then
     dec_chk
@@ -423,6 +434,8 @@ Function read_branch
   '       of = 1 -> return true
 End Function
 
+' Gets the value of an operand.
+' For VARIABLE operands gets the value of the referenced Variable.
 Function get_op(i)
   Local a
   a = op_value(i)
@@ -614,17 +627,17 @@ Sub init
 
   Print "Loading "; file$
 
-  ' Load page 0 which contains the header
+  ' Load page 0 which contains the header.
   Print "  Header page: 0"
   If mem_load(0) <> 0 Then Error
 
-  ' Read header data
+  ' Read header data.
   pc = readw(&h06)
   GLOBAL_VAR = readw(&h0C)
   BASE_STATIC = readw(&h0E)
   FILE_LEN = readw(&h1A) * 2
 
-  ' Initialise dynamic memory
+  ' Initialise dynamic memory.
   FIRST_SWAP_PAGE = BASE_STATIC \ PAGE_SIZE
   If BASE_STATIC Mod PAGE_SIZE > 0 Then FIRST_SWAP_PAGE = FIRST_SWAP_PAGE + 1
   Print "  Dynamic pages: ";
