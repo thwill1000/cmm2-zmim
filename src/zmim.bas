@@ -401,7 +401,10 @@ Sub perform_op
   EndIf
 End Sub
 
-Function get_branch
+' Reads branch offset.
+' @return bits 0-14 - new value for the program counter.
+'         bit 15    - set = branch on True, unset = branch on False.
+Function read_branch
   Local a, of
   a = pcreadb()
   of = a And BTM_6_BITS
@@ -413,8 +416,8 @@ Function get_branch
     EndIf
   EndIf
 
-  get_branch = pc + of - 2
-  If a And BIT_7 Then get_branch = get_branch Or BIT_15
+  read_branch = pc + of - 2
+  If a And BIT_7 Then read_branch = read_branch Or BIT_15
 
   ' TODO: of = 0 -> return false
   '       of = 1 -> return true
@@ -427,37 +430,37 @@ Function get_op(i)
 End Function
 
 Sub add
-  Local a, b, c
+  Local a, b, st
   a = get_op(0)
   b = get_op(1)
-  c = pcreadb()
-  dmp_op("ADD", c)
-  set_var(c, a + b)
+  st = pcreadb()
+  dmp_op("ADD", st)
+  set_var(st, a + b)
 End Sub
 
 Sub and_
-  Local a, b, c
+  Local a, b, st
   a = get_op(0)
   b = get_op(1)
-  c = pcreadb()
-  dmp_op("AND", c)
-  set_var(c, a And b)
+  st = pcreadb()
+  dmp_op("AND", st)
+  set_var(st, a And b)
 End Sub
 
 Sub call_
-  Local args(2), i, locals_sz, new_pc, x
+  Local args(2), i, locals_sz, new_pc, st, x
 
   new_pc = 2 * op_value(0)
   For i = 1 To op_num - 1
     args(i - 1) = get_op(i)
   Next i
-  result = pcreadb()
+  st = pcreadb()
 
-  dmp_op("CALL", result)
+  dmp_op("CALL", st)
 
   push(fp)
   fp = sp
-  push(result)
+  push(st)
   push(pc)
   pc = new_pc
   locals_sz = pcreadb()
@@ -475,15 +478,15 @@ Sub call_
 End Sub
 
 Sub dec_chk
-  Local a, b, branch, x
+  Local a, b, br, x
   a = get_op(0)
   b = get_op(1)
-  branch = get_branch()
-  dmp_op("DEC_CHK", -1, branch)
+  br = read_branch()
+  dmp_op("DEC_CHK", -1, br)
   x = get_var(a)
   set_var(a, x - 1)
-  If x < b And (branch And BIT_15) Then
-    pc = branch And BTM_15_BITS
+  If x < b And (br And BIT_15) Then
+    pc = br And BTM_15_BITS
   EndIf
 End Sub
 
@@ -496,13 +499,13 @@ Sub inc
 End Sub
 
 Sub je
-  Local a, b, branch
+  Local a, b, br
   a = get_op(0)
   b = get_op(1)
-  branch = get_branch()
-  dmp_op("JE", -1, branch)
-  If a = b And (branch And BIT_15) Then
-    pc = branch And BTM_15_BITS
+  br = read_branch()
+  dmp_op("JE", -1, br)
+  If a = b And (br And BIT_15) Then
+    pc = br And BTM_15_BITS
   EndIf
 End Sub
 
@@ -517,12 +520,12 @@ Sub jump
 End Sub
 
 Sub jz
-  Local a, branch
+  Local a, br
   a = get_op(0)
-  branch = get_branch()
-  dmp_op("JZ", -1, branch)
-  If a = 0 And (branch And BIT_15) Then
-    pc = branch And BTM_15_BITS
+  br = read_branch()
+  dmp_op("JZ", -1, br)
+  If a = 0 And (br And BIT_15) Then
+    pc = br And BTM_15_BITS
   EndIf
 End Sub
 
@@ -535,12 +538,12 @@ Sub insert_obj
 End Sub
 
 Sub loadw
-  Local a, b, c
+  Local a, b, st
   a = get_op(0)
   b = get_op(1)
-  c = pcreadb()
-  dmp_op("LOADW", c)
-  set_var(c, readw(a + 2 * b))
+  st = pcreadb()
+  dmp_op("LOADW", st)
+  set_var(st, readw(a + 2 * b))
 End Sub
 
 Sub newline
@@ -589,21 +592,21 @@ Sub store
 End Sub
 
 Sub storew
-  Local a, b, c
+  Local a, b, st
   a = get_op(0)
   b = get_op(1)
   c = get_op(2)
   dmp_op("STOREW", -1)
-  writew(a + 2 * b, c)
+  writew(a + 2 * b, st)
 End Sub
 
 Sub sub_
-  Local a, b, c
+  Local a, b, st
   a = get_op(0)
   b = get_op(1)
   c = pcreadb()
-  dmp_op("SUB", c)
-  set_var(c, a - b)
+  dmp_op("SUB", st)
+  set_var(st, a - b)
 End Sub
 
 Sub init
@@ -649,7 +652,7 @@ End Sub
 Library Load "util"
 Library Load "dmp_mem"
 Library Load "dmp_op"
-'Sub dmp_op(m$, ret, branch) : End Sub
+'Sub dmp_op(m$, st, br) : End Sub
 Library Load "dmp_stak"
 Library Load "dmp_rout"
 

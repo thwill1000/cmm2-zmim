@@ -22,24 +22,24 @@ Function fmt_operand$(i)
   fmt_operand$ = a$
 End Function
 
-Function fmt_result$(x)
+Function fmt_store$(st)
   Local a$
-  If x = 0 Then
+  If st = 0 Then
     a$ = "-(SP)"
-  ElseIf x < &h10 Then
-    a$ = "L" + lpad$(Hex$(x - 1), 2, "0")
+  ElseIf st < &h10 Then
+    a$ = "L" + lpad$(Hex$(st - 1), 2, "0")
   Else
-    a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
+    a$ = "G" + lpad$(Hex$(st - &h10), 2, "0")
   EndIf
-  fmt_result$ = a$
+  fmt_store$ = a$
 End Function
 
-Function fmt_branch$(branch)
-  If branch And BIT_15 Then Print " [TRUE] "; Else Print " [FALSE] ";
-  Print Hex$(branch And BTM_15_BITS);
+Function fmt_branch$(br)
+  If br And BIT_15 Then Print " [TRUE] "; Else Print " [FALSE] ";
+  Print Hex$(br And BTM_15_BITS);
 End Function
 
-Sub dmp_call(m$, result, branch)
+Sub dmp_call(m$, st, br)
   Local i
 
   Print fmt_mnemonic$(m$); Hex$(2 * op_value(0)); " (";
@@ -48,22 +48,22 @@ Sub dmp_call(m$, result, branch)
     Print fmt_operand$(i);
   Next i
   Print ")";
-  If result > -1 Then Print " -> "; fmt_result$(result);
-  If branch > 0 Then Error
+  If st > -1 Then Print " -> "; fmt_store$(st);
+  If br > 0 Then Error
   Print
 End Sub
 
-Sub dmp_op(m$, result, branch)
+Sub dmp_op(m$, st, br)
   Local i
 
-  If m$ = "CALL" Then dmp_call(m$, result, branch) : Exit Sub : EndIf
+  If m$ = "CALL" Then dmp_call(m$, st, br) : Exit Sub : EndIf
 
   Print fmt_mnemonic$(m$);
   For i = 0 To op_num - 1
     If i > 0 Then Print ", ";
     Print fmt_operand$(i);
   Next i
-  If result > -1 Then Print " -> "; fmt_result$(result);
-  If branch > 0 Then Print fmt_branch$(branch);
+  If st > -1 Then Print " -> "; fmt_store$(st);
+  If br > 0 Then Print fmt_branch$(br);
   Print
 End Sub
