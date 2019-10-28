@@ -221,7 +221,7 @@ Sub set_var(i, x)
 End Sub
 
 ' Returns the number of bytes read
-Function dmp_zstring(addr)
+Function print_zstring(addr)
   Local abbrv, ad, al, ch, i, x, zchar(2)
 
   abbrv = 0
@@ -246,7 +246,7 @@ Function dmp_zstring(addr)
     For i = 0 To 2
       ch = zchar(i)
       If abbrv > 0 Then
-        dmp_abrv((abbrv - 1) * 32 + ch)
+        print_abrv((abbrv - 1) * 32 + ch)
         abbrv = 0
       ElseIf ch > 0 And ch < 4 Then
         abbrv = ch
@@ -266,14 +266,14 @@ Function dmp_zstring(addr)
     GoTo start_loop
   exit_loop:
 
-  dmp_zstring = ad - addr
+  print_zstring = ad - addr
 End Function
 
-Sub dmp_abrv(idx)
+Sub print_abrv(idx)
   Local ad, x
   ad = readw(&h18)
   x = readw(ad + idx * 2)
-  devnull = dmp_zstring(x * 2)
+  devnull = print_zstring(x * 2)
 End Sub
 
 Sub more
@@ -549,7 +549,7 @@ End Sub
 
 Sub print_
   dmp_op("PRINT", -1)
-  pc = pc + dmp_zstring(pc)
+  pc = pc + print_zstring(pc)
   new_line = 1
 End Sub
 
@@ -565,7 +565,7 @@ Sub print_paddr
   Local a
   a = get_op(0)
   dmp_op("PRINT_PADDR", -1)
-  devnull = dmp_zstring(a * 2)
+  devnull = print_zstring(a * 2)
   new_line = 1
 End Sub
 
