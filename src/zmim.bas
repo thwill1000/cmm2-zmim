@@ -159,29 +159,6 @@ Sub push(w)
   stack(sp) = w
 End Sub
 
-Sub dmp_stack
-  Local i
-  Print "TOP: ";
-  For i = sp To 0 Step -1
-    If i = fp Then
-      Print " --> ";
-    ElseIf i < sp Then
-      Print "     ";
-    EndIf
-    Print lpad$(Hex$(stack(i)), 4, "0");
-    If i = fp Then
-      Print " previous fp";
-    ElseIf i = fp + 1 Then
-      Print " store result";
-    ElseIf i = fp + 2 Then
-      Print " return address";
-    ElseIf i = fp + 3 Then
-      Print " num locals";
-    EndIf
-    Print
-  Next i
-End Sub
-
 ' Loads 'src' page of 'file$' into 'mem'
 ' Returns destination / physical page number
 ' TODO: open the file once globally and keep it open until exit
@@ -687,6 +664,7 @@ Library Load "util"
 Library Load "dmp_mem"
 Library Load "dmp_op"
 'Sub dmp_op(m$, ret, branch) : End Sub
+Library Load "dmp_stak"
 
 Memory
 Print

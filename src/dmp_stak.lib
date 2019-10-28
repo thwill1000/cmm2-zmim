@@ -1,0 +1,30 @@
+' Copyright (c) 2019 Thomas Hugo Williams
+' For Maximite BASIC v4.5C
+
+' Expects global variables:
+'  fp    - current frame index/pointer
+'  sp    - current stack index/pointer
+'  stack - the stack (an array of 32-bit floats)
+
+Sub dmp_stack
+  Local i
+  Print "TOP: ";
+  For i = sp To 0 Step -1
+    If i = fp Then
+      Print " --> ";
+    ElseIf i < sp Then
+      Print "     ";
+    EndIf
+    Print lpad$(Hex$(stack(i)), 4, "0");
+    If i = fp Then
+      Print " previous fp";
+    ElseIf i = fp + 1 Then
+      Print " store result";
+    ElseIf i = fp + 2 Then
+      Print " return address";
+    ElseIf i = fp + 3 Then
+      Print " num locals";
+    EndIf
+    Print
+  Next i
+End Sub
