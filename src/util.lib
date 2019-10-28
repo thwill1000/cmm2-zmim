@@ -5,11 +5,6 @@ Function rshift(v, num)
   rshift = v\(2^num)
 End Function
 
-Function hex2$(x)
-  If byte <= &hF Then hex2$ = "0"
-  hex2$ = hex2$ + Hex$(x)
-End Function
-
 Function lpad$(s$, i, c$)
   Local a
   a = Len(s$)
