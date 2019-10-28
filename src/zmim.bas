@@ -444,24 +444,6 @@ Sub and_
   set_var(c, a And b)
 End Sub
 
-Sub dmp_routine(new_pc)
-  Local i, locals_sz
-
-  locals_sz = readb(new_pc)
-
-  Print
-  Print "Routine "; Hex$(new_pc); ", "; Str$(locals_sz); " locals (";
-  For i = 0 To locals_sz - 1
-    If i > 0 Then Print ", ";
-    x = readw(new_pc + 1 + i * 2)
-    Print lpad$(Hex$(x), 4, "0");
-  Next i
-  Print ")"
-  Print
-  dmp_stack()
-  Print""
-End Sub
-
 Sub call_
   Local args(2), i, locals_sz, new_pc, x
 
@@ -485,7 +467,11 @@ Sub call_
     If i > op_num - 1 Then push(x) Else push(args(i))
   Next i
 
+  Print
   dmp_routine(new_pc)
+  Print
+  dmp_stack()
+  Print
 End Sub
 
 Sub dec_chk
@@ -665,6 +651,7 @@ Library Load "dmp_mem"
 Library Load "dmp_op"
 'Sub dmp_op(m$, ret, branch) : End Sub
 Library Load "dmp_stak"
+Library Load "dmp_rout"
 
 Memory
 Print
