@@ -360,39 +360,39 @@ End Sub
 
 ' Performs the last decoded instruction
 Sub perform_op
-  If op = 4 Then
+  If op = &h04 Then
     dec_chk
-  ElseIf op = 13 Or op = 77 Then
+  ElseIf op = &h0D Or op = &h4D Then
     store
-  ElseIf op = &h0F Or op = 79 Then
+  ElseIf op = &h0F Or op = &h4F Then
     loadw
-  ElseIf op = 84 Or op = 116 Then
+  ElseIf op = &h54 Or op = &h74 Then
     add
-  ElseIf op = 85 Then
+  ElseIf op = &h55 Then
     sub_
-  ElseIf op = 97 Then
+  ElseIf op = &h61 Then
     je
   ElseIf op = &h6E Then
     insert_obj
-  ElseIf op = 140 Then
+  ElseIf op = &h8C Then
     jump
-  ElseIf op = 160 Then
+  ElseIf op = &hA0 Then
     jz
-  ElseIf op = 165 Then
+  ElseIf op = &hA5 Then
     inc
-  ElseIf op = 171 Then
+  ElseIf op = &hAB Then
     ret
   ElseIf op = &hAD Then
     print_paddr
-  ElseIf op = 178 Then
+  ElseIf op = &hB2 Then
     print_
-  ElseIf op = 187 Then
+  ElseIf op = &hBB Then
     newline
   ElseIf op = &hC9 Then
     and_
-  ElseIf op = 224 Then
+  ElseIf op = &hE0 Then
     call_
-  ElseIf op = 225 Then
+  ElseIf op = &hE1 Then
     storew
   ElseIf op = &hE6 Then
     print_num
