@@ -39,30 +39,33 @@ Function fmt_branch$(br)
   Print Hex$(br And BTM_15_BITS);
 End Function
 
-Sub dmp_call(m$, st, br)
-  Local i
-
-  Print fmt_mnemonic$(m$); Hex$(2 * op_value(0)); " (";
+Function fmt_call_operands$
+  Local a$, i
+  a$ = Hex$(2 * op_value(0)) + " ("
   For i = 1 To op_num - 1
-    If i > 1 Then Print ", ";
-    Print fmt_operand$(i);
+    If i > 1 Then a$ = a$ + ", "
+    a$ = a$ + fmt_operand$(i)
   Next i
-  Print ")";
-  If st > -1 Then Print " -> "; fmt_store$(st);
-  If br > 0 Then Error
-  Print
-End Sub
+  a$ = a$ + ")"
+  fmt_call_operands$ = a$
+End Function
+
+Function fmt_normal_operands$
+  Local a$, i
+  For i = 0 To op_num - 1
+    If i > 0 Then a$ = a$ + ", "
+    a$ = a$ + fmt_operand$(i)
+  Next i
+  fmt_normal_operands$ = a$
+End Function
 
 Sub dmp_op(m$, st, br)
-  Local i
-
-  If m$ = "CALL" Then dmp_call(m$, st, br) : Exit Sub : EndIf
-
   Print fmt_mnemonic$(m$);
-  For i = 0 To op_num - 1
-    If i > 0 Then Print ", ";
-    Print fmt_operand$(i);
-  Next i
+  If m$ = "CALL" Then
+    Print fmt_call_operands$();
+  Else
+    Print fmt_normal_operands$();
+  EndIf
   If st > -1 Then Print " -> "; fmt_store$(st);
   If br > 0 Then Print fmt_branch$(br);
   Print
