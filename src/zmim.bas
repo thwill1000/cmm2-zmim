@@ -644,7 +644,7 @@ Sub sub_
   Local a, b, st
   a = get_op(0)
   b = get_op(1)
-  c = pcreadb()
+  st = pcreadb()
   dmp_op("SUB", st)
   set_var(st, a - b)
 End Sub
