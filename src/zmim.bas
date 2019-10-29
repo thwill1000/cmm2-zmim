@@ -130,7 +130,7 @@ Function readw(ad)
   pa2 = paddr(ad + 1)
 
   ' Does this ever happen? If not then pa2 = pa + 1
-  If pa1 + 1 <> pa2 Then Print "Unaligned word read!"
+  If pa1 + 1 <> pa2 Then Error "Unaligned word read"
 
   readw = Peek(Var mem(0), pa1) * 256 + Peek(Var mem(0), pa2)
 End Function
@@ -373,10 +373,14 @@ End Sub
 Sub perform_op
   If op = &h04 Then
     dec_chk
+  ElseIf op = &h05 Then
+    inc_chk
   ElseIf op = &h0D Or op = &h4D Then
     store
   ElseIf op = &h0F Or op = &h4F Then
     loadw
+  ElseIf op = &h30 Then
+    loadb
   ElseIf op = &h54 Or op = &h74 Then
     add
   ElseIf op = &h55 Then
@@ -405,6 +409,8 @@ Sub perform_op
     call_
   ElseIf op = &hE1 Then
     storew
+  ElseIf op = &hE5 Then
+    print_char
   ElseIf op = &hE6 Then
     print_num
   Else
@@ -480,14 +486,11 @@ Sub call_
   push(locals_sz)
   For i = 0 To locals_sz - 1
     x = pcreadw()
-    If i > op_num - 1 Then push(x) Else push(args(i))
+    If i > op_num - 2 Then push(x) Else push(args(i))
   Next i
 
-  Print
   dmp_routine(new_pc)
-  Print
   dmp_stack()
-  Print
 End Sub
 
 Sub dec_chk
@@ -497,10 +500,9 @@ Sub dec_chk
   br = read_branch()
   dmp_op("DEC_CHK", -1, br)
   x = get_var(a)
-  set_var(a, x - 1)
-  If x < b And (br And BIT_15) Then
-    pc = br And BTM_15_BITS
-  EndIf
+  x = x - 1
+  set_var(a, x)
+  If x < b And (br And BIT_15) > 0 Then pc = br And BTM_15_BITS
 End Sub
 
 Sub inc
@@ -511,15 +513,25 @@ Sub inc
   set_var(a, x + 1)
 End Sub
 
+Sub inc_chk
+  Local a, b, br, x
+  a = get_op(0)
+  b = get_op(1)
+  br = read_branch()
+  dmp_op("INC_CHK", -1, br)
+  x = get_var(a)
+  x = x + 1
+  set_var(a, x)
+  If x > b And (br And BIT_15) > 0 Then pc = br And BTM_15_BITS
+End Sub
+
 Sub je
   Local a, b, br
   a = get_op(0)
   b = get_op(1)
   br = read_branch()
   dmp_op("JE", -1, br)
-  If a = b And (br And BIT_15) Then
-    pc = br And BTM_15_BITS
-  EndIf
+  If a = b And (br And BIT_15) > 0 Then c = br And BTM_15_BITS
 End Sub
 
 Sub jump
@@ -528,7 +540,6 @@ Sub jump
   of = op_value(i)
   If op_type(i) = OT_VARIABLE Then of = get_var(of)
   If of And BIT_15 Then of = of - 65536
-  Print Hex$(pc + of - 2)
   pc = pc + of - 2
 End Sub
 
@@ -537,26 +548,34 @@ Sub jz
   a = get_op(0)
   br = read_branch()
   dmp_op("JZ", -1, br)
-  If a = 0 And (br And BIT_15) Then
-    pc = br And BTM_15_BITS
-  EndIf
+  If a = 0 And (br And BIT_15) > 0 Then pc = br And BTM_15_BITS
 End Sub
 
 Sub insert_obj
   Local obj, dest
   obj = get_op(0)
   dest = get_op(1)
-  dmp_op("INSERT_OBJ", -1)
-  Print " *TODO"
+  dmp_op("** TODO ** INSERT_OBJ", -1)
+End Sub
+
+Sub loadb
+  Local a, b, st, x
+  a = get_op(0)
+  b = get_op(1)
+  st = pcreadb()
+  dmp_op("LOADB", st)
+  x = readb(a + b)
+  set_var(st, x)
 End Sub
 
 Sub loadw
-  Local a, b, st
+  Local a, b, st, x
   a = get_op(0)
   b = get_op(1)
   st = pcreadb()
   dmp_op("LOADW", st)
-  set_var(st, readw(a + 2 * b))
+  x = readw(a + 2 * b)
+  set_var(st, x)
 End Sub
 
 Sub newline
@@ -566,6 +585,14 @@ End Sub
 Sub print_
   dmp_op("PRINT", -1)
   pc = pc + print_zstring(pc)
+  new_line = 1
+End Sub
+
+Sub print_char
+  Local a
+  dmp_op("PRINT_CHAR", -1)
+  a = get_op(0)
+  Print Chr$(a);
   new_line = 1
 End Sub
 
@@ -605,12 +632,12 @@ Sub store
 End Sub
 
 Sub storew
-  Local a, b, st
+  Local a, b, c
   a = get_op(0)
   b = get_op(1)
   c = get_op(2)
   dmp_op("STOREW", -1)
-  writew(a + 2 * b, st)
+  writew(a + 2 * b, c)
 End Sub
 
 Sub sub_
@@ -654,20 +681,23 @@ Sub main_loop
   Local i
 
   For i = 0 To 10
-    If new_line Then Print : new_line = 0
-    Print Hex$(pc); ": ";
+'    If new_line Then Print : new_line = 0
+'    Print Hex$(pc); ": ";
     decode_op()
     perform_op()
-    If (i + 1) Mod 10 = 0 Then i = 0 : more()
+    If (i + 1) Mod 10 = 0 Then i = 0 ': more()
   Next i
 End Sub
 
 Library Load "util"
-Library Load "dmp_mem"
-Library Load "dmp_op"
-'Sub dmp_op(m$, st, br) : End Sub
-Library Load "dmp_stak"
-Library Load "dmp_rout"
+'Library Load "dmp_hdr"
+'Library Load "dmp_mem"
+'Library Load "dmp_op"
+Sub dmp_op(m$, st, br) : End Sub
+'Library Load "dmp_stak"
+'Library Load "dmp_rout"
+Sub dmp_stack() : End Sub
+Sub dmp_routine(new_pc) : End Sub
 
 Memory
 Print
