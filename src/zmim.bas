@@ -130,7 +130,8 @@ Function readw(ad)
   pa2 = paddr(ad + 1)
 
   ' Does this ever happen? If not then pa2 = pa + 1
-  If pa1 + 1 <> pa2 Then Error "Unaligned word read"
+  ' Apparently it can happen
+  ' If pa1 + 1 <> pa2 Then Error "Unaligned word read"
 
   readw = Peek(Var mem(0), pa1) * 256 + Peek(Var mem(0), pa2)
 End Function
@@ -201,7 +202,7 @@ Function mem_load(vp)
   mem_load = pp
 End Function
 
-' Gets variable 'i'
+' Gets variable 'i'.
 ' If i = 0 then pops and returns the top value of the stack.
 Function get_var(i)
   If i = 0 Then
@@ -215,7 +216,7 @@ Function get_var(i)
   EndIf
 End Function
 
-' Sets variable 'i'
+' Sets variable 'i'.
 ' If i = 0 then pushes the value onto the stack.
 Sub set_var(i, x)
   If i = 0 Then
@@ -223,7 +224,7 @@ Sub set_var(i, x)
   ElseIf i < &h10 Then
     stack(fp + i + 3) = x
   ElseIf i < &hFF Then
-    writew(GLOBAL_VAR + 2 * (i - &h10))
+    writew(GLOBAL_VAR + 2 * (i - &h10), x)
   Else
     Error "Unknown variable " + Str$(i)
   EndIf
@@ -375,30 +376,36 @@ Sub perform_op
     dec_chk
   ElseIf op = &h05 Then
     inc_chk
-  ElseIf op = &h0D Or op = &h4D Then
+  ElseIf op = &h0D Or op = &h2D Or op = &h4D Then
     store
   ElseIf op = &h0F Or op = &h4F Then
     loadw
   ElseIf op = &h30 Then
     loadb
+  ElseIf op = &h41 Or op = &h61 Then
+    je
+  ElseIf op = &h46 Then
+    jin
   ElseIf op = &h54 Or op = &h74 Then
     add
   ElseIf op = &h55 Then
     sub_
-  ElseIf op = &h61 Then
-    je
   ElseIf op = &h6E Then
     insert_obj
   ElseIf op = &h8C Then
     jump
+  ElseIf op = &h9B Or op = &hAB Then
+    ret
   ElseIf op = &hA0 Then
     jz
   ElseIf op = &hA5 Then
     inc
-  ElseIf op = &hAB Then
-    ret
   ElseIf op = &hAD Then
     print_paddr
+  ElseIf op = &hB0 Then
+    rtrue
+  ElseIf op = &hB1 Then
+    rfalse
   ElseIf op = &hB2 Then
     print_
   ElseIf op = &hBB Then
@@ -420,6 +427,8 @@ End Sub
 
 ' Reads branch offset.
 ' @return bits 0-14 - new value for the program counter.
+'                   - if = pc - 2 then -> return false.
+'                   - if = pc - 1 then -> return true.
 '         bit 15    - set = branch on True, unset = branch on False.
 Function read_branch
   Local a, of
@@ -435,9 +444,6 @@ Function read_branch
 
   read_branch = pc + of - 2
   If a And BIT_7 Then read_branch = read_branch Or BIT_15
-
-  ' TODO: of = 0 -> return false
-  '       of = 1 -> return true
 End Function
 
 ' Gets the value of an operand.
@@ -447,6 +453,28 @@ Function get_op(i)
   a = op_value(i)
   If op_type(i) = OT_VARIABLE Then get_op = get_var(a) Else get_op = a
 End Function
+
+Sub do_branch(z, br)
+  Local new_pc
+  If Not (z = (br And BIT_15) > 0) Then Exit Sub
+  new_pc = br And BTM_15_BITS
+  If new_pc = pc - 2 Then
+    do_return(0)
+  ElseIf new_pc = pc - 1 Then
+    do_return(1)
+  Else
+    pc = new_pc
+  EndIf
+End Sub
+
+Sub do_return(x)
+  Local st
+  Do While sp > fp + 2 : devnull = pop() : Loop
+  pc = pop()
+  st = pop()
+  fp = pop()
+  set_var(st, x)
+End Sub
 
 Sub add
   Local a, b, st
@@ -502,7 +530,7 @@ Sub dec_chk
   x = get_var(a)
   x = x - 1
   set_var(a, x)
-  If x < b And (br And BIT_15) > 0 Then pc = br And BTM_15_BITS
+  do_branch(x < b, br)
 End Sub
 
 Sub inc
@@ -522,7 +550,7 @@ Sub inc_chk
   x = get_var(a)
   x = x + 1
   set_var(a, x)
-  If x > b And (br And BIT_15) > 0 Then pc = br And BTM_15_BITS
+  do_branch(x > b, br)
 End Sub
 
 Sub je
@@ -531,16 +559,23 @@ Sub je
   b = get_op(1)
   br = read_branch()
   dmp_op("JE", -1, br)
-  If a = b And (br And BIT_15) > 0 Then c = br And BTM_15_BITS
+  do_branch(a = b, br)
 End Sub
 
 Sub jump
   Local of
   dmp_op("JUMP", -1)
-  of = op_value(i)
-  If op_type(i) = OT_VARIABLE Then of = get_var(of)
+  of = get_op(i)
   If of And BIT_15 Then of = of - 65536
   pc = pc + of - 2
+End Sub
+
+Sub jin
+  Local a, b, br
+  a = get_op(0)
+  b = get_op(1)
+  br = read_branch()
+  dmp_op("!JIN", -1, br)
 End Sub
 
 Sub jz
@@ -548,14 +583,14 @@ Sub jz
   a = get_op(0)
   br = read_branch()
   dmp_op("JZ", -1, br)
-  If a = 0 And (br And BIT_15) > 0 Then pc = br And BTM_15_BITS
+  do_branch(a = 0, br)
 End Sub
 
 Sub insert_obj
-  Local obj, dest
-  obj = get_op(0)
-  dest = get_op(1)
-  dmp_op("** TODO ** INSERT_OBJ", -1)
+  Local a, b
+  a = get_op(0)
+  b = get_op(1)
+  dmp_op("!INSERT_OBJ", -1)
 End Sub
 
 Sub loadb
@@ -613,14 +648,20 @@ Sub print_paddr
 End Sub
 
 Sub ret
-  Local a, dest
+  Local a
   a = get_op(0)
   dmp_op("RET", -1)
-  Do While sp > fp + 2 : devnull = pop() : Loop
-  pc = pop()
-  dest = pop()
-  fp = pop()
-  set_var(dest, a)
+  do_return(a)
+End Sub
+
+Sub rfalse
+  dmp_op("RFALSE", -1)
+  do_return(0)
+End Sub
+
+Sub rtrue
+  dmp_op("RTRUE", -1)
+  do_return(1)
 End Sub
 
 Sub store
@@ -693,9 +734,9 @@ Library Load "util"
 'Library Load "dmp_hdr"
 'Library Load "dmp_mem"
 'Library Load "dmp_op"
-Sub dmp_op(m$, st, br) : End Sub
 'Library Load "dmp_stak"
 'Library Load "dmp_rout"
+Sub dmp_op(m$, st, br) : End Sub
 Sub dmp_stack() : End Sub
 Sub dmp_routine(new_pc) : End Sub
 

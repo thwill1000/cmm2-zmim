@@ -19,6 +19,7 @@ Function fmt_operand$(i)
   Else
     a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
   EndIf
+  If x > 0 Then a$ = a$ + " (=" + Hex$(get_var(x)) + ")"
   fmt_operand$ = a$
 End Function
 
@@ -35,8 +36,16 @@ Function fmt_store$(st)
 End Function
 
 Function fmt_branch$(br)
+  Local new_pc
   If br And BIT_15 Then Print " [TRUE] "; Else Print " [FALSE] ";
-  Print Hex$(br And BTM_15_BITS);
+  new_pc = br AND BTM_15_BITS
+  If new_pc = pc - 2 Then
+    Print "RFALSE"
+  ElseIf new_pc = pc - 1 Then
+    Print "RTRUE"
+  Else
+    Print Hex$(new_pc);
+  EndIf
 End Function
 
 Function fmt_call_operands$
@@ -50,9 +59,17 @@ Function fmt_call_operands$
   fmt_call_operands$ = a$
 End Function
 
+Function fmt_jump_operands$
+  Local of
+  If op_num > 1 Then Error "Too many operands."
+  of = get_op(0)
+  If of And BIT_15 Then of = of - 65536
+  fmt_jump_operands$ = Hex$(pc + of - 2)
+End Function
+
 Function fmt_store_operands$
   Local a$, i
-  if op_type(0) = OT_VARIABLE Then Error "Unexpected VARIABLE operand"
+  If op_type(0) = OT_VARIABLE Then Error "Unexpected VARIABLE operand"
   a$ = a$ + fmt_store$(op_value(0))
   For i = 1 To op_num - 1
     a$ = a$ + ", " + fmt_operand$(i)
@@ -73,6 +90,8 @@ Sub dmp_op(m$, st, br)
   Print fmt_mnemonic$(m$);
   If m$ = "CALL" Then
     Print fmt_call_operands$();
+  ElseIf m$ = "JUMP" Then
+    Print fmt_jump_operands$();
   ElseIf m$ = "STORE" Or m$= "DEC_CHK" Or m$ = "INC_CHK" Then
     Print fmt_store_operands$();
   Else
