@@ -370,56 +370,183 @@ Sub decode_op
 
 End Sub
 
-' Performs the last decoded instruction.
-Sub perform_op
+Sub _2op
+  Local a, b, br, st, x
+
+  a = get_op(0)
+  b = get_op(1)
+
+  ' DEC_CHK
   If op = &h04 Then
-    dec_chk
+    br = read_branch()
+    dmp_op("DEC_CHK", -1, br)
+    x = get_var(a) - 1
+    set_var(a, x)
+    do_branch(x < b, br)
+
+  ' INC_CHK
   ElseIf op = &h05 Then
-    inc_chk
+    br = read_branch()
+    dmp_op("INC_CHK", -1, br)
+    x = get_var(a) + 1
+    set_var(a, x)
+    do_branch(x > b, br)
+
+  ' STORE
   ElseIf op = &h0D Or op = &h2D Or op = &h4D Then
-    store
+    dmp_op("STORE", -1)
+    set_var(a, b)
+
+  ' LOADW
   ElseIf op = &h0F Or op = &h4F Then
-    loadw
+    st = pcreadb()
+    dmp_op("LOADW", st)
+    x = readw(a + 2 * b)
+    set_var(st, x)
+
+  ' LOADB
   ElseIf op = &h30 Then
-    loadb
+    st = pcreadb()
+    dmp_op("LOADB", st)
+    x = readb(a + b)
+    set_var(st, x)
+
+  ' JE
   ElseIf op = &h41 Or op = &h61 Then
-    je
+    br = read_branch()
+    dmp_op("JE", -1, br)
+    do_branch(a = b, br)
+
+  ' JIN
   ElseIf op = &h46 Then
-    jin
+    br = read_branch()
+    dmp_op("!JIN", -1, br)
+
+  ' ADD
   ElseIf op = &h54 Or op = &h74 Then
-    add
+    st = pcreadb()
+    dmp_op("ADD", st)
+    set_var(st, a + b)
+
+  ' SUB
   ElseIf op = &h55 Then
-    sub_
+    st = pcreadb()
+    dmp_op("SUB", st)
+    set_var(st, a - b)
+
+  ' INSERT_OBJ
   ElseIf op = &h6E Then
-    insert_obj
-  ElseIf op = &h8C Then
-    jump
+    dmp_op("!INSERT_OBJ", -1)
+
+  Else
+    Error "Unsupported instruction " + Hex$(op)
+  EndIf
+End Sub
+
+Sub _1op
+  Local a, st, br, x
+
+  a = get_op(0)
+
+  ' JUMP
+  If op = &h8C Then
+    dmp_op("JUMP", -1)
+    If a And BIT_15 Then a = a - 65536
+    pc = pc + a - 2
+
+  ' RET
   ElseIf op = &h9B Or op = &hAB Then
-    ret
+    dmp_op("RET", -1)
+    do_return(a)
+
+  ' JZ
   ElseIf op = &hA0 Then
-    jz
+    br = read_branch()
+    dmp_op("JZ", -1, br)
+    do_branch(a = 0, br)
+
+  ' INC
   ElseIf op = &hA5 Then
-    inc
+    dmp_op("INC", -1)
+    x = get_var(a) + 1
+    set_var(a, x)
+
+  ' PRINT_PADDR
   ElseIf op = &hAD Then
-    print_paddr
-  ElseIf op = &hB0 Then
-    rtrue
+    dmp_op("PRINT_PADDR", -1)
+    devnull = print_zstring(a * 2)
+    new_line = 1
+
+  Else
+    Error "Unsupported instruction " + Hex$(op)
+  EndIf
+End Sub
+
+Sub _0op
+
+  ' RTRUE
+  If op = &hB0 Then
+    dmp_op("RTRUE", -1)
+    do_return(1)
+
+  ' RFALSE
   ElseIf op = &hB1 Then
-    rfalse
+    dmp_op("RFALSE", -1)
+    do_return(0)
+
+  ' PRINT
   ElseIf op = &hB2 Then
-    print_
+    dmp_op("PRINT", -1)
+    pc = pc + print_zstring(pc)
+    new_line = 1
+
+  ' NEWLINE
   ElseIf op = &hBB Then
-    newline
-  ElseIf op = &hC9 Then
-    and_
+    dmp_op("NEWLINE", -1)
+    Print
+
+  Else
+    Error "Unsupported instruction " + Hex$(op)
+  EndIf
+End Sub
+
+Sub _varop
+  Local a, b, c, st, br, x
+
+  ' AND
+  If op = &hC9 Then
+    a = get_op(0)
+    b = get_op(1)
+    st = pcreadb()
+    dmp_op("AND", st)
+    set_var(st, a And b)
+
+  ' CALL
   ElseIf op = &hE0 Then
-    call_
+    do_call()
+
+  ' STOREW
   ElseIf op = &hE1 Then
-    storew
+    a = get_op(0)
+    b = get_op(1)
+    c = get_op(2)
+    dmp_op("STOREW", -1)
+    writew(a + 2 * b, c)
+
+  ' PRINT_CHAR
   ElseIf op = &hE5 Then
-    print_char
+    dmp_op("PRINT_CHAR", -1)
+    a = get_op(0)
+    Print Chr$(a);
+    new_line = 1
+
+  ' PRINT_NUM
   ElseIf op = &hE6 Then
-    print_num
+    a = get_op(0)
+    dmp_op("PRINT_NUM", -1)
+    Print Str$(a);
+    new_line = 1
+
   Else
     Error "Unsupported instruction " + Hex$(op)
   EndIf
@@ -476,25 +603,7 @@ Sub do_return(x)
   set_var(st, x)
 End Sub
 
-Sub add
-  Local a, b, st
-  a = get_op(0)
-  b = get_op(1)
-  st = pcreadb()
-  dmp_op("ADD", st)
-  set_var(st, a + b)
-End Sub
-
-Sub and_
-  Local a, b, st
-  a = get_op(0)
-  b = get_op(1)
-  st = pcreadb()
-  dmp_op("AND", st)
-  set_var(st, a And b)
-End Sub
-
-Sub call_
+Sub do_call
   Local args(2), i, locals_sz, new_pc, st, x
 
   new_pc = 2 * op_value(0)
@@ -519,175 +628,6 @@ Sub call_
 
   dmp_routine(new_pc)
   dmp_stack()
-End Sub
-
-Sub dec_chk
-  Local a, b, br, x
-  a = get_op(0)
-  b = get_op(1)
-  br = read_branch()
-  dmp_op("DEC_CHK", -1, br)
-  x = get_var(a)
-  x = x - 1
-  set_var(a, x)
-  do_branch(x < b, br)
-End Sub
-
-Sub inc
-  Local a
-  a = get_op(0)
-  dmp_op("INC", -1)
-  x = get_var(a)
-  set_var(a, x + 1)
-End Sub
-
-Sub inc_chk
-  Local a, b, br, x
-  a = get_op(0)
-  b = get_op(1)
-  br = read_branch()
-  dmp_op("INC_CHK", -1, br)
-  x = get_var(a)
-  x = x + 1
-  set_var(a, x)
-  do_branch(x > b, br)
-End Sub
-
-Sub je
-  Local a, b, br
-  a = get_op(0)
-  b = get_op(1)
-  br = read_branch()
-  dmp_op("JE", -1, br)
-  do_branch(a = b, br)
-End Sub
-
-Sub jump
-  Local of
-  dmp_op("JUMP", -1)
-  of = get_op(i)
-  If of And BIT_15 Then of = of - 65536
-  pc = pc + of - 2
-End Sub
-
-Sub jin
-  Local a, b, br
-  a = get_op(0)
-  b = get_op(1)
-  br = read_branch()
-  dmp_op("!JIN", -1, br)
-End Sub
-
-Sub jz
-  Local a, br
-  a = get_op(0)
-  br = read_branch()
-  dmp_op("JZ", -1, br)
-  do_branch(a = 0, br)
-End Sub
-
-Sub insert_obj
-  Local a, b
-  a = get_op(0)
-  b = get_op(1)
-  dmp_op("!INSERT_OBJ", -1)
-End Sub
-
-Sub loadb
-  Local a, b, st, x
-  a = get_op(0)
-  b = get_op(1)
-  st = pcreadb()
-  dmp_op("LOADB", st)
-  x = readb(a + b)
-  set_var(st, x)
-End Sub
-
-Sub loadw
-  Local a, b, st, x
-  a = get_op(0)
-  b = get_op(1)
-  st = pcreadb()
-  dmp_op("LOADW", st)
-  x = readw(a + 2 * b)
-  set_var(st, x)
-End Sub
-
-Sub newline
-  Print
-End Sub
-
-Sub print_
-  dmp_op("PRINT", -1)
-  pc = pc + print_zstring(pc)
-  new_line = 1
-End Sub
-
-Sub print_char
-  Local a
-  dmp_op("PRINT_CHAR", -1)
-  a = get_op(0)
-  Print Chr$(a);
-  new_line = 1
-End Sub
-
-Sub print_num
-  Local a
-  a = get_op(0)
-  dmp_op("PRINT_NUM", -1)
-  Print Str$(a);
-  new_line = 1
-End Sub
-
-Sub print_paddr
-  Local a
-  a = get_op(0)
-  dmp_op("PRINT_PADDR", -1)
-  devnull = print_zstring(a * 2)
-  new_line = 1
-End Sub
-
-Sub ret
-  Local a
-  a = get_op(0)
-  dmp_op("RET", -1)
-  do_return(a)
-End Sub
-
-Sub rfalse
-  dmp_op("RFALSE", -1)
-  do_return(0)
-End Sub
-
-Sub rtrue
-  dmp_op("RTRUE", -1)
-  do_return(1)
-End Sub
-
-Sub store
-  Local a, b
-  a = get_op(0)
-  b = get_op(1)
-  dmp_op("STORE", -1)
-  set_var(a, b)
-End Sub
-
-Sub storew
-  Local a, b, c
-  a = get_op(0)
-  b = get_op(1)
-  c = get_op(2)
-  dmp_op("STOREW", -1)
-  writew(a + 2 * b, c)
-End Sub
-
-Sub sub_
-  Local a, b, st
-  a = get_op(0)
-  b = get_op(1)
-  st = pcreadb()
-  dmp_op("SUB", st)
-  set_var(st, a - b)
 End Sub
 
 Sub init
@@ -725,7 +665,15 @@ Sub main_loop
 '    If new_line Then Print : new_line = 0
 '    Print Hex$(pc); ": ";
     decode_op()
-    perform_op()
+    If op < 128 Then
+      _2op()
+    ElseIf op < 176 Then
+      _1op()
+    ElseIf op < 192 Then
+      _0op()
+    Else
+      _varop()
+    EndIf
     If (i + 1) Mod 10 = 0 Then i = 0 ': more()
   Next i
 End Sub
