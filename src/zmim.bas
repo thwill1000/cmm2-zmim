@@ -392,8 +392,13 @@ Sub _2op
     set_var(a, x)
     do_branch(x > b, br)
 
+  ' JIN
+  ElseIf op = &h06 Or op = &h46 Then
+    br = read_branch()
+    dmp_op("!JIN", -1, br)
+
   ' STORE
-  ElseIf op = &h0D Or op = &h2D Or op = &h4D Then
+  ElseIf op = &h0D Or op = &h2D Or op = &h4D Or op = &hCD Then
     dmp_op("STORE", -1)
     set_var(a, b)
 
@@ -405,22 +410,31 @@ Sub _2op
     set_var(st, x)
 
   ' LOADB
-  ElseIf op = &h30 Then
+  ElseIf op = &h30 Or op = &h50 Then
     st = pcreadb()
     dmp_op("LOADB", st)
     x = readb(a + b)
     set_var(st, x)
 
   ' JE
-  ElseIf op = &h41 Or op = &h61 Then
+  ElseIf op = &h41 Or op = &h61 Or op = &hC1 Then
     br = read_branch()
     dmp_op("JE", -1, br)
     do_branch(a = b, br)
 
-  ' JIN
-  ElseIf op = &h46 Then
+  ' TEST_ATTR
+  ElseIf op = &h4A Then
     br = read_branch()
-    dmp_op("!JIN", -1, br)
+    dmp_op("!TEST_ATTR", -1, br)
+
+  ' SET_ATTR
+  ElseIf op = &h4B Then
+    dmp_op("!SET_ATTR", -1)
+
+  ' GET_PROP
+  ElseIf op = &h51 Then
+    st = pcreadb()
+    dmp_op("!GET_PROP", st)
 
   ' ADD
   ElseIf op = &h54 Or op = &h74 Then
@@ -429,7 +443,7 @@ Sub _2op
     set_var(st, a + b)
 
   ' SUB
-  ElseIf op = &h55 Then
+  ElseIf op = &h15 Or op = &h55 Then
     st = pcreadb()
     dmp_op("SUB", st)
     set_var(st, a - b)
@@ -477,6 +491,10 @@ Sub _1op
     devnull = print_zstring(a * 2)
     new_line = 1
 
+  ' PRINT_OBJECT
+  ElseIf op = &h9A Or op = &hAA Then
+    dmp_op("!PRINT_OBJECT", -1)
+
   Else
     Error "Unsupported instruction " + Hex$(op)
   EndIf
@@ -513,8 +531,11 @@ End Sub
 Sub _varop
   Local a, b, c, st, br, x
 
+  If op = &hC1 Or op = &hCD Then
+    _2op()
+
   ' AND
-  If op = &hC9 Then
+  ElseIf op = &hC9 Then
     a = get_op(0)
     b = get_op(1)
     st = pcreadb()
@@ -532,6 +553,20 @@ Sub _varop
     c = get_op(2)
     dmp_op("STOREW", -1)
     writew(a + 2 * b, c)
+
+  ' STOREB
+  ElseIf op = &hE2 Then
+    a = get_op(0)
+    b = get_op(1)
+    c = get_op(2)
+    dmp_op("STOREB", -1)
+    writeb(a + b, c)
+
+  ' READ
+  ElseIf op = &hE4 Then
+    dmp_op("!READ", -1)
+    a = get_op(0)
+    b = get_op(1)
 
   ' PRINT_CHAR
   ElseIf op = &hE5 Then

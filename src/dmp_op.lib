@@ -2,7 +2,7 @@
 ' Copyright (c) 2019 Thomas Hugo Williams
 
 Function fmt_mnemonic$(m$)
-  fmt_mnemonic$ = rpad$(m$, 13)
+  fmt_mnemonic$ = rpad$(m$, 14)
 End Function
 
 Function fmt_operand$(i)
@@ -50,7 +50,12 @@ End Function
 
 Function fmt_call_operands$
   Local a$, i
-  a$ = Hex$(2 * op_value(0)) + " ("
+  If op_type(0) = OT_VARIABLE Then
+    a$ = fmt_operand$(i)
+  Else
+    a$ = Hex$(2 * op_value(0))
+  EndIf
+  a$ = a$ + " ("
   For i = 1 To op_num - 1
     If i > 1 Then a$ = a$ + ", "
     a$ = a$ + fmt_operand$(i)
