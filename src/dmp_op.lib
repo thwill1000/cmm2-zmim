@@ -1,10 +1,6 @@
 ' ZMIM a Z-Machine Interpreter for the Colour Maximite
 ' Copyright (c) 2019 Thomas Hugo Williams
 
-Function fmt_mnemonic$(m$)
-  fmt_mnemonic$ = rpad$(m$, 14)
-End Function
-
 Function fmt_operand$(i)
   Local a$, x
   x = op_value(i)
@@ -21,31 +17,6 @@ Function fmt_operand$(i)
   EndIf
   If x > 0 Then a$ = a$ + " (=" + Hex$(get_var(x)) + ")"
   fmt_operand$ = a$
-End Function
-
-Function fmt_store$(st)
-  Local a$
-  If st = 0 Then
-    a$ = "-(SP)"
-  ElseIf st < &h10 Then
-    a$ = "L" + lpad$(Hex$(st - 1), 2, "0")
-  Else
-    a$ = "G" + lpad$(Hex$(st - &h10), 2, "0")
-  EndIf
-  fmt_store$ = a$
-End Function
-
-Function fmt_branch$(br)
-  Local new_pc
-  If br And BIT_15 Then Print " [TRUE] "; Else Print " [FALSE] ";
-  new_pc = br AND BTM_15_BITS
-  If new_pc = pc - 2 Then
-    Print "RFALSE"
-  ElseIf new_pc = pc - 1 Then
-    Print "RTRUE"
-  Else
-    Print Hex$(new_pc);
-  EndIf
 End Function
 
 Function fmt_call_operands$
@@ -92,7 +63,9 @@ Function fmt_normal_operands$
 End Function
 
 Sub dmp_op(m$, st, br)
-  Print fmt_mnemonic$(m$);
+  Local new_pc
+
+  Print rpad$(m$, 14);
   If m$ = "CALL" Then
     Print fmt_call_operands$();
   ElseIf m$ = "JUMP" Then
@@ -102,7 +75,29 @@ Sub dmp_op(m$, st, br)
   Else
     Print fmt_normal_operands$();
   EndIf
-  If st > -1 Then Print " -> "; fmt_store$(st);
-  If br > 0 Then Print fmt_branch$(br);
+
+  If st > -1 Then
+    Print " -> ";
+    If st = 0 Then
+      Print "-(SP)";
+    ElseIf st < &h10 Then
+      Print "L" + lpad$(Hex$(st - 1), 2, "0");
+    Else
+      Print "G" + lpad$(Hex$(st - &h10), 2, "0");
+    EndIf
+  EndIf
+
+  If br > 0 Then
+    If br And BIT_15 Then Print " [TRUE] "; Else Print " [FALSE] ";
+    new_pc = br AND BTM_15_BITS
+    If new_pc = pc - 2 Then
+      Print "RFALSE";
+    ElseIf new_pc = pc - 1 Then
+      Print "RTRUE";
+    Else
+      Print Hex$(new_pc);
+    EndIf
+  EndIf
+
   Print
 End Sub

@@ -1,0 +1,63 @@
+zmim.bas:
+  decode_op
+  do_call
+  do_branch
+  do_return
+  get_op
+  get_var
+  init
+  mem_load
+  more
+  paddr
+  pcreadb
+  pcreadw
+  pop
+  print_abrv
+  print_zstring
+  push
+  readb
+  readw
+  read_branch
+  set_var
+  writeb
+  writew
+  _0op
+  _1op
+  _2op
+  _varop
+
+util.lib:
+  lpad$
+  rpad$
+  rshift
+
+dmp_abrv.lib:
+  dmp_abrv
+
+dmp_dict.lib:
+  dmp_dict
+
+dmp_hdr.lib:
+  dmp_hdr
+
+dmp_mem.lib:
+  dmp_mem
+
+dmp_op.lib:
+  dmp_op
+  fmt_call_operands$
+  fmt_operand$
+  fmt_jump_operands$
+  fmt_normal_operands$
+  fmt_store_operands$
+
+dmp_rout.lib:
+  dmp_routine
+
+dmp_stak.lib:
+  dmp_stack
+
+tst_mem.lib:
+  tst_mem
+
+TOTAL = 42 functions & subroutines

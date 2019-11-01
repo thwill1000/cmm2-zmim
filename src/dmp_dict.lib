@@ -21,8 +21,8 @@ Sub dmp_dict
   Print Hex$(addr_entries)
   more()
   For i = 0 To num_entries
-    dump_zstring(addr_entries)
-    dump_zstring(addr_entries + 2)
+    print_zstring(addr_entries)
+    print_zstring(addr_entries + 2)
     addr_entries = addr_entries + entry_length
     Print
   Next i

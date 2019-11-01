@@ -692,26 +692,6 @@ Sub init
   Print "  Paged memory starts at page "; Str$(FIRST_SWAP_PAGE)
 End Sub
 
-Sub main_loop
-  Local i
-
-  For i = 0 To 10
-'    If new_line Then Print : new_line = 0
-'    Print Hex$(pc); ": ";
-    decode_op()
-    If op < 128 Then
-      _2op()
-    ElseIf op < 176 Then
-      _1op()
-    ElseIf op < 192 Then
-      _0op()
-    Else
-      _varop()
-    EndIf
-    If (i + 1) Mod 10 = 0 Then i = 0 ': more()
-  Next i
-End Sub
-
 Library Load "util"
 'Library Load "dmp_hdr"
 'Library Load "dmp_mem"
@@ -726,7 +706,23 @@ Memory
 Print
 init()
 Print
-main_loop()
+
+For i = 0 To 10
+'  If new_line Then Print : new_line = 0
+'  Print Hex$(pc); ": ";
+  decode_op()
+  If op < 128 Then
+    _2op()
+  ElseIf op < 176 Then
+    _1op()
+  ElseIf op < 192 Then
+    _0op()
+  Else
+    _varop()
+  EndIf
+  If (i + 1) Mod 10 = 0 Then i = 0 ': more()
+Next i
+
 Print
 Print "Num page faults ="; page_faults
 Memory
