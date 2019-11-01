@@ -233,16 +233,16 @@ End Sub
 ' Prints ZString starting at 'addr'.
 ' @return the number of bytes read.
 Function print_zstring(addr)
-  Local abbrv, ad, al, ch, i, x, zchar(2)
+  Local abbrv, ad, al, ch, i, x, z, zchar(2)
 
   abbrv = 0
   ad = addr
   al = 0
   x = 0
-  ' Should be 'Do While x = 0' but seems to be an issue
-  ' using Do While in recursive functions.
-  start_loop:
-    If x > 0 Then GoTo exit_loop
+  ' Should be 'Do While x = 0' but there is an MMBasic bug using that
+  ' in recursive functions.
+  For z = 0 To 0 Step 0
+    If x > 0 Then Exit For
 
     x = readw(ad)
 
@@ -274,8 +274,7 @@ Function print_zstring(addr)
     Next i
 
     ad = ad + 2
-    GoTo start_loop
-  exit_loop:
+  Next z
 
   print_zstring = ad - addr
 End Function
