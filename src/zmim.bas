@@ -38,8 +38,16 @@ OT_SMALL_CONST = &b01
 OT_VARIABLE = &b10
 OT_OMITTED = &b11
 
-BIT_6       = &b01000000
-BIT_7       = &b10000000
+Dim BIT(8)
+BIT(0) = &b00000001
+BIT(1) = &b00000010
+BIT(2) = &b00000100
+BIT(3) = &b00001000
+BIT(4) = &b00010000
+BIT(5) = &b00100000
+BIT(6) = &b01000000
+BIT(7) = &b10000000
+
 BIT_15      = &b1000000000000000
 BTM_2_BITS  = &b00000011
 BTM_4_BITS  = &b00001111
@@ -596,15 +604,15 @@ Function read_branch
   a = pcreadb()
   of = a And BTM_6_BITS
 
-  If a And BIT_6 = 0 Then
+  If a And BIT(6) = 0 Then
     of = 256 * of + pcreadb()
-    If a And BIT_5 Then
+    If a And BIT(5) Then
       of = of - 16384
     EndIf
   EndIf
 
   read_branch = pc + of - 2
-  If a And BIT_7 Then read_branch = read_branch Or BIT_15
+  If a And BIT(7) Then read_branch = read_branch Or BIT_15
 End Function
 
 ' Gets the value of an operand.
@@ -690,6 +698,85 @@ Sub init
   Next i
   Print
   Print "  Paged memory starts at page "; Str$(FIRST_SWAP_PAGE)
+End Sub
+
+' Gets attribute 'a' of object 'o'.
+Function get_attr(o, a)
+  Local ad, x
+
+  ad = readw(&h0A) + 62 + (o - 1) * 9 + a \ 8
+  x = readb(ad)
+  get_attr = (x And BIT(7 - a Mod 8)) > 0
+End Function
+
+PARENT = 4 : SIBLING = 5 : CHILD = 6
+
+' Gets relation 'r' of object 'o'
+' PARENT = 4, SIBLING = 5, CHILD = 6
+Function get_relation(o, r)
+  Local ad
+
+  ad = readw(&h0A) + 62 + (o - 1) * 9 + r
+  get_relation = readb(ad)
+End Function
+
+Function get_prop_addr(o)
+  Local ad
+
+  ad = readw(&h0A) + 62 + (o - 1) * 9 + 7
+  Print Hex$(ad)
+  get_prop_addr = readw(ad)
+End Function
+
+Sub dmp_obj()
+  Local ad, i, j, pad, sz, x
+
+  ad = readw(&h0A)
+
+  Print "Property defaults:"
+  For i = 0 To 30
+    x = readw(ad)
+    Print lpad$(Hex$(x), 4, "0"); " ";
+    If (i + 1) Mod 10 = 0 Then Print
+    ad = ad + 2
+  Next i
+  Print : Print
+
+  For i = 1 To 3
+    Print "Object"; i; ":"
+    Print "Attributes: ";
+    For j = 0 To 31
+      x = get_attr(i, j)
+'      Print Str$(x);
+      If x <> 0 Then Print j;
+    Next j
+    Print
+
+    x = get_relation(i, PARENT)
+    Print "Parent object:"; x
+    x = get_relation(i, SIBLING)
+    Print "Sibling object:"; x
+    x = get_relation(i, CHILD)
+    Print "Child object:"; x
+    x = get_prop_addr(i)
+    Print "Property address: "; lpad$(Hex$(x), 4, "0")
+    pad = x
+    x = readb(pad) : pad = pad + 1
+    Print "Text length ="; x; " bytes"
+    Print "Name        = ";
+    pad = pad + print_zstring(pad)
+    Print
+    x = readb(pad) : pad = pad + 1
+    Print "Property"; x And BTM_5_BITS; ":"
+    sz = (x \ 32) + 1
+    Print "Size        ="; sz
+    Print "Data        = ";
+    For j = 1 To sz
+      x = readb(pad) : pad = pad + 1
+      Print lpad$(Hex$(x), 2, "0"); " ";
+    Next j
+    Print : Print
+  Next i
 End Sub
 
 Library Load "util"
