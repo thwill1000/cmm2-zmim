@@ -38,17 +38,11 @@ OT_SMALL_CONST = &b01
 OT_VARIABLE = &b10
 OT_OMITTED = &b11
 
-Dim BIT(8)
-BIT(0) = &b00000001
-BIT(1) = &b00000010
-BIT(2) = &b00000100
-BIT(3) = &b00001000
-BIT(4) = &b00010000
-BIT(5) = &b00100000
-BIT(6) = &b01000000
-BIT(7) = &b10000000
+Dim BIT(15)
+For i = 0 To 15
+  BIT(i) = 2 ^ i
+Next i
 
-BIT_15      = &b1000000000000000
 BTM_2_BITS  = &b00000011
 BTM_4_BITS  = &b00001111
 BTM_5_BITS  = &b00011111
@@ -472,7 +466,7 @@ Sub _1op
   ' JUMP
   If op = &h8C Then
     dmp_op("JUMP", -1)
-    If a And BIT_15 Then a = a - 65536
+    If a And BIT(15) Then a = a - 65536
     pc = pc + a - 2
 
   ' RET
@@ -500,7 +494,9 @@ Sub _1op
 
   ' PRINT_OBJECT
   ElseIf op = &h9A Or op = &hAA Then
-    dmp_op("!PRINT_OBJECT", -1)
+    dmp_op("PRINT_OBJECT", -1)
+    print_obj(a)
+    new_line = 1
 
   Else
     Error "Unsupported instruction " + Hex$(op)
@@ -612,7 +608,7 @@ Function read_branch
   EndIf
 
   read_branch = pc + of - 2
-  If a And BIT(7) Then read_branch = read_branch Or BIT_15
+  If a And BIT(7) Then read_branch = read_branch Or BIT(15)
 End Function
 
 ' Gets the value of an operand.
@@ -625,7 +621,7 @@ End Function
 
 Sub do_branch(z, br)
   Local new_pc
-  If Not (z = (br And BIT_15) > 0) Then Exit Sub
+  If Not (z = (br And BIT(15)) > 0) Then Exit Sub
   new_pc = br And BTM_15_BITS
   If new_pc = pc - 2 Then
     do_return(0)
@@ -703,7 +699,6 @@ End Sub
 ' Gets attribute 'a' of object 'o'.
 Function get_attr(o, a)
   Local ad, x
-
   ad = readw(&h0A) + 62 + (o - 1) * 9 + a \ 8
   x = readb(ad)
   get_attr = (x And BIT(7 - a Mod 8)) > 0
@@ -715,68 +710,59 @@ PARENT = 4 : SIBLING = 5 : CHILD = 6
 ' PARENT = 4, SIBLING = 5, CHILD = 6
 Function get_relation(o, r)
   Local ad
-
   ad = readw(&h0A) + 62 + (o - 1) * 9 + r
   get_relation = readb(ad)
 End Function
 
-Function get_prop_addr(o)
-  Local ad
+Function get_next_prop(o, p)
+  Local ad, x
 
-  ad = readw(&h0A) + 62 + (o - 1) * 9 + 7
-  Print Hex$(ad)
-  get_prop_addr = readw(ad)
+  If p = 0 Then
+    ad = get_prop_base(o)
+    ad = ad + 1 + 2 * readb(ad) ' Skip length & description
+  Else
+    ad = get_prop_addr(o, p)
+    If ad = 0 Then Error "Property does not exist"
+    x = readb(ad)
+    ad = ad + 2 + x\32
+  EndIf
+
+  x = readb(ad)
+  get_next_prop = x And BTM_5_BITS
 End Function
 
-Sub dmp_obj()
-  Local ad, i, j, pad, sz, x
+Function get_prop_len(o, p)
+  Local ad, x
+  If o > 0 Then
+    ad = get_prop_addr(o, p)
+    If ad = 0 Then Error "Property does not exist"
+    x = readb(ad)
+    get_prop_len = x\32 + 1
+  EndIf
+End Function
 
-  ad = readw(&h0A)
+Function get_prop_base(o)
+  Local ad
+  ad = readw(&h0A) + 62 + (o - 1) * 9 + 7
+  get_prop_base = readw(ad)
+End Function
 
-  Print "Property defaults:"
-  For i = 0 To 30
-    x = readw(ad)
-    Print lpad$(Hex$(x), 4, "0"); " ";
-    If (i + 1) Mod 10 = 0 Then Print
-    ad = ad + 2
-  Next i
-  Print : Print
+Function get_prop_addr(o, p)
+  Local ad, x
+  ad = get_prop_base(o)
+  ad = ad + 1 + 2 * readb(ad) ' Skip length & description
+  Do
+    x = readb(ad)
+    If (x And BTM_5_BITS) = p Then get_prop_addr = ad : Exit Function
+    If (x And BTM_5_BITS) < p Then get_prop_addr = 0 : Exit Function
+    ad = ad + 2 + x\32
+  Loop
+End Function
 
-  For i = 1 To 3
-    Print "Object"; i; ":"
-    Print "Attributes: ";
-    For j = 0 To 31
-      x = get_attr(i, j)
-'      Print Str$(x);
-      If x <> 0 Then Print j;
-    Next j
-    Print
-
-    x = get_relation(i, PARENT)
-    Print "Parent object:"; x
-    x = get_relation(i, SIBLING)
-    Print "Sibling object:"; x
-    x = get_relation(i, CHILD)
-    Print "Child object:"; x
-    x = get_prop_addr(i)
-    Print "Property address: "; lpad$(Hex$(x), 4, "0")
-    pad = x
-    x = readb(pad) : pad = pad + 1
-    Print "Text length ="; x; " bytes"
-    Print "Name        = ";
-    pad = pad + print_zstring(pad)
-    Print
-    x = readb(pad) : pad = pad + 1
-    Print "Property"; x And BTM_5_BITS; ":"
-    sz = (x \ 32) + 1
-    Print "Size        ="; sz
-    Print "Data        = ";
-    For j = 1 To sz
-      x = readb(pad) : pad = pad + 1
-      Print lpad$(Hex$(x), 2, "0"); " ";
-    Next j
-    Print : Print
-  Next i
+Sub print_obj(o)
+  Local ad
+  ad = get_prop_base(o) + 1
+  nullop = print_zstring(ad)
 End Sub
 
 Library Load "util"
@@ -785,6 +771,7 @@ Library Load "util"
 'Library Load "dmp_op"
 'Library Load "dmp_stak"
 'Library Load "dmp_rout"
+Library Load "dmp_obj"
 Sub dmp_op(m$, st, br) : End Sub
 Sub dmp_stack() : End Sub
 Sub dmp_routine(new_pc) : End Sub
@@ -793,6 +780,10 @@ Memory
 Print
 init()
 Print
+dmp_obj(0) : Print
+dmp_obj(1) : Print
+dmp_obj(2) : Print
+dmp_obj(3) : Print
 
 For i = 0 To 10
 '  If new_line Then Print : new_line = 0

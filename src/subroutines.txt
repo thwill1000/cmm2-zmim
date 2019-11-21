@@ -3,7 +3,13 @@ zmim.bas:
   do_call
   do_branch
   do_return
+  get_attr
+  get_next_prop
   get_op
+  get_prop_addr
+  get_prop_base
+  get_prop_len
+  get_relation
   get_var
   init
   mem_load
@@ -13,6 +19,7 @@ zmim.bas:
   pcreadw
   pop
   print_abrv
+  print_obj
   print_zstring
   push
   readb
@@ -25,6 +32,7 @@ zmim.bas:
   _1op
   _2op
   _varop
+
 
 util.lib:
   lpad$
@@ -43,6 +51,9 @@ dmp_hdr.lib:
 dmp_mem.lib:
   dmp_mem
 
+dmp_obj.lib:
+  dmp_obj
+
 dmp_op.lib:
   dmp_op
   fmt_call_operands$
@@ -60,4 +71,4 @@ dmp_stak.lib:
 tst_mem.lib:
   tst_mem
 
-TOTAL = 42 functions & subroutines
+TOTAL = 50 functions & subroutines
