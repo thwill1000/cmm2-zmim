@@ -6,6 +6,7 @@ zmim.bas:
   get_attr
   get_next_prop
   get_op
+  get_prop
   get_prop_addr
   get_prop_base
   get_prop_len
@@ -71,4 +72,4 @@ dmp_stak.lib:
 tst_mem.lib:
   tst_mem
 
-TOTAL = 50 functions & subroutines
+TOTAL = 51 functions & subroutines

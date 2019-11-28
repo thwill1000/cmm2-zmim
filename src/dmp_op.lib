@@ -43,10 +43,20 @@ Function fmt_jump_operands$
   fmt_jump_operands$ = Hex$(pc + of - 2)
 End Function
 
+Function fmt_store_value$(st)
+  If st = 0 Then
+    Print "-(SP)";
+  ElseIf st < &h10 Then
+    Print "L" + lpad$(Hex$(st - 1), 2, "0");
+  Else
+    Print "G" + lpad$(Hex$(st - &h10), 2, "0");
+  EndIf
+End Function
+
 Function fmt_store_operands$
   Local a$, i
   If op_type(0) = OT_VARIABLE Then Error "Unexpected VARIABLE operand"
-  a$ = a$ + fmt_store$(op_value(0))
+  a$ = a$ + fmt_store_value$(op_value(0))
   For i = 1 To op_num - 1
     a$ = a$ + ", " + fmt_operand$(i)
   Next i
@@ -63,8 +73,6 @@ Function fmt_normal_operands$
 End Function
 
 Sub dmp_op(m$, st, br)
-  Local new_pc
-
   Print rpad$(m$, 14);
   If m$ = "CALL" Then
     Print fmt_call_operands$();
@@ -76,28 +84,11 @@ Sub dmp_op(m$, st, br)
     Print fmt_normal_operands$();
   EndIf
 
-  If st > -1 Then
-    Print " -> ";
-    If st = 0 Then
-      Print "-(SP)";
-    ElseIf st < &h10 Then
-      Print "L" + lpad$(Hex$(st - 1), 2, "0");
-    Else
-      Print "G" + lpad$(Hex$(st - &h10), 2, "0");
-    EndIf
-  EndIf
+  If st > -1 Then Print " -> "; fmt_store_value$(st);
 
-  If br > 0 Then
-    If br And BIT_15 Then Print " [TRUE] "; Else Print " [FALSE] ";
-    new_pc = br AND BTM_15_BITS
-    If new_pc = pc - 2 Then
-      Print "RFALSE";
-    ElseIf new_pc = pc - 1 Then
-      Print "RTRUE";
-    Else
-      Print Hex$(new_pc);
-    EndIf
-  EndIf
-
-  Print
+  If br = 0 Then Print : Exit Sub
+  If br And BIT_15 Then Print " [TRUE] "; Else Print " [FALSE] ";
+  If br = pc - 2 Then Print "RFALSE" : Exit Sub
+  If br = pc - 1 Then Print "RTRUE" : Exit Sub
+  Print Hex$(br)
 End Sub

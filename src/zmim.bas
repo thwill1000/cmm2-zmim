@@ -5,6 +5,10 @@
 Mode 1
 Cls
 
+Input "Save 'ZMIM.BAS'"; sv$
+If (sv$ = "y") Or (sv$ = "Y") Then Save "ZMIM.BAS"
+Print
+
 file$ = "B:\zmim\examples\minizork.z3"
 'file$ = "B:\zmim\examples\advent.z3"
 'file$ = "B:\zmim\examples\ZORK1\DATA\ZORK1.DAT"
@@ -12,7 +16,7 @@ file$ = "B:\zmim\examples\minizork.z3"
 ' By convention variables declared in UPPER CASE are constant
 '  - this is not enforced by the language!
 PAGE_SIZE = 512
-NUM_PHYSICAL_PAGES = 100
+NUM_PHYSICAL_PAGES = 90
 NUM_VIRTUAL_PAGES = 128 * 1024 / PAGE_SIZE
 
 ' Memory addresses below this are read on startup and not swapped in/out
@@ -48,6 +52,9 @@ BTM_4_BITS  = &b00001111
 BTM_5_BITS  = &b00011111
 BTM_6_BITS  = &b00111111
 BTM_15_BITS = &b0111111111111111
+
+' Constants for get_relation()
+PARENT = 4 : SIBLING = 5 : CHILD = 6
 
 Dim mem(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
 
@@ -435,7 +442,9 @@ Sub _2op
   ' GET_PROP
   ElseIf op = &h51 Then
     st = pcreadb()
-    dmp_op("!GET_PROP", st)
+    dmp_op("GET_PROP", st)
+    x = get_prop(a, b)
+    set_var(st, x)
 
   ' ADD
   ElseIf op = &h54 Or op = &h74 Then
@@ -479,6 +488,22 @@ Sub _1op
     br = read_branch()
     dmp_op("JZ", -1, br)
     do_branch(a = 0, br)
+
+  ' GET_CHILD
+  ElseIf op = &hA2 Then
+    st = pcreadb()
+    br = read_branch()
+    dmp_op("GET_CHILD", st, br)
+    x = get_relation(a, CHILD)
+    set_var(st, x)
+    do_branch(x <> 0, br)
+
+  ' GET_PARENT
+  ElseIf op = &hA3 Then
+    st = pcreadb()
+    dmp_op("GET_PARENT", st)
+    x = get_relation(a, parent)
+    set_var(st, x)
 
   ' INC
   ElseIf op = &hA5 Then
@@ -602,13 +627,12 @@ Function read_branch
 
   If a And BIT(6) = 0 Then
     of = 256 * of + pcreadb()
-    If a And BIT(5) Then
-      of = of - 16384
-    EndIf
+    If a And BIT(5) Then of = of - 16384
   EndIf
 
-  read_branch = pc + of - 2
   If a And BIT(7) Then read_branch = read_branch Or BIT(15)
+
+  read_branch = pc + of - 2
 End Function
 
 ' Gets the value of an operand.
@@ -620,16 +644,10 @@ Function get_op(i)
 End Function
 
 Sub do_branch(z, br)
-  Local new_pc
   If Not (z = (br And BIT(15)) > 0) Then Exit Sub
-  new_pc = br And BTM_15_BITS
-  If new_pc = pc - 2 Then
-    do_return(0)
-  ElseIf new_pc = pc - 1 Then
-    do_return(1)
-  Else
-    pc = new_pc
-  EndIf
+  If br = pc - 2 Then do_return(0) : Exit Sub
+  If br = pc - 1 Then do_return(1) : Exit Sub
+  pc = br And BTM_15_BITS
 End Sub
 
 Sub do_return(x)
@@ -644,7 +662,7 @@ End Sub
 Sub do_call
   Local args(2), i, locals_sz, new_pc, st, x
 
-  new_pc = 2 * op_value(0)
+  new_pc = 2 * get_op(0)
   For i = 1 To op_num - 1
     args(i - 1) = get_op(i)
   Next i
@@ -704,8 +722,6 @@ Function get_attr(o, a)
   get_attr = (x And BIT(7 - a Mod 8)) > 0
 End Function
 
-PARENT = 4 : SIBLING = 5 : CHILD = 6
-
 ' Gets relation 'r' of object 'o'
 ' PARENT = 4, SIBLING = 5, CHILD = 6
 Function get_relation(o, r)
@@ -759,6 +775,21 @@ Function get_prop_addr(o, p)
   Loop
 End Function
 
+Function get_prop(o, p)
+  Local ad, sz, x
+  ad = get_prop_addr(o, p)
+  If ad > 0 Then
+    x = readb(ad)
+    If (x And BTM_5_BITS) <> p Then Error
+    sz = x\32 + 1
+    If sz = 1 Then get_prop = readb(ad + 1) : Exit Function
+    If sz = 2 Then get_prop = readw(ad + 1) : Exit Function
+    Error
+  EndIf
+  ad = readw(&h0A) + 2 * (p - 1)
+  get_prop = readb(ad)
+End Function
+
 Sub print_obj(o)
   Local ad
   ad = get_prop_base(o) + 1
@@ -771,7 +802,7 @@ Library Load "util"
 'Library Load "dmp_op"
 'Library Load "dmp_stak"
 'Library Load "dmp_rout"
-Library Load "dmp_obj"
+'Library Load "dmp_obj"
 Sub dmp_op(m$, st, br) : End Sub
 Sub dmp_stack() : End Sub
 Sub dmp_routine(new_pc) : End Sub
@@ -780,10 +811,6 @@ Memory
 Print
 init()
 Print
-dmp_obj(0) : Print
-dmp_obj(1) : Print
-dmp_obj(2) : Print
-dmp_obj(3) : Print
 
 For i = 0 To 10
 '  If new_line Then Print : new_line = 0
