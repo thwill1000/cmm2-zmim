@@ -75,7 +75,7 @@ sp = -1
 fp = -1
 
 ' Variable to assign unused result of a Function call to
-devnull = 0
+_ = 0
 
 pc = 0
 
@@ -293,7 +293,7 @@ Sub print_abrv(i)
   Local ad, x
   ad = readw(&h18)
   x = readw(ad + i * 2)
-  devnull = print_zstring(x * 2)
+  _ = print_zstring(x * 2)
 End Sub
 
 Sub more
@@ -389,21 +389,25 @@ Sub _2op
     br = read_branch()
     dmp_op("DEC_CHK", -1, br)
     x = get_var(a) - 1
+    If x < 0 Then x = &hFFFF
     set_var(a, x)
     do_branch(x < b, br)
 
   ' INC_CHK
-  ElseIf op = &h05 Then
+  ElseIf op = &h05 Or op = &h25 Then
     br = read_branch()
     dmp_op("INC_CHK", -1, br)
     x = get_var(a) + 1
+    If x > &hFFFF Then x = 0
     set_var(a, x)
     do_branch(x > b, br)
 
   ' JIN
-  ElseIf op = &h06 Or op = &h46 Then
+  ElseIf op = &h06 Or op = &h26 Or op = &h46 Then
     br = read_branch()
-    dmp_op("!JIN", -1, br)
+    dmp_op("JIN", -1, br)
+    x = orel(a, PARENT)
+    do_branch(x = b, br)
 
   ' STORE
   ElseIf op = &h0D Or op = &h2D Or op = &h4D Or op = &hCD Then
@@ -411,33 +415,44 @@ Sub _2op
     set_var(a, b)
 
   ' LOADW
-  ElseIf op = &h0F Or op = &h4F Then
+  ElseIf op = &h0F Or op = &h4F Or op = &h6F Then
     st = pcreadb()
     dmp_op("LOADW", st)
     x = readw(a + 2 * b)
     set_var(st, x)
 
   ' LOADB
-  ElseIf op = &h30 Or op = &h50 Then
+  ElseIf op = &h30 Or op = &h50 Or op = &h70 Then
     st = pcreadb()
     dmp_op("LOADB", st)
     x = readb(a + b)
     set_var(st, x)
 
   ' JE
-  ElseIf op = &h41 Or op = &h61 Or op = &hC1 Then
+  ElseIf op = &h21 Or op = &h41 Or op = &h61 Or op = &hC1 Then
     br = read_branch()
     dmp_op("JE", -1, br)
     do_branch(a = b, br)
 
-  ' TEST_ATTR
+  ' JG
+  ElseIf op = &h43 Then
+    br = read_branch()
+    dmp_op("JG", -1, br)
+    If a > 32767 Then a = a - 65536
+    If b > 32767 Then b = b - 65536
+    do_branch(a > b, br)
+
+  ' TEST_ATTR: a = object, b = attribute
   ElseIf op = &h4A Then
     br = read_branch()
-    dmp_op("!TEST_ATTR", -1, br)
+    dmp_op("TEST_ATTR", -1, br)
+    x = oattr(a, b)
+    do_branch(x = 1, br)
 
   ' SET_ATTR
   ElseIf op = &h4B Then
     dmp_op("!SET_ATTR", -1)
+    Error
 
   ' GET_PROP
   ElseIf op = &h51 Then
@@ -452,15 +467,45 @@ Sub _2op
     dmp_op("ADD", st)
     set_var(st, a + b)
 
+  ' MUL
+  ElseIf op = &h56 Then
+    st = pcreadb()
+    dmp_op("MUL", st)
+    If a > 32767 Then a = a - 65536
+    If b > 32767 Then b = b - 65536
+    x = a * b
+    If x < 0 Then x = 65536 - x
+    set_var(st, x)
+
+  ' DIV
+  ElseIf op = &h57 Then
+    st = pcreadb()
+    dmp_op("DIV", st)
+    If a > 32767 Then a = a - 65536
+    If a > 32767 Then b = b - 65536
+    x = a \ b
+    If x < 0 Then x = 65536 - x
+    set_var(st, x)
+
   ' SUB
   ElseIf op = &h15 Or op = &h55 Then
     st = pcreadb()
     dmp_op("SUB", st)
     set_var(st, a - b)
 
-  ' INSERT_OBJ
+  ' TEST
+  ElseIf op = &h67 Then
+    br = read_branch()
+    dmp_op("!TEST", -1, br)
+    Error
+
+  ' INSERT_OBJ: a = object, b = destination
   ElseIf op = &h6E Then
-    dmp_op("!INSERT_OBJ", -1)
+    dmp_op("INSERT_OBJ", -1)
+    x = orel(b, CHILD)
+    _ = orel(b, CHILD, 1, a)
+    _ = orel(a, PARENT, 1, b)
+    _ = orel(a, SIBLING, 1, x)
 
   Else
     Error "Unsupported instruction " + Hex$(op)
@@ -494,7 +539,7 @@ Sub _1op
     st = pcreadb()
     br = read_branch()
     dmp_op("GET_CHILD", st, br)
-    x = get_relation(a, CHILD)
+    x = orel(a, CHILD)
     set_var(st, x)
     do_branch(x <> 0, br)
 
@@ -502,7 +547,7 @@ Sub _1op
   ElseIf op = &hA3 Then
     st = pcreadb()
     dmp_op("GET_PARENT", st)
-    x = get_relation(a, parent)
+    x = orel(a, parent)
     set_var(st, x)
 
   ' INC
@@ -514,7 +559,7 @@ Sub _1op
   ' PRINT_PADDR
   ElseIf op = &hAD Then
     dmp_op("PRINT_PADDR", -1)
-    devnull = print_zstring(a * 2)
+    _ = print_zstring(a * 2)
     new_line = 1
 
   ' PRINT_OBJECT
@@ -529,6 +574,7 @@ Sub _1op
 End Sub
 
 Sub _0op
+  Local x
 
   ' RTRUE
   If op = &hB0 Then
@@ -545,6 +591,12 @@ Sub _0op
     dmp_op("PRINT", -1)
     pc = pc + print_zstring(pc)
     new_line = 1
+
+  ' RET_POPPED
+  ElseIf op = &hB8 Then
+    dmp_op("RET_POPPED", -1)
+    x = pop()
+    do_return(x)
 
   ' NEWLINE
   ElseIf op = &hBB Then
@@ -595,6 +647,7 @@ Sub _varop
     dmp_op("!READ", -1)
     a = get_op(0)
     b = get_op(1)
+    Error
 
   ' PRINT_CHAR
   ElseIf op = &hE5 Then
@@ -625,13 +678,12 @@ Function read_branch
   a = pcreadb()
   of = a And BTM_6_BITS
 
-  If a And BIT(6) = 0 Then
+  If (a And BIT(6)) = 0 Then
     of = 256 * of + pcreadb()
     If a And BIT(5) Then of = of - 16384
   EndIf
 
   If a And BIT(7) Then read_branch = read_branch Or BIT(15)
-
   read_branch = pc + of - 2
 End Function
 
@@ -652,7 +704,7 @@ End Sub
 
 Sub do_return(x)
   Local st
-  Do While sp > fp + 2 : devnull = pop() : Loop
+  Do While sp > fp + 2 : _ = pop() : Loop
   pc = pop()
   st = pop()
   fp = pop()
@@ -714,20 +766,25 @@ Sub init
   Print "  Paged memory starts at page "; Str$(FIRST_SWAP_PAGE)
 End Sub
 
-' Gets attribute 'a' of object 'o'.
-Function get_attr(o, a)
-  Local ad, x
+' Gets/sets object attribute
+Function oattr(o, a, s, x)
+  Local ad, m, y
   ad = readw(&h0A) + 62 + (o - 1) * 9 + a \ 8
-  x = readb(ad)
-  get_attr = (x And BIT(7 - a Mod 8)) > 0
+  y = readb(ad)
+  m = BIT(7 - a Mod 8)
+  If s = 0 Then oattr = (y And m) > 0 : Exit Function
+  If x = 0 Then y = y Xor m Else y = y Or m
+  writeb(ad, y)
+  oattr = x
 End Function
 
-' Gets relation 'r' of object 'o'
-' PARENT = 4, SIBLING = 5, CHILD = 6
-Function get_relation(o, r)
+' Gets/sets object relations
+Function orel(o, r, s, x)
   Local ad
   ad = readw(&h0A) + 62 + (o - 1) * 9 + r
-  get_relation = readb(ad)
+  If s = 0 Then orel = readb(ad) : Exit Function
+  writeb(ad, x)
+  orel = x
 End Function
 
 Function get_next_prop(o, p)
@@ -784,10 +841,10 @@ Function get_prop(o, p)
     sz = x\32 + 1
     If sz = 1 Then get_prop = readb(ad + 1) : Exit Function
     If sz = 2 Then get_prop = readw(ad + 1) : Exit Function
-    Error
+    Error "Property length > 2"
   EndIf
   ad = readw(&h0A) + 2 * (p - 1)
-  get_prop = readb(ad)
+  get_prop = readw(ad)
 End Function
 
 Sub print_obj(o)
@@ -803,6 +860,7 @@ Library Load "util"
 'Library Load "dmp_stak"
 'Library Load "dmp_rout"
 'Library Load "dmp_obj"
+'Library Load "tst_obj"
 Sub dmp_op(m$, st, br) : End Sub
 Sub dmp_stack() : End Sub
 Sub dmp_routine(new_pc) : End Sub
