@@ -87,8 +87,8 @@ Sub dmp_op(m$, st, br)
   If st > -1 Then Print " -> "; fmt_store_value$(st);
 
   If br = 0 Then Print : Exit Sub
-  If br And BIT_15 Then Print " [TRUE] "; Else Print " [FALSE] ";
-  If br = pc - 2 Then Print "RFALSE" : Exit Sub
-  If br = pc - 1 Then Print "RTRUE" : Exit Sub
-  Print Hex$(br)
+  If br And &h10000 Then Print " [TRUE] "; Else Print " [FALSE] ";
+  If (br And &hFFFF) = pc - 2 Then Print "RFALSE" : Exit Sub
+  If (br And &hFFFF) = pc - 1 Then Print "RTRUE" : Exit Sub
+  Print Hex$(br And &hFFFF)
 End Sub

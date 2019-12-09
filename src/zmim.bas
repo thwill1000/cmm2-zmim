@@ -42,14 +42,13 @@ OT_SMALL_CONST = &b01
 OT_VARIABLE = &b10
 OT_OMITTED = &b11
 
-Dim BIT(15)
-For i = 0 To 15 : BIT(i) = 2 ^ i : Next i
+Dim BIT(7)
+For i = 0 To 7 : BIT(i) = 2 ^ i : Next i
 
 BTM_2_BITS  = &b00000011
 BTM_4_BITS  = &b00001111
 BTM_5_BITS  = &b00011111
 BTM_6_BITS  = &b00111111
-BTM_15_BITS = &b0111111111111111
 
 ' Constants for orel()
 PARENT = 4 : SIBLING = 5 : CHILD = 6
@@ -608,7 +607,7 @@ Sub _1op
   ' JUMP
   ElseIf op_code = &hC Then
     dmp_op("JUMP", -1)
-    If a And BIT(15) Then a = a - 65536
+    If a And &h8000 Then a = a - 65536
     pc = pc + a - 2
 
   ' PRINT_PADDR
@@ -719,10 +718,10 @@ Sub _varop
 End Sub
 
 ' Reads branch offset.
-' @return bits 0-14 - new value for the program counter.
+' @return bits 0-15 - new value for the program counter.
 '                   - if = pc - 2 then -> return false.
 '                   - if = pc - 1 then -> return true.
-'         bit 15    - set = branch on True, unset = branch on False.
+'         bit 16    - set = branch on True, unset = branch on False.
 Function read_branch
   Local a, of
   a = pcreadb()
@@ -733,8 +732,8 @@ Function read_branch
     If a And BIT(5) Then of = of - 16384
   EndIf
 
-  If a And BIT(7) Then read_branch = read_branch Or BIT(15)
   read_branch = pc + of - 2
+  If a And BIT(7) Then read_branch = read_branch Or &h10000
 End Function
 
 ' Gets the value of an operand.
@@ -746,10 +745,10 @@ Function get_op(i)
 End Function
 
 Sub do_branch(z, br)
-  If Not (z = (br And BIT(15)) > 0) Then Exit Sub
-  If br = pc - 2 Then do_return(0) : Exit Sub
-  If br = pc - 1 Then do_return(1) : Exit Sub
-  pc = br And BTM_15_BITS
+  If Not (z = (br And &h10000) > 0) Then Exit Sub
+  If (br And &hFFFF) = pc - 2 Then do_return(0) : Exit Sub
+  If (br And &hFFFF) = pc - 1 Then do_return(1) : Exit Sub
+  pc = br And &hFFFF ' Bottom 16-bits
 End Sub
 
 Sub do_return(x)
