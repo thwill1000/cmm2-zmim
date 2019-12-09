@@ -43,9 +43,7 @@ OT_VARIABLE = &b10
 OT_OMITTED = &b11
 
 Dim BIT(15)
-For i = 0 To 15
-  BIT(i) = 2 ^ i
-Next i
+For i = 0 To 15 : BIT(i) = 2 ^ i : Next i
 
 BTM_2_BITS  = &b00000011
 BTM_4_BITS  = &b00001111
@@ -53,7 +51,7 @@ BTM_5_BITS  = &b00011111
 BTM_6_BITS  = &b00111111
 BTM_15_BITS = &b0111111111111111
 
-' Constants for get_relation()
+' Constants for orel()
 PARENT = 4 : SIBLING = 5 : CHILD = 6
 
 Dim mem(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
@@ -95,18 +93,12 @@ Function paddr(va)
 
   ' TODO: in practice any page below the one
   '       containing BASE_STATIC is unpaged
-  If va < BASE_STATIC Then
-    paddr = va
-    Exit Function
-  EndIf
+  If va < BASE_STATIC Then paddr = va : Exit Function
 
   vp = va \ PAGE_SIZE
   of = va Mod PAGE_SIZE
   pp = vp_to_pp(vp)
-  If pp = 0 Then
-    pp = mem_load(vp)
-    page_faults = page_faults + 1
-  EndIf
+  If pp = 0 Then pp = mem_load(vp) : page_faults = page_faults + 1
 
   paddr = pp * PAGE_SIZE + of
 End Function
@@ -183,9 +175,7 @@ Function mem_load(vp)
 
   ' TODO: Implement some form of Least Recently Used algorithm.
   next_page = next_page + 1
-  If next_page = NUM_PHYSICAL_PAGES Then
-    next_page = FIRST_SWAP_PAGE
-  EndIf
+  If next_page = NUM_PHYSICAL_PAGES Then next_page = FIRST_SWAP_PAGE
 
   ' TODO: Should the file be opened once globally and kept open until exit?
   Open file$ For random As #1
@@ -314,19 +304,16 @@ Sub decode_op
     op_form = FORM_LONG
     op_code = op And BTM_5_BITS
     op_num = 2
+    op_type(0) = OT_VARIABLE
+    op_type(1) = OT_VARIABLE
 
     If op <= &h1F Then
       op_type(0) = OT_SMALL_CONST
       op_type(1) = OT_SMALL_CONST
     ElseIf op <= &h3F Then
       op_type(0) = OT_SMALL_CONST
-      op_type(1) = OT_VARIABLE
     ElseIf op <= &h5F Then
-      op_type(0) = OT_VARIABLE
       op_type(1) = OT_SMALL_CONST
-    Else
-      op_type(0) = OT_VARIABLE
-      op_type(1) = OT_VARIABLE
     EndIf
 
   ElseIf op <= &hBF Then
@@ -369,9 +356,7 @@ Sub decode_op
   For i = 0 To op_num - 1
     If op_type(i) = OT_LARGE_CONST Then
       op_value(i) = pcreadw()
-    ElseIf op_type(i) = OT_OMITTED Then
-      ' Do nothing
-    Else
+    ElseIf op_type(i) <> OT_OMITTED Then
       op_value(i) = pcreadb()
     EndIf
   Next i
@@ -384,8 +369,30 @@ Sub _2op
   a = get_op(0)
   b = get_op(1)
 
+  ' JE
+  If op_code = &h1 Then
+    br = read_branch()
+    dmp_op("JE", -1, br)
+    do_branch(a = b, br)
+
+  ' JL
+  ElseIf op_code = &h2 Then
+    br = read_branch()
+    dmp_op("JL", -1, br)
+    If a > 32767 Then a = a - 65536
+    If b > 32767 Then b = b - 65536
+    do_branch(a < b, br)
+
+  ' JG
+  ElseIf op_code = &h3 Then
+    br = read_branch()
+    dmp_op("JG", -1, br)
+    If a > 32767 Then a = a - 65536
+    If b > 32767 Then b = b - 65536
+    do_branch(a > b, br)
+
   ' DEC_CHK
-  If op = &h04 Then
+  ElseIf op_code = &h4 Then
     br = read_branch()
     dmp_op("DEC_CHK", -1, br)
     x = get_var(a) - 1
@@ -394,7 +401,7 @@ Sub _2op
     do_branch(x < b, br)
 
   ' INC_CHK
-  ElseIf op = &h05 Or op = &h25 Then
+  ElseIf op_code = &h5 Then
     br = read_branch()
     dmp_op("INC_CHK", -1, br)
     x = get_var(a) + 1
@@ -403,109 +410,118 @@ Sub _2op
     do_branch(x > b, br)
 
   ' JIN
-  ElseIf op = &h06 Or op = &h26 Or op = &h46 Then
+  ElseIf op_code = &h6 Then
     br = read_branch()
     dmp_op("JIN", -1, br)
     x = orel(a, PARENT)
     do_branch(x = b, br)
 
-  ' STORE
-  ElseIf op = &h0D Or op = &h2D Or op = &h4D Or op = &hCD Then
-    dmp_op("STORE", -1)
-    set_var(a, b)
-
-  ' LOADW
-  ElseIf op = &h0F Or op = &h4F Or op = &h6F Then
-    st = pcreadb()
-    dmp_op("LOADW", st)
-    x = readw(a + 2 * b)
-    set_var(st, x)
-
-  ' LOADB
-  ElseIf op = &h30 Or op = &h50 Or op = &h70 Then
-    st = pcreadb()
-    dmp_op("LOADB", st)
-    x = readb(a + b)
-    set_var(st, x)
-
-  ' JE
-  ElseIf op = &h21 Or op = &h41 Or op = &h61 Or op = &hC1 Then
+  ' TEST
+  ElseIf op_code = &h7 Then
     br = read_branch()
-    dmp_op("JE", -1, br)
-    do_branch(a = b, br)
+    dmp_op("TEST", -1, br)
+    do_branch(a And b = b, br)
 
-  ' JG
-  ElseIf op = &h43 Then
-    br = read_branch()
-    dmp_op("JG", -1, br)
-    If a > 32767 Then a = a - 65536
-    If b > 32767 Then b = b - 65536
-    do_branch(a > b, br)
+  ' OR
+  ElseIf op_code = &h8 Then
+    st = pcreadb()
+    dmp_op("OR", st)
+    set_var(st, a Or b)
+
+  ' AND
+  ElseIf op_code = &h9 Then
+    st = pcreadb()
+    dmp_op("AND", st)
+    set_var(st, a And b)
 
   ' TEST_ATTR: a = object, b = attribute
-  ElseIf op = &h4A Then
+  ElseIf op_code = &hA Then
     br = read_branch()
     dmp_op("TEST_ATTR", -1, br)
     x = oattr(a, b)
     do_branch(x = 1, br)
 
   ' SET_ATTR
-  ElseIf op = &h4B Then
-    dmp_op("!SET_ATTR", -1)
-    Error
+  ElseIf op_code = &hB Then
+    dmp_op("SET_ATTR", -1)
+    _ = oattr(a, b, 1, 1)
 
-  ' GET_PROP
-  ElseIf op = &h51 Then
-    st = pcreadb()
-    dmp_op("GET_PROP", st)
-    x = get_prop(a, b)
-    set_var(st, x)
+  ' CLEAR_ATTR
+  ElseIf op_code = &hC Then
+    dmp_op("CLEAR_ATTR", -1)
+    _ = oattr(a, b, 1, 0)
 
-  ' ADD
-  ElseIf op = &h54 Or op = &h74 Then
-    st = pcreadb()
-    dmp_op("ADD", st)
-    set_var(st, a + b)
-
-  ' MUL
-  ElseIf op = &h56 Then
-    st = pcreadb()
-    dmp_op("MUL", st)
-    If a > 32767 Then a = a - 65536
-    If b > 32767 Then b = b - 65536
-    x = a * b
-    If x < 0 Then x = 65536 - x
-    set_var(st, x)
-
-  ' DIV
-  ElseIf op = &h57 Then
-    st = pcreadb()
-    dmp_op("DIV", st)
-    If a > 32767 Then a = a - 65536
-    If a > 32767 Then b = b - 65536
-    x = a \ b
-    If x < 0 Then x = 65536 - x
-    set_var(st, x)
-
-  ' SUB
-  ElseIf op = &h15 Or op = &h55 Then
-    st = pcreadb()
-    dmp_op("SUB", st)
-    set_var(st, a - b)
-
-  ' TEST
-  ElseIf op = &h67 Then
-    br = read_branch()
-    dmp_op("!TEST", -1, br)
-    Error
+  ' STORE
+  ElseIf op_code = &hD Then
+    dmp_op("STORE", -1)
+    set_var(a, b)
 
   ' INSERT_OBJ: a = object, b = destination
-  ElseIf op = &h6E Then
+  ElseIf op_code = &hE Then
     dmp_op("INSERT_OBJ", -1)
     x = orel(b, CHILD)
     _ = orel(b, CHILD, 1, a)
     _ = orel(a, PARENT, 1, b)
     _ = orel(a, SIBLING, 1, x)
+
+  ' LOADW
+  ElseIf op_code = &hF Then
+    st = pcreadb()
+    dmp_op("LOADW", st)
+    x = readw(a + 2 * b)
+    set_var(st, x)
+
+  ' LOADB
+  ElseIf op_code = &h10 Then
+    st = pcreadb()
+    dmp_op("LOADB", st)
+    x = readb(a + b)
+    set_var(st, x)
+
+  ' GET_PROP
+  ElseIf op_code = &h11 Then
+    st = pcreadb()
+    dmp_op("GET_PROP", st)
+    x = get_prop(a, b)
+    set_var(st, x)
+
+  ' GET_PROP_ADDR
+  ElseIf op_code = &h12 Then
+    st = pcreadb()
+    dmp_op("!GET_PROP_ADDR", st)
+    Error
+
+  ' GET_NEXT_PROP
+  ElseIf op_code = &h13 Then
+    st = pcreadb()
+    dmp_op("!GET_NEXT_PROP", st)
+    Error
+
+  ElseIf op_code < &h19 Then
+    st = pcreadb()
+    If a > 32767 Then a = a - 65536
+    If b > 32767 Then b = b - 65536
+
+    ' ADD
+    If op_code = &h14 Then
+      dmp_op("ADD", st)
+      x = a + b
+    ElseIf op_code = &h15 Then
+      dmp_op("SUB", st)
+      x = a - b
+    ElseIf op_code = &h16 Then
+      dmp_op("MUL", st)
+      x = a * b
+    ElseIf op_code = &h17 Then
+      dmp_op("DIV", st)
+      x = a \ b
+    Else
+      dmp_op("!MOD", st)
+      Error
+    EndIf
+
+    If x < 0 Then x = 65536 - x
+    set_var(st, x)
 
   Else
     Error "Unsupported instruction " + Hex$(op)
@@ -517,25 +533,23 @@ Sub _1op
 
   a = get_op(0)
 
-  ' JUMP
-  If op = &h8C Then
-    dmp_op("JUMP", -1)
-    If a And BIT(15) Then a = a - 65536
-    pc = pc + a - 2
-
-  ' RET
-  ElseIf op = &h9B Or op = &hAB Then
-    dmp_op("RET", -1)
-    do_return(a)
-
   ' JZ
-  ElseIf op = &hA0 Then
+  If op_code = &h0 Then
     br = read_branch()
     dmp_op("JZ", -1, br)
     do_branch(a = 0, br)
 
+  ' GET_SIBLING
+  ElseIf op_code = &h1 Then
+    st = pcreadb()
+    br = read_branch()
+    dmp_op("GET_SIBLING", st, br)
+    x = orel(a, SIBLING)
+    set_var(st, x)
+    do_branch(x <> 0, br)
+
   ' GET_CHILD
-  ElseIf op = &hA2 Then
+  ElseIf op_code = &h2 Then
     st = pcreadb()
     br = read_branch()
     dmp_op("GET_CHILD", st, br)
@@ -544,29 +558,70 @@ Sub _1op
     do_branch(x <> 0, br)
 
   ' GET_PARENT
-  ElseIf op = &hA3 Then
+  ElseIf op_code = &h3 Then
     st = pcreadb()
     dmp_op("GET_PARENT", st)
-    x = orel(a, parent)
+    x = orel(a, PARENT)
     set_var(st, x)
 
+  ' GET_PROP_LEN
+  ElseIf op_code = &h4 Then
+    st = pcreadb()
+    dmp_op("!GET_PROP_LEN", st)
+    Error
+
   ' INC
-  ElseIf op = &hA5 Then
+  ElseIf op_code = &h5 Then
     dmp_op("INC", -1)
     x = get_var(a) + 1
+    If x > &hFFFF Then x = 0
     set_var(a, x)
 
+  ' DEC
+  ElseIf op_code = &h6 Then
+    dmp_op("DEC", -1)
+    x = get_var(a) - 1
+    If x < 0 Then x = &hFFFF
+    set_var(a, x)
+
+  ' PRINT_ADDR
+  ElseIf op_code = &h7 Then
+    dmp_op("!PRINT_ADDR", -1)
+    Error
+
+  ' REMOVE_OBJ
+  ElseIf op_code = &h9 Then
+    dmp_op("!REMOVE_OBJ", -1)
+    Error
+
+  ' PRINT_OBJECT
+  ElseIf op_code = &hA Then
+    dmp_op("PRINT_OBJECT", -1)
+    print_obj(a)
+    new_line = 1
+
+  ' RET
+  ElseIf op_code = &hB Then
+    dmp_op("RET", -1)
+    do_return(a)
+
+  ' JUMP
+  ElseIf op_code = &hC Then
+    dmp_op("JUMP", -1)
+    If a And BIT(15) Then a = a - 65536
+    pc = pc + a - 2
+
   ' PRINT_PADDR
-  ElseIf op = &hAD Then
+  ElseIf op_code = &hD Then
     dmp_op("PRINT_PADDR", -1)
     _ = print_zstring(a * 2)
     new_line = 1
 
-  ' PRINT_OBJECT
-  ElseIf op = &h9A Or op = &hAA Then
-    dmp_op("PRINT_OBJECT", -1)
-    print_obj(a)
-    new_line = 1
+  ' LOAD
+  ElseIf op_code = &hE Then
+    st = pcreadb()
+    dmp_op("!LOAD", st)
+    Error
 
   Else
     Error "Unsupported instruction " + Hex$(op)
@@ -577,29 +632,35 @@ Sub _0op
   Local x
 
   ' RTRUE
-  If op = &hB0 Then
+  If op_code = &h0 Then
     dmp_op("RTRUE", -1)
     do_return(1)
 
   ' RFALSE
-  ElseIf op = &hB1 Then
+  ElseIf op_code = &h1 Then
     dmp_op("RFALSE", -1)
     do_return(0)
 
   ' PRINT
-  ElseIf op = &hB2 Then
+  ElseIf op_code = &h2 Then
     dmp_op("PRINT", -1)
     pc = pc + print_zstring(pc)
     new_line = 1
 
+  ' PRINT_RET
+  ElseIf op_code = &h3 Then
+    dmp_op("!PRINT_RET", -1)
+    pc = pc + print_zstring(pc)
+    Error
+
   ' RET_POPPED
-  ElseIf op = &hB8 Then
+  ElseIf op_code = &h8 Then
     dmp_op("RET_POPPED", -1)
     x = pop()
     do_return(x)
 
   ' NEWLINE
-  ElseIf op = &hBB Then
+  ElseIf op_code = &hB Then
     dmp_op("NEWLINE", -1)
     Print
 
@@ -611,23 +672,12 @@ End Sub
 Sub _varop
   Local a, b, c, st, br, x
 
-  If op = &hC1 Or op = &hCD Then
-    _2op()
-
-  ' AND
-  ElseIf op = &hC9 Then
-    a = get_op(0)
-    b = get_op(1)
-    st = pcreadb()
-    dmp_op("AND", st)
-    set_var(st, a And b)
-
   ' CALL
-  ElseIf op = &hE0 Then
+  If op_code = &h0 Then
     do_call()
 
   ' STOREW
-  ElseIf op = &hE1 Then
+  ElseIf op_code = &h1 Then
     a = get_op(0)
     b = get_op(1)
     c = get_op(2)
@@ -635,7 +685,7 @@ Sub _varop
     writew(a + 2 * b, c)
 
   ' STOREB
-  ElseIf op = &hE2 Then
+  ElseIf op_code = &h2 Then
     a = get_op(0)
     b = get_op(1)
     c = get_op(2)
@@ -643,21 +693,21 @@ Sub _varop
     writeb(a + b, c)
 
   ' READ
-  ElseIf op = &hE4 Then
-    dmp_op("!READ", -1)
+  ElseIf op_code = &h4 Then
     a = get_op(0)
     b = get_op(1)
+    dmp_op("!READ", -1)
     Error
 
   ' PRINT_CHAR
-  ElseIf op = &hE5 Then
-    dmp_op("PRINT_CHAR", -1)
+  ElseIf op_code = &h5 Then
     a = get_op(0)
+    dmp_op("PRINT_CHAR", -1)
     Print Chr$(a);
     new_line = 1
 
   ' PRINT_NUM
-  ElseIf op = &hE6 Then
+  ElseIf op_code = &h6 Then
     a = get_op(0)
     dmp_op("PRINT_NUM", -1)
     Print Str$(a);
@@ -715,9 +765,7 @@ Sub do_call
   Local args(2), i, locals_sz, new_pc, st, x
 
   new_pc = 2 * get_op(0)
-  For i = 1 To op_num - 1
-    args(i - 1) = get_op(i)
-  Next i
+  For i = 1 To op_num - 1 : args(i - 1) = get_op(i) : Next i
   st = pcreadb()
 
   dmp_op("CALL", st)
@@ -850,7 +898,7 @@ End Function
 Sub print_obj(o)
   Local ad
   ad = get_prop_base(o) + 1
-  nullop = print_zstring(ad)
+  _ = print_zstring(ad)
 End Sub
 
 Library Load "util"
@@ -880,6 +928,8 @@ For i = 0 To 10
     _1op()
   ElseIf op < 192 Then
     _0op()
+  ElseIf op < 224 Then
+    _2op()
   Else
     _varop()
   EndIf
