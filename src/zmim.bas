@@ -5,8 +5,14 @@
 Mode 1
 Cls
 
-Input "Save 'ZMIM.BAS'"; sv$
-If (sv$ = "y") Or (sv$ = "Y") Then Save "ZMIM.BAS"
+' If > 0 then produce debug output
+' If bit 7 is set then print a new line before the current value of 'pc'
+dbg = 1
+
+Input "Save 'ZMIM.BAS' [y|N]"; s$
+If (s$ = "y") Or (s$ = "Y") Then Save "ZMIM.BAS"
+Input "Run with debug output [Y|n]"; s$
+If (s$ = "n") Or (s$ = "N") Then dbg = 0
 Print
 
 file$ = "B:\zmim\examples\minizork.z3"
@@ -16,7 +22,7 @@ file$ = "B:\zmim\examples\minizork.z3"
 ' By convention variables declared in UPPER CASE are constant
 '  - this is not enforced by the language!
 PAGE_SIZE = 512
-NUM_PHYSICAL_PAGES = 90
+NUM_PHYSICAL_PAGES = 80
 NUM_VIRTUAL_PAGES = 128 * 1024 / PAGE_SIZE
 
 ' Memory addresses below this are read on startup and not swapped in/out
@@ -86,8 +92,6 @@ op_form = 0
 op_num = 0 ' number of operands
 Dim op_type(MAX_NUM_OPERANDS)
 Dim op_value(MAX_NUM_OPERANDS)
-
-new_line = 0
 
 ' Converts a virtual address to a physical address.
 Function paddr(va)
@@ -600,7 +604,7 @@ Sub _1op
   ElseIf op_code = &hA Then
     dmp_op("PRINT_OBJECT", -1)
     print_obj(a)
-    new_line = 1
+    dbg = dbg Or BIT(7)
 
   ' RET
   ElseIf op_code = &hB Then
@@ -617,7 +621,7 @@ Sub _1op
   ElseIf op_code = &hD Then
     dmp_op("PRINT_PADDR", -1)
     _ = print_zstring(a * 2)
-    new_line = 1
+    dbg = dbg Or BIT(7)
 
   ' LOAD
   ElseIf op_code = &hE Then
@@ -647,8 +651,7 @@ Sub _0op
   ElseIf op_code = &h2 Then
     dmp_op("PRINT", -1)
     pc = pc + print_zstring(pc)
-    new_line = 1
-
+    dbg = dbg Or BIT(7)
   ' PRINT_RET
   ElseIf op_code = &h3 Then
     dmp_op("!PRINT_RET", -1)
@@ -706,14 +709,14 @@ Sub _varop
     a = get_op(0)
     dmp_op("PRINT_CHAR", -1)
     Print Chr$(a);
-    new_line = 1
+    dbg = dbg Or BIT(7)
 
   ' PRINT_NUM
   ElseIf op_code = &h6 Then
     a = get_op(0)
     dmp_op("PRINT_NUM", -1)
     Print Str$(a);
-    new_line = 1
+    dbg = dbg Or BIT(7)
 
   Else
     err = 1
@@ -904,16 +907,18 @@ Sub print_obj(o)
 End Sub
 
 Library Load "util"
-'Library Load "dmp_hdr"
-'Library Load "dmp_mem"
-'Library Load "dmp_op"
-'Library Load "dmp_stak"
-'Library Load "dmp_rout"
-'Library Load "dmp_obj"
 'Library Load "tst_obj"
-Sub dmp_op(m$, st, br) : End Sub
-Sub dmp_stack() : End Sub
-Sub dmp_routine(new_pc) : End Sub
+
+If dbg Then
+'  Library Load "dmp_hdr"
+  Library Load "dmp_mem.lib"
+  Library Load "dmp_obj.lib"
+  Library Load "dmp_op.lib"
+  Library Load "dmp_rout.lib"
+  Library Load "dmp_stak.lib"
+Else
+  Library Load "nodebug.lib"
+EndIf
 
 Memory
 Print
@@ -921,9 +926,13 @@ init()
 Print
 
 Do While err = 0
-'  If new_line Then Print : new_line = 0
-'  Print Hex$(pc); ": ";
+  If dbg Then
+    If dbg And BIT(7) Then Print : dbg = (dbg And (BIT(7) Xor &hFF))
+    Print Hex$(pc); ": ";
+  EndIf
+
   decode_op()
+
   If op < 128 Then
     _2op()
   ElseIf op < 176 Then

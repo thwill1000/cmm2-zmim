@@ -1,0 +1,8 @@
+' Copyright (c) 2019 Thomas Hugo Williams
+' For Maximite BASIC v4.5C
+
+Sub dmp_mem(ad, sz) : End Sub
+Sub dmp_obj(o) : End Sub
+Sub dmp_op(m$, st, br) : End Sub
+Sub dmp_routine(new_pc) : End Sub
+Sub dmp_stack : End Sub
