@@ -76,6 +76,9 @@ _ = 0
 
 pc = 0
 
+' If > 0 then an error has occurred
+err = 0
+
 ' The currently decoded operation
 op = 0
 op_code = 0
@@ -523,7 +526,7 @@ Sub _2op
     set_var(st, x)
 
   Else
-    Error "Unsupported instruction " + Hex$(op)
+    err = 1
   EndIf
 End Sub
 
@@ -623,7 +626,7 @@ Sub _1op
     Error
 
   Else
-    Error "Unsupported instruction " + Hex$(op)
+    err = 1
   EndIf
 End Sub
 
@@ -664,7 +667,7 @@ Sub _0op
     Print
 
   Else
-    Error "Unsupported instruction " + Hex$(op)
+    err = 1
   EndIf
 End Sub
 
@@ -713,7 +716,7 @@ Sub _varop
     new_line = 1
 
   Else
-    Error "Unsupported instruction " + Hex$(op)
+    err = 1
   EndIf
 End Sub
 
@@ -917,7 +920,7 @@ Print
 init()
 Print
 
-For i = 0 To 10
+Do While err = 0
 '  If new_line Then Print : new_line = 0
 '  Print Hex$(pc); ": ";
   decode_op()
@@ -932,9 +935,10 @@ For i = 0 To 10
   Else
     _varop()
   EndIf
-  If (i + 1) Mod 10 = 0 Then i = 0 ': more()
-Next i
+Loop
 
-Print
-Print "Num page faults ="; page_faults
+Print : Print "Num page faults ="; page_faults : Print
 Memory
+Print
+
+If err > 0 Then Error "Unsupported instruction " + Hex$(op)
