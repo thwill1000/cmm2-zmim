@@ -771,6 +771,7 @@ Sub do_return(x)
   st = pop()
   fp = pop()
   set_var(st, x)
+  dmp_stack()
 End Sub
 
 Sub do_call

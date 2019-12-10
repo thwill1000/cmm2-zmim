@@ -6,7 +6,7 @@
 '  sp    - current stack index/pointer
 '  stack - the stack (an array of 32-bit floats)
 
-Sub dmp_stack
+Sub dmp_stack(s)
   Local i
   Print "TOP: ";
   For i = sp To 0 Step -1
@@ -26,5 +26,6 @@ Sub dmp_stack
       Print " num locals";
     EndIf
     Print
+    If (s = 0) And (i = fp) Then i = 0
   Next i
 End Sub

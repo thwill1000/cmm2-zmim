@@ -5,4 +5,4 @@ Sub dmp_mem(ad, sz) : End Sub
 Sub dmp_obj(o) : End Sub
 Sub dmp_op(m$, st, br) : End Sub
 Sub dmp_routine(new_pc) : End Sub
-Sub dmp_stack : End Sub
+Sub dmp_stack(s) : End Sub
