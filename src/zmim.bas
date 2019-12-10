@@ -379,7 +379,10 @@ Sub _2op
   If op_code = &h1 Then
     br = read_branch()
     dmp_op("JE", -1, br)
-    do_branch(a = b, br)
+    x = (a = b)
+    If (Not x) And (op_num = 3) Then x = (a = get_op(2))
+    If (Not x) And (op_num = 4) Then x = (a = get_op(3))
+    do_branch(x, br)
 
   ' JL
   ElseIf op_code = &h2 Then
