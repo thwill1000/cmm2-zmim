@@ -582,15 +582,19 @@ Sub _1op
   ' INC
   ElseIf op_code = &h5 Then
     dmp_op("INC", -1)
-    x = get_var(a) + 1
-    If x > &hFFFF Then x = 0
+    x = get_var(a)
+    If x > 32767 Then x = x - 65536
+    x = x + 1
+    If x < 0 Then x = 65536 - x
     set_var(a, x)
 
   ' DEC
   ElseIf op_code = &h6 Then
     dmp_op("DEC", -1)
-    x = get_var(a) - 1
-    If x < 0 Then x = &hFFFF
+    x = get_var(a)
+    If x > 32767 Then x = x - 65536
+    x = x - 1
+    If x < 0 Then x = 65536 - x
     set_var(a, x)
 
   ' PRINT_ADDR
