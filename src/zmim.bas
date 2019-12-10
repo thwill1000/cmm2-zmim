@@ -826,7 +826,7 @@ Function oattr(o, a, s, x)
   y = readb(ad)
   m = BIT(7 - a Mod 8)
   If s = 0 Then oattr = (y And m) > 0 : Exit Function
-  If x = 0 Then y = y Xor m Else y = y Or m
+  If x = 0 Then y = (y And (m Xor &hFF)) Else y = (y Or m)
   writeb(ad, y)
   oattr = x
 End Function

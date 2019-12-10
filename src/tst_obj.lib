@@ -74,12 +74,16 @@ Sub tst_obj
   If oattr(o, 0) <> 1 Then Error
   If oattr(o, 15) <> 1 Then Error
   If oattr(o, 27) <> 1 Then Error
+  _ = oattr(o, 27, 1, 1)
+  If oattr(o, 27) <> 1 Then Error
   _ = oattr(o, 0, 1, 0)
   _ = oattr(o, 15, 1, 0)
   _ = oattr(o, 27, 1, 0)
   dmp_obj(o)
   If oattr(o, 0) <> 0 Then Error
   If oattr(o, 15) <> 0 Then Error
+  If oattr(o, 27) <> 0 Then Error
+  _ = oattr(o, 27, 1, 0)
   If oattr(o, 27) <> 0 Then Error
 
   Print "PASSED"
