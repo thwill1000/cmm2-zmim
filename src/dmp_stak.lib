@@ -24,6 +24,10 @@ Sub dmp_stack(s)
       Print " return address";
     ElseIf i = fp + 3 Then
       Print " num locals";
+    ElseIf stack(i) And &h8000 Then
+      Print " "; stack(i) - &h10000;
+    Else
+      Print stack(i);
     EndIf
     Print
     If (s = 0) And (i = fp) Then i = 0
