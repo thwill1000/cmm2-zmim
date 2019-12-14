@@ -40,9 +40,6 @@ ALPHABET$(0) = " 123[]abcdefghijklmnopqrstuvwxyz"
 ALPHABET$(1) = " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALPHABET$(2) = " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
 MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
-FORM_LONG = 1
-FORM_SHORT = 2
-FORM_VARIABLE = 3
 OT_LARGE_CONST = &b00
 OT_SMALL_CONST = &b01
 OT_VARIABLE = &b10
@@ -88,7 +85,6 @@ err = 0
 ' The currently decoded operation
 op = 0
 op_code = 0
-op_form = 0
 op_num = 0 ' number of operands
 Dim op_type(MAX_NUM_OPERANDS)
 Dim op_value(MAX_NUM_OPERANDS)
@@ -313,8 +309,7 @@ Sub do_op
   op = pcreadb()
 
   If op <= &h7F Then
-
-    op_form = FORM_LONG
+    ' Long form
     op_code = op And BTM_5_BITS
     op_num = 2
     op_type(0) = OT_VARIABLE
@@ -329,8 +324,7 @@ Sub do_op
     EndIf
 
   ElseIf op <= &hBF Then
-
-    op_form = FORM_SHORT
+    ' Short form
     op_code = op And BTM_4_BITS
     op_num = 1
     If op <= &h8F Then
@@ -344,7 +338,7 @@ Sub do_op
     EndIf
 
   Else
-    op_form = FORM_VARIABLE
+    ' Variable form
     op_code = op And BTM_5_BITS
     op_num = 4
 
