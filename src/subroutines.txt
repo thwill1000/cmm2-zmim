@@ -39,6 +39,19 @@ util.lib: (3 subs)
   rpad$
   rshift
 
+{no}debug.lib: (11 subs)
+  dmp_mem
+  dmp_obj
+  dmp_op
+  dmp_routine
+  dmp_stack
+  fmt_call_operands$
+  fmt_operand$
+  fmt_jump_operands$
+  fmt_normal_operands$
+  fmt_store_operands$
+  fmt_store_values$
+
 dmp_abrv.lib:
   dmp_abrv
 
@@ -48,29 +61,8 @@ dmp_dict.lib:
 dmp_hdr.lib:
   dmp_hdr
 
-dmp_mem.lib:
-  dmp_mem
-
 dmp_mmap.lib:
   dmp_mmap
-
-dmp_obj.lib:
-  dmp_obj
-
-dmp_op.lib: (7 subs)
-  dmp_op
-  fmt_call_operands$
-  fmt_operand$
-  fmt_jump_operands$
-  fmt_normal_operands$
-  fmt_store_operands$
-  fmt_store_values$
-
-dmp_rout.lib:
-  dmp_routine
-
-dmp_stak.lib:
-  dmp_stack
 
 tst_mem.lib:
   tst_mem

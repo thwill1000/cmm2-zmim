@@ -937,15 +937,9 @@ Sub cont(a)
 End Sub
 
 Library Load "util"
-'Library Load "tst_obj"
 
 If dbg Then
-'  Library Load "dmp_hdr"
-  Library Load "dmp_mem.lib"
-  Library Load "dmp_obj.lib"
-  Library Load "dmp_op.lib"
-  Library Load "dmp_rout.lib"
-  Library Load "dmp_stak.lib"
+  Library Load "debug.lib"
 Else
   Library Load "nodebug.lib"
 EndIf
@@ -967,5 +961,3 @@ Print "Num page faults            ="; page_faults
 Print
 Memory
 Print
-
-
