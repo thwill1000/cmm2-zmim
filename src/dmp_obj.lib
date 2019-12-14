@@ -20,16 +20,16 @@ Sub dmp_obj(o)
   Print Str$(o); ". ";
   Print "Attributes: ";
   For i = 0 To 31
-    x = get_attr(o, i)
+    x = oattr(o, i)
     If x <> 0 Then Print i;
   Next i
   Print
 
-  x = get_relation(o, PARENT)
+  x = orel(o, PARENT)
   Print "   Parent object:"; x; "  ";
-  x = get_relation(o, SIBLING)
+  x = orel(o, SIBLING)
   Print "Sibling object:"; x; "  ";
-  x = get_relation(o, CHILD)
+  x = orel(o, CHILD)
   Print "Child object:"; x
 
   ad = get_prop_base(o)
