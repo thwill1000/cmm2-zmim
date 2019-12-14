@@ -292,16 +292,21 @@ Sub print_abrv(i)
   _ = print_zstring(x * 2)
 End Sub
 
-Sub more
-  Local a$
-  Print
-  Input "More...", a$
-  Print
-End Sub
-
-' Decodes instruction at 'pc' into 'op_*' vars.
-Sub decode_op
+' Performs instruction at 'pc'
+Sub do_op
   Local i, x
+
+  If dbg Then
+    If dbg And BIT(7) Then Print : dbg = (dbg And (BIT(7) Xor &hFF))
+    Print Hex$(pc); ": ";
+  EndIf
+
+  If pc = bp Then ' Breakpoint
+    Print "[Breakpoint reached] - resetting bp = 0"
+    bp = 0
+    err = -1
+    Exit Sub
+  EndIf
 
   op = pcreadb()
 
@@ -312,7 +317,6 @@ Sub decode_op
     op_num = 2
     op_type(0) = OT_VARIABLE
     op_type(1) = OT_VARIABLE
-
     If op <= &h1F Then
       op_type(0) = OT_SMALL_CONST
       op_type(1) = OT_SMALL_CONST
@@ -327,7 +331,6 @@ Sub decode_op
     op_form = FORM_SHORT
     op_code = op And BTM_4_BITS
     op_num = 1
-
     If op <= &h8F Then
       op_type(0) = OT_LARGE_CONST
     ElseIf op <= &h9F Then
@@ -342,11 +345,6 @@ Sub decode_op
     op_form = FORM_VARIABLE
     op_code = op And BTM_5_BITS
     op_num = 4
-  '  If op <= &hDF Then
-  '    op_num = 2
-  '  Else
-  '    op_num = 4 ' actually VAR
-  '  EndIf
 
     ' Read operand types
     x = pcreadb()
@@ -366,6 +364,21 @@ Sub decode_op
       op_value(i) = pcreadb()
     EndIf
   Next i
+
+  ' Perform the operation
+  If op < 128 Then
+    _2op()
+  ElseIf op < 176 Then
+    _1op()
+  ElseIf op < 192 Then
+    _0op()
+  ElseIf op < 224 Then
+    _2op()
+  Else
+    _varop()
+  EndIf
+
+  If err > 0 Then Print : Print "Unsupported instruction "; Hex$(op)
 
 End Sub
 
@@ -611,7 +624,7 @@ Sub _1op
   ElseIf op_code = &hA Then
     dmp_op("PRINT_OBJECT", -1)
     print_obj(a)
-    dbg = dbg Or BIT(7)
+    If dbg Then dbg = dbg Or BIT(7)
 
   ' RET
   ElseIf op_code = &hB Then
@@ -628,7 +641,7 @@ Sub _1op
   ElseIf op_code = &hD Then
     dmp_op("PRINT_PADDR", -1)
     _ = print_zstring(a * 2)
-    dbg = dbg Or BIT(7)
+    If dbg Then dbg = dbg Or BIT(7)
 
   ' LOAD
   ElseIf op_code = &hE Then
@@ -658,7 +671,8 @@ Sub _0op
   ElseIf op_code = &h2 Then
     dmp_op("PRINT", -1)
     pc = pc + print_zstring(pc)
-    dbg = dbg Or BIT(7)
+    If dbg Then dbg = dbg Or BIT(7)
+
   ' PRINT_RET
   ElseIf op_code = &h3 Then
     dmp_op("!PRINT_RET", -1)
@@ -716,14 +730,14 @@ Sub _varop
     a = get_op(0)
     dmp_op("PRINT_CHAR", -1)
     Print Chr$(a);
-    dbg = dbg Or BIT(7)
+    If dbg Then dbg = dbg Or BIT(7)
 
   ' PRINT_NUM
   ElseIf op_code = &h6 Then
     a = get_op(0)
     dmp_op("PRINT_NUM", -1)
     Print Str$(a);
-    dbg = dbg Or BIT(7)
+    If dbg Then dbg = dbg Or BIT(7)
 
   Else
     err = 1
@@ -914,6 +928,15 @@ Sub print_obj(o)
   _ = print_zstring(ad)
 End Sub
 
+Sub cont(a)
+  If a = 0 Then a = &hFFFF
+  For i = 0 To a - 1
+    do_op()
+    If a = &hFFFF Then i = 0
+    If err <> 0 Then i = a - 1
+  Next i
+End Sub
+
 Library Load "util"
 'Library Load "tst_obj"
 
@@ -933,29 +956,9 @@ Print
 init()
 Print
 
-Do While err = 0
-  If dbg Then
-    If dbg And BIT(7) Then Print : dbg = (dbg And (BIT(7) Xor &hFF))
-    Print Hex$(pc); ": ";
-  EndIf
+' cont(&hFFFF)
 
-  decode_op()
+'Print : Print "Num page faults ="; page_faults : Print
+'Memory
+'Print
 
-  If op < 128 Then
-    _2op()
-  ElseIf op < 176 Then
-    _1op()
-  ElseIf op < 192 Then
-    _0op()
-  ElseIf op < 224 Then
-    _2op()
-  Else
-    _varop()
-  EndIf
-Loop
-
-Print : Print "Num page faults ="; page_faults : Print
-Memory
-Print
-
-If err > 0 Then Error "Unsupported instruction " + Hex$(op)
