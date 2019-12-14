@@ -1,20 +1,20 @@
-zmim.bas:
-  decode_op
+zmim.bas: (34 subs)
+  cont
   do_call
   do_branch
+  do_op
   do_return
-  get_attr
   get_next_prop
   get_op
   get_prop
   get_prop_addr
   get_prop_base
   get_prop_len
-  get_relation
   get_var
   init
   mem_load
-  more
+  oattr
+  orel
   paddr
   pcreadb
   pcreadw
@@ -34,8 +34,7 @@ zmim.bas:
   _2op
   _varop
 
-
-util.lib:
+util.lib: (3 subs)
   lpad$
   rpad$
   rshift
@@ -52,16 +51,20 @@ dmp_hdr.lib:
 dmp_mem.lib:
   dmp_mem
 
+dmp_mmap.lib:
+  dmp_mmap
+
 dmp_obj.lib:
   dmp_obj
 
-dmp_op.lib:
+dmp_op.lib: (7 subs)
   dmp_op
   fmt_call_operands$
   fmt_operand$
   fmt_jump_operands$
   fmt_normal_operands$
   fmt_store_operands$
+  fmt_store_values$
 
 dmp_rout.lib:
   dmp_routine
@@ -72,4 +75,7 @@ dmp_stak.lib:
 tst_mem.lib:
   tst_mem
 
-TOTAL = 51 functions & subroutines
+tst_obj.lib:
+  tst_obj
+
+TOTAL = 54 functions & subroutines

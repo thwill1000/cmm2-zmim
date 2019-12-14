@@ -853,7 +853,7 @@ Function oattr(o, a, s, x)
   oattr = x
 End Function
 
-' Gets/sets object relations
+' Gets/sets object relatives
 Function orel(o, r, s, x)
   Local ad
   ad = readw(&h0A) + 62 + (o - 1) * 9 + r
