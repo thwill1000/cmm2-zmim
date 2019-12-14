@@ -296,6 +296,8 @@ End Sub
 Sub do_op
   Local i, x
 
+  num_ops = num_ops + 1
+
   If dbg Then
     If dbg And BIT(7) Then Print : dbg = (dbg And (BIT(7) Xor &hFF))
     Print Hex$(pc); ": ";
@@ -511,13 +513,13 @@ Sub _2op
   ElseIf op_code = &h12 Then
     st = pcreadb()
     dmp_op("!GET_PROP_ADDR", st)
-    Error
+    err = 1
 
   ' GET_NEXT_PROP
   ElseIf op_code = &h13 Then
     st = pcreadb()
     dmp_op("!GET_NEXT_PROP", st)
-    Error
+    err = 1
 
   ElseIf op_code < &h19 Then
     st = pcreadb()
@@ -539,7 +541,7 @@ Sub _2op
       x = a \ b
     Else
       dmp_op("!MOD", st)
-      Error
+      err = 1
     EndIf
 
     If x < 0 Then x = 65536 - x
@@ -590,7 +592,7 @@ Sub _1op
   ElseIf op_code = &h4 Then
     st = pcreadb()
     dmp_op("!GET_PROP_LEN", st)
-    Error
+    err = 1
 
   ' INC
   ElseIf op_code = &h5 Then
@@ -613,12 +615,12 @@ Sub _1op
   ' PRINT_ADDR
   ElseIf op_code = &h7 Then
     dmp_op("!PRINT_ADDR", -1)
-    Error
+    err = 1
 
   ' REMOVE_OBJ
   ElseIf op_code = &h9 Then
     dmp_op("!REMOVE_OBJ", -1)
-    Error
+    err = 1
 
   ' PRINT_OBJECT
   ElseIf op_code = &hA Then
@@ -647,7 +649,7 @@ Sub _1op
   ElseIf op_code = &hE Then
     st = pcreadb()
     dmp_op("!LOAD", st)
-    Error
+    err = 1
 
   Else
     err = 1
@@ -677,7 +679,7 @@ Sub _0op
   ElseIf op_code = &h3 Then
     dmp_op("!PRINT_RET", -1)
     pc = pc + print_zstring(pc)
-    Error
+    err = 1
 
   ' RET_POPPED
   ElseIf op_code = &h8 Then
@@ -723,7 +725,7 @@ Sub _varop
     a = get_op(0)
     b = get_op(1)
     dmp_op("!READ", -1)
-    Error
+    err = 1
 
   ' PRINT_CHAR
   ElseIf op_code = &h5 Then
@@ -796,6 +798,9 @@ Sub do_call
   st = pcreadb()
 
   dmp_op("CALL", st)
+
+  ' When address 0 is called, nothing happens and return value is false
+  If new_pc = 0 Then set_var(st, 0) : Exit Sub
 
   push(fp)
   fp = sp
@@ -956,9 +961,17 @@ Print
 init()
 Print
 
-' cont(&hFFFF)
+num_ops = 0
+Timer = 0
 
-'Print : Print "Num page faults ="; page_faults : Print
-'Memory
-'Print
+cont(&hFFFF)
+
+Print
+Print "Num instructions processed ="; num_ops
+Print "Instructions / second      ="; num_ops / (Timer / 1000)
+Print "Num page faults            ="; page_faults
+Print
+Memory
+Print
+
 
