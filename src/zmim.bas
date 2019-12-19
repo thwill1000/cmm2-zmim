@@ -311,39 +311,6 @@ Sub var_decode(op)
   Next i
 End Sub
 
-' Performs instruction at 'pc'
-Sub do_op
-  Local op
-  num_ops = num_ops + 1
-
-  If dbg Then
-    If dbg And BIT(7) Then Print : dbg = (dbg And (BIT(7) Xor &hFF))
-    Print Hex$(pc); ": ";
-  EndIf
-
-  If pc = bp Then
-    Print "[Breakpoint reached] - resetting bp = 0"
-    bp = 0
-    err = -1
-    Exit Sub
-  EndIf
-
-  op = rp()
-
-  If op < &h80 Then
-    long_decode(op)
-    _2op()
-  ElseIf op < &hC0 Then
-    short_decode(op)
-    If op < &hB0 Then _1op() Else _0op()
-  Else
-    var_decode(op)
-    If op < &hE0 Then _2op() Else _varop()
-  EndIf
-
-  If err > 0 Then Print : Print "Unsupported instruction "; Hex$(op)
-End Sub
-
 Sub _2op
   Local a, b, br, st, x
 
@@ -896,9 +863,35 @@ Sub print_obj(o)
 End Sub
 
 Sub cont(a)
+  Local op
+
   If a = 0 Then a = &hFFFF
   For i = 0 To a - 1
-    do_op()
+    If dbg Then
+      If dbg And BIT(7) Then Print : dbg = (dbg And (BIT(7) Xor &hFF))
+      Print Hex$(pc); ": ";
+    EndIf
+
+    If pc = bp Then
+      Print "[Breakpoint reached] - resetting bp = 0"
+      bp = 0
+      err = -1
+    Else
+      op = rp()
+      num_ops = num_ops + 1
+      If op < &h80 Then
+        long_decode(op)
+        _2op()
+      ElseIf op < &hC0 Then
+        short_decode(op)
+        If op < &hB0 Then _1op() Else _0op()
+      Else
+        var_decode(op)
+        If op < &hE0 Then _2op() Else _varop()
+      EndIf
+      If err > 0 Then Print : Print "Unsupported instruction "; Hex$(op)
+    EndIf
+
     If a = &hFFFF Then i = 0
     If err <> 0 Then i = a - 1
   Next i
