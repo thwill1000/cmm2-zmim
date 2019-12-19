@@ -862,21 +862,18 @@ Sub print_obj(o)
   print_zstring(ad)
 End Sub
 
-Sub cont(a)
-  Local op
+Sub do_step(n)
+  Local i, op
 
-  If a = 0 Then a = &hFFFF
-  For i = 0 To a - 1
+  If n = 0 Then n = 1 Else If n < 0 Then n = &hFFFF
+
+  For i = 0 To n - 1
     If dbg Then
       If dbg And BIT(7) Then Print : dbg = (dbg And (BIT(7) Xor &hFF))
       Print Hex$(pc); ": ";
     EndIf
 
-    If pc = bp Then
-      Print "[Breakpoint reached] - resetting bp = 0"
-      bp = 0
-      err = -1
-    Else
+    If pc <> bp Then
       op = rp()
       num_ops = num_ops + 1
       If op < &h80 Then
@@ -889,11 +886,19 @@ Sub cont(a)
         var_decode(op)
         If op < &hE0 Then _2op() Else _varop()
       EndIf
-      If err > 0 Then Print : Print "Unsupported instruction "; Hex$(op)
     EndIf
 
-    If a = &hFFFF Then i = 0
-    If err <> 0 Then i = a - 1
+    If err > 0 Then
+      Print
+      Print "Unsupported instruction "; Hex$(op)
+      i = n ' Exit loop
+    ElseIf pc = bp Then
+      Print "[Breakpoint reached] - resetting bp = 0"
+      bp = 0
+      i = n ' Exit loop
+    ElseIf n = &hFFFF then
+      i = 0 ' Loop indefinitely
+    EndIf
   Next i
 End Sub
 
@@ -913,7 +918,7 @@ Print
 num_ops = 0
 Timer = 0
 
-cont(&hFFFF)
+do_step(-1)
 
 Print
 Print "Num instructions processed ="; num_ops
