@@ -206,61 +206,54 @@ Sub set_var(i, x)
   EndIf
 End Sub
 
-' Prints ZString starting at 'addr'.
-' @return the number of bytes read.
-Function print_zstring(addr)
-  Local abbrv, ad, al, ch, i, x, z, zchar(2)
+' Prints ZString starting at 'a' incrementing 'a' by the number of bytes read
+Sub print_zstring(a)
 
-  abbrv = 0
-  ad = addr
-  al = 0
-  x = 0
+  Local abrv, al, b, c, i, x, zc(2)
+
   ' Should be 'Do While x = 0' but there is an MMBasic bug using that
   ' in recursive functions.
-  For z = 0 To 0 Step 0
-    If x > 0 Then Exit For
-
-    x = rw(ad)
+  For x = 0 To 0 Step 0
+    x = rb(a) * 256 + rb(a + 1)
 
     For i = 2 To 0 Step -1
-      zchar(i) = x And BTM_5_BITS
-      x = rshift(x, 5)
+      zc(i) = x And 31 ' &b00011111
+      x = x \ 32 ' rshift 5
     Next i
 
     ' x is now the top-bit of the word. If x = 1 then we have reached the end
     ' of the string and will exit the loop after this iteration.
 
     For i = 0 To 2
-      ch = zchar(i)
-      If abbrv > 0 Then
-        print_abrv((abbrv - 1) * 32 + ch)
-        abbrv = 0
-      ElseIf ch > 0 And ch < 4 Then
-        abbrv = ch
-      ElseIf ch = 4 Then
-        al = 1
-      ElseIf ch = 5 Then
-        al = 2
-      ElseIf ch = 7 And al = 2 Then
+      c = zc(i)
+      If abrv > 0 Then
+        b = a ' Backup the address
+        print_abrv((abrv - 1) * 32 + c)
+        a = b ' Restore the address
+        abrv = 0
+      ElseIf c = 7 And al = 2 Then
         Print
-      Else
-        Print Mid$(ALPHABET$(al), ch + 1, 1);
+      ElseIf c = 0 Or c > 5 Then
+        Print Mid$(ALPHABET$(al), c + 1, 1);
         al = 0
+      ElseIf c < 4 Then
+        abrv = c
+      Else
+        al = c - 3
       EndIf
     Next i
 
-    ad = ad + 2
-  Next z
+    a = a + 2
+  Next x
 
-  print_zstring = ad - addr
-End Function
+End Sub
 
-' Prints abbreviation 'i'.
-Sub print_abrv(i)
-  Local ad, x
-  ad = rw(&h18)
-  x = rw(ad + i * 2)
-  _ = print_zstring(x * 2)
+' Prints abbreviation 'x'
+Sub print_abrv(x)
+  Local a, b
+  a = rw(&h18)
+  b = rw(a + x * 2)
+  print_zstring(b * 2)
 End Sub
 
 ' Performs instruction at 'pc'
@@ -611,7 +604,7 @@ Sub _1op
   ' PRINT_PADDR
   ElseIf op_code = &hD Then
     dmp_op("PRINT_PADDR", -1)
-    _ = print_zstring(a * 2)
+    print_zstring(a * 2)
     If dbg Then dbg = dbg Or BIT(7)
 
   ' LOAD
@@ -641,13 +634,13 @@ Sub _0op
   ' PRINT
   ElseIf op_code = &h2 Then
     dmp_op("PRINT", -1)
-    pc = pc + print_zstring(pc)
+    print_zstring(pc)
     If dbg Then dbg = dbg Or BIT(7)
 
   ' PRINT_RET
   ElseIf op_code = &h3 Then
     dmp_op("!PRINT_RET", -1)
-    pc = pc + print_zstring(pc)
+    print_zstring(pc)
     err = 1
 
   ' RET_POPPED
@@ -899,7 +892,7 @@ End Function
 Sub print_obj(o)
   Local ad
   ad = get_prop_base(o) + 1
-  _ = print_zstring(ad)
+  print_zstring(ad)
 End Sub
 
 Sub cont(a)
