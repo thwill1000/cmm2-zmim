@@ -85,7 +85,6 @@ pc = 0
 err = 0
 
 ' The currently decoded operation
-op = 0
 op_code = 0
 op_num = 0 ' number of operands
 Dim op_type(MAX_NUM_OPERANDS)
@@ -256,10 +255,65 @@ Sub print_abrv(x)
   print_zstring(b * 2)
 End Sub
 
+Sub long_decode(op)
+  op_code = op And BTM_5_BITS
+  op_num = 2
+  If op <= &h1F Then
+    op_type(0) = OT_SMALL_CONST
+    op_type(1) = OT_SMALL_CONST
+  ElseIf op <= &h3F Then
+    op_type(0) = OT_SMALL_CONST
+    op_type(1) = OT_VARIABLE
+  ElseIf op <= &h5F Then
+    op_type(0) = OT_VARIABLE
+    op_type(1) = OT_SMALL_CONST
+  Else
+    op_type(0) = OT_VARIABLE
+    op_type(1) = OT_VARIABLE
+  EndIf
+  op_value(0) = rp()
+  op_value(1) = rp()
+End Sub
+
+Sub short_decode(op)
+  op_code = op And BTM_4_BITS
+  op_num = 1
+  If op <= &h8F Then
+    op_type(0) = OT_LARGE_CONST
+    op_value(0) = rp() * 256 + rp()
+  ElseIf op <= &h9F Then
+    op_type(0) = OT_SMALL_CONST
+    op_value(0) = rp()
+  ElseIf op <= &hAF Then
+    op_type(0) = OT_VARIABLE
+    op_value(0) = rp()
+  Else
+    op_num = 0
+  EndIf
+End Sub
+
+Sub var_decode(op)
+  Local i, x
+  op_code = op And BTM_5_BITS
+  op_num = 4
+  x = rp()
+  For i = 3 To 0 Step -1
+    op_type(i) = x And BTM_2_BITS
+    If op_type(i) = OT_OMITTED Then op_num = op_num - 1
+    x = rshift(x, 2)
+  Next i
+  For i = 0 To op_num - 1
+    If op_type(i) = OT_LARGE_CONST Then
+      op_value(i) = rp() * 256 + rp()
+    ElseIf op_type(i) <> OT_OMITTED Then
+      op_value(i) = rp()
+    EndIf
+  Next i
+End Sub
+
 ' Performs instruction at 'pc'
 Sub do_op
-  Local i, x
-
+  Local op
   num_ops = num_ops + 1
 
   If dbg Then
@@ -267,7 +321,7 @@ Sub do_op
     Print Hex$(pc); ": ";
   EndIf
 
-  If pc = bp Then ' Breakpoint
+  If pc = bp Then
     Print "[Breakpoint reached] - resetting bp = 0"
     bp = 0
     err = -1
@@ -276,74 +330,18 @@ Sub do_op
 
   op = rp()
 
-  If op <= &h7F Then
-    ' Long form
-    op_code = op And BTM_5_BITS
-    op_num = 2
-    op_type(0) = OT_VARIABLE
-    op_type(1) = OT_VARIABLE
-    If op <= &h1F Then
-      op_type(0) = OT_SMALL_CONST
-      op_type(1) = OT_SMALL_CONST
-    ElseIf op <= &h3F Then
-      op_type(0) = OT_SMALL_CONST
-    ElseIf op <= &h5F Then
-      op_type(1) = OT_SMALL_CONST
-    EndIf
-
-  ElseIf op <= &hBF Then
-    ' Short form
-    op_code = op And BTM_4_BITS
-    op_num = 1
-    If op <= &h8F Then
-      op_type(0) = OT_LARGE_CONST
-    ElseIf op <= &h9F Then
-      op_type(0) = OT_SMALL_CONST
-    ElseIf op <= &hAF Then
-      op_type(0) = OT_VARIABLE
-    Else
-      op_num = 0
-    EndIf
-
-  Else
-    ' Variable form
-    op_code = op And BTM_5_BITS
-    op_num = 4
-
-    ' Read operand types
-    x = rp()
-    For i = 3 To 0 Step -1
-      op_type(i) = x And BTM_2_BITS
-      If op_type(i) = OT_OMITTED Then op_num = op_num - 1
-      x = rshift(x, 2)
-    Next i
-
-  EndIf
-
-  ' Read operands
-  For i = 0 To op_num - 1
-    If op_type(i) = OT_LARGE_CONST Then
-      op_value(i) = rp() * 256 + rp()
-    ElseIf op_type(i) <> OT_OMITTED Then
-      op_value(i) = rp()
-    EndIf
-  Next i
-
-  ' Perform the operation
-  If op < 128 Then
+  If op < &h80 Then
+    long_decode(op)
     _2op()
-  ElseIf op < 176 Then
-    _1op()
-  ElseIf op < 192 Then
-    _0op()
-  ElseIf op < 224 Then
-    _2op()
+  ElseIf op < &hC0 Then
+    short_decode(op)
+    If op < &hB0 Then _1op() Else _0op()
   Else
-    _varop()
+    var_decode(op)
+    If op < &hE0 Then _2op() Else _varop()
   EndIf
 
   If err > 0 Then Print : Print "Unsupported instruction "; Hex$(op)
-
 End Sub
 
 Sub _2op
