@@ -5,23 +5,23 @@
 Sub dmp_hdr
   Local i, serial$
 
-  Print "Version      =";  readb(&h00)
-  Print "Flags1       = "; Bin$(readb(&h01))
-  Print "Release      =";  readw(&h02)
-  Print "Base high    = "; Hex$(readw(&h04))
-  Print "Initial PC   = "; Hex$(readw(&h06))
-  Print "Dictionary   = "; Hex$(readw(&h08))
-  Print "Object tbl   = "; Hex$(readw(&h0A))
-  Print "Glob var tbl = "; Hex$(readw(&h0C))
-  Print "Base static  = "; Hex$(readw(&h0E))
-  Print "Flags2       = "; Bin$(readb(&h10))
+  Print "Version      =";  rb(&h00)
+  Print "Flags1       = "; Bin$(rb(&h01))
+  Print "Release      =";  rw(&h02)
+  Print "Base high    = "; Hex$(rw(&h04))
+  Print "Initial PC   = "; Hex$(rw(&h06))
+  Print "Dictionary   = "; Hex$(rw(&h08))
+  Print "Object tbl   = "; Hex$(rw(&h0A))
+  Print "Glob var tbl = "; Hex$(rw(&h0C))
+  Print "Base static  = "; Hex$(rw(&h0E))
+  Print "Flags2       = "; Bin$(rb(&h10))
   serial$ = "000000"
   For i = 0 To 5
-    Poke Var serial$, i + 1, readb(&H12 + i)
+    Poke Var serial$, i + 1, rb(&H12 + i)
   Next i
   Print "Serial num   = "; serial$
-  Print "Abbrv tbl    = "; Hex$(readw(&H18))
-  Print "File length  ="; 2 * readw(&H1A)
-  Print "File chksum  ="; readw(&H1C)
-  Print "Std revision ="; readw(&H32)
+  Print "Abbrv tbl    = "; Hex$(rw(&h18))
+  Print "File length  ="; 2 * rw(&h1A)
+  Print "File chksum  ="; rw(&h1C)
+  Print "Std revision ="; rw(&h32)
 End Sub

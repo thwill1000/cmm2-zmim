@@ -56,7 +56,11 @@ BTM_6_BITS  = &b00111111
 ' Constants for orel()
 PARENT = 4 : SIBLING = 5 : CHILD = 6
 
-Dim mem(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
+Dim m(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
+
+pf = 0 ' Counter for number of page faults
+pp = 0 ' Physical page number
+vp = 0 ' Virtual page number
 
 ' Map of physical pages -> virtual pages
 Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)
@@ -65,8 +69,6 @@ Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)
 Dim vp_to_pp(NUM_VIRTUAL_PAGES - 1)
 
 next_page = 0
-
-page_faults = 0
 
 Dim stack(511)
 sp = -1
@@ -89,71 +91,44 @@ op_num = 0 ' number of operands
 Dim op_type(MAX_NUM_OPERANDS)
 Dim op_value(MAX_NUM_OPERANDS)
 
-' Converts a virtual address to a physical address.
-Function paddr(va)
-  Local of, pp, vp
-
-  ' TODO: in practice any page below the one
-  '       containing BASE_STATIC is unpaged
-  If va < BASE_STATIC Then paddr = va : Exit Function
-
-  vp = va \ PAGE_SIZE
-  of = va Mod PAGE_SIZE
+' Reads a byte from 'pc' and increments 'pc'
+Function rp
+  If pc < 0 Or pc >= FILE_LEN Then Error
+  vp = pc \ PAGE_SIZE
   pp = vp_to_pp(vp)
-  If pp = 0 Then pp = mem_load(vp) : page_faults = page_faults + 1
-
-  paddr = pp * PAGE_SIZE + of
-End Function
-
-' Reads a byte from 'pc' and increments 'pc'.
-Function pcreadb
-  pcreadb = readb(pc)
+  If pp = 0 Then pp = mem_load(vp) : pf = pf + 1
+  rp = Peek(Var m(0), pp * PAGE_SIZE + (pc Mod PAGE_SIZE))
   pc = pc + 1
 End Function
 
-' Reads a byte from 'ad'.
-Function readb(ad)
-  If ad < 0 Or ad >= FILE_LEN Then Error Hex$(ad)
-  readb = Peek(Var mem(0), paddr(ad))
+' Reads a byte from 'a' but DOES NOT increment a
+Function rb(a)
+  If a < 0 Or a >= FILE_LEN Then Error
+  If a < BASE_STATIC Then rb = Peek(Var m(0), a) : Exit Function
+  vp = a \ PAGE_SIZE
+  pp = vp_to_pp(vp)
+  If pp = 0 Then pp = mem_load(vp) : pf = pf + 1
+  rb = Peek(Var m(0), pp * PAGE_SIZE + (a Mod Page_SIZE))
 End Function
 
-' Reads a 16-bit word from 'pc' and increments 'bc' by 2.
-Function pcreadw
-  pcreadw = readw(pc)
-  pc = pc + 2
+' Reads a 16-bit word from 'a' but DOES NOT increment a
+Function rw(a)
+  rw = rb(a) * 256 + rb(a + 1)
 End Function
 
-' Reads a 16-bit word from 'ad'.
-Function readw(ad)
-  Local pa1, pa2
-
-  If ad < 0 Or ad >= FILE_LEN - 1 Then Error Hex$(ad)
-
-  pa1 = paddr(ad)
-  pa2 = paddr(ad + 1)
-
-  ' Does this ever happen? If not then pa2 = pa + 1
-  ' Apparently it can happen
-  ' If pa1 + 1 <> pa2 Then Error "Unaligned word read"
-
-  readw = Peek(Var mem(0), pa1) * 256 + Peek(Var mem(0), pa2)
-End Function
-
-' Writes byte 'x' to 'ad'.
-Sub writeb(ad, x)
-  If ad < 0 Or ad >= BASE_STATIC Then Error Hex$(ad)
-  If x < 0 Or x > 255 Then Error Str$(x)
-  Poke Var mem(0), ad, x
+' Writes byte 'x' to 'a'
+Sub wb(a, x)
+  If a < 0 Or a >= BASE_STATIC Then Error
+  If x < 0 Or x > 255 Then Error
+  Poke Var m(0), a, x
 End Sub
 
-' Writes 16-bit word 'x' to 'ad'.
-Sub writew(ad, x)
-  If ad < 0 Or ad >= BASE_STATIC - 1 Then
-    Error "Non dynamic mem write: " + Hex$(ad)
-  EndIf
-  If x < 0 Or x > MAX_WORD Then Error Str$(x)
-  Poke Var mem(0), ad, x \ 256
-  Poke Var mem(0), ad + 1, x Mod 256
+' Writes 16-bit word 'x' to 'a'
+Sub ww(a, x)
+  If a < 0 Or a >= BASE_STATIC - 1 Then Error
+  If x < 0 Or x > MAX_WORD Then Error
+  Poke Var m(0), a, x \ 256
+  Poke Var m(0), a + 1, x Mod 256
 End Sub
 
 ' Pops a 16-bit word from the stack.
@@ -189,7 +164,7 @@ Function mem_load(vp)
     If to_read < 255 Then buf_sz = to_read
     buf$ = Input$(buf_sz, 1)
     For i = 1 To buf_sz
-      Poke Var mem(0), ad, Peek(Var buf$, i)
+      Poke Var m(0), ad, Peek(Var buf$, i)
       ad = ad + 1
     Next i
     to_read = to_read - buf_sz
@@ -211,7 +186,7 @@ Function get_var(i)
   ElseIf i < &h10 Then
     get_var = stack(fp + i + 3)
   ElseIf i <= &hFF Then
-    get_var = readw(GLOBAL_VAR + 2 * (i - &h10))
+    get_var = rw(GLOBAL_VAR + 2 * (i - &h10))
   Else
     Error "Unknown variable " + Str$(i)
   EndIf
@@ -225,7 +200,7 @@ Sub set_var(i, x)
   ElseIf i < &h10 Then
     stack(fp + i + 3) = x
   ElseIf i < &hFF Then
-    writew(GLOBAL_VAR + 2 * (i - &h10), x)
+    ww(GLOBAL_VAR + 2 * (i - &h10), x)
   Else
     Error "Unknown variable " + Str$(i)
   EndIf
@@ -245,7 +220,7 @@ Function print_zstring(addr)
   For z = 0 To 0 Step 0
     If x > 0 Then Exit For
 
-    x = readw(ad)
+    x = rw(ad)
 
     For i = 2 To 0 Step -1
       zchar(i) = x And BTM_5_BITS
@@ -283,8 +258,8 @@ End Function
 ' Prints abbreviation 'i'.
 Sub print_abrv(i)
   Local ad, x
-  ad = readw(&h18)
-  x = readw(ad + i * 2)
+  ad = rw(&h18)
+  x = rw(ad + i * 2)
   _ = print_zstring(x * 2)
 End Sub
 
@@ -306,7 +281,7 @@ Sub do_op
     Exit Sub
   EndIf
 
-  op = pcreadb()
+  op = rp()
 
   If op <= &h7F Then
     ' Long form
@@ -343,7 +318,7 @@ Sub do_op
     op_num = 4
 
     ' Read operand types
-    x = pcreadb()
+    x = rp()
     For i = 3 To 0 Step -1
       op_type(i) = x And BTM_2_BITS
       If op_type(i) = OT_OMITTED Then op_num = op_num - 1
@@ -355,9 +330,9 @@ Sub do_op
   ' Read operands
   For i = 0 To op_num - 1
     If op_type(i) = OT_LARGE_CONST Then
-      op_value(i) = pcreadw()
+      op_value(i) = rp() * 256 + rp()
     ElseIf op_type(i) <> OT_OMITTED Then
-      op_value(i) = pcreadb()
+      op_value(i) = rp()
     EndIf
   Next i
 
@@ -442,13 +417,13 @@ Sub _2op
 
   ' OR
   ElseIf op_code = &h8 Then
-    st = pcreadb()
+    st = rp()
     dmp_op("OR", st)
     set_var(st, a Or b)
 
   ' AND
   ElseIf op_code = &h9 Then
-    st = pcreadb()
+    st = rp()
     dmp_op("AND", st)
     set_var(st, a And b)
 
@@ -484,39 +459,39 @@ Sub _2op
 
   ' LOADW
   ElseIf op_code = &hF Then
-    st = pcreadb()
+    st = rp()
     dmp_op("LOADW", st)
-    x = readw(a + 2 * b)
+    x = rw(a + 2 * b)
     set_var(st, x)
 
   ' LOADB
   ElseIf op_code = &h10 Then
-    st = pcreadb()
+    st = rp()
     dmp_op("LOADB", st)
-    x = readb(a + b)
+    x = rb(a + b)
     set_var(st, x)
 
   ' GET_PROP
   ElseIf op_code = &h11 Then
-    st = pcreadb()
+    st = rp()
     dmp_op("GET_PROP", st)
     x = get_prop(a, b)
     set_var(st, x)
 
   ' GET_PROP_ADDR
   ElseIf op_code = &h12 Then
-    st = pcreadb()
+    st = rp()
     dmp_op("!GET_PROP_ADDR", st)
     err = 1
 
   ' GET_NEXT_PROP
   ElseIf op_code = &h13 Then
-    st = pcreadb()
+    st = rp()
     dmp_op("!GET_NEXT_PROP", st)
     err = 1
 
   ElseIf op_code < &h19 Then
-    st = pcreadb()
+    st = rp()
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
 
@@ -559,7 +534,7 @@ Sub _1op
 
   ' GET_SIBLING
   ElseIf op_code = &h1 Then
-    st = pcreadb()
+    st = rp()
     br = read_branch()
     dmp_op("GET_SIBLING", st, br)
     x = orel(a, SIBLING)
@@ -568,7 +543,7 @@ Sub _1op
 
   ' GET_CHILD
   ElseIf op_code = &h2 Then
-    st = pcreadb()
+    st = rp()
     br = read_branch()
     dmp_op("GET_CHILD", st, br)
     x = orel(a, CHILD)
@@ -577,14 +552,14 @@ Sub _1op
 
   ' GET_PARENT
   ElseIf op_code = &h3 Then
-    st = pcreadb()
+    st = rp()
     dmp_op("GET_PARENT", st)
     x = orel(a, PARENT)
     set_var(st, x)
 
   ' GET_PROP_LEN
   ElseIf op_code = &h4 Then
-    st = pcreadb()
+    st = rp()
     dmp_op("!GET_PROP_LEN", st)
     err = 1
 
@@ -641,7 +616,7 @@ Sub _1op
 
   ' LOAD
   ElseIf op_code = &hE Then
-    st = pcreadb()
+    st = rp()
     dmp_op("!LOAD", st)
     err = 1
 
@@ -704,7 +679,7 @@ Sub _varop
     b = get_op(1)
     c = get_op(2)
     dmp_op("STOREW", -1)
-    writew(a + 2 * b, c)
+    ww(a + 2 * b, c)
 
   ' STOREB
   ElseIf op_code = &h2 Then
@@ -712,7 +687,7 @@ Sub _varop
     b = get_op(1)
     c = get_op(2)
     dmp_op("STOREB", -1)
-    writeb(a + b, c)
+    wb(a + b, c)
 
   ' READ
   ElseIf op_code = &h4 Then
@@ -747,11 +722,11 @@ End Sub
 '         bit 16    - set = branch on True, unset = branch on False.
 Function read_branch
   Local a, of
-  a = pcreadb()
+  a = rp()
   of = a And BTM_6_BITS
 
   If (a And BIT(6)) = 0 Then
-    of = 256 * of + pcreadb()
+    of = 256 * of + rp()
     If a And BIT(5) Then of = of - 16384
   EndIf
 
@@ -789,7 +764,7 @@ Sub do_call
 
   new_pc = 2 * get_op(0)
   For i = 1 To op_num - 1 : args(i - 1) = get_op(i) : Next i
-  st = pcreadb()
+  st = rp()
 
   dmp_op("CALL", st)
 
@@ -801,10 +776,10 @@ Sub do_call
   push(st)
   push(pc)
   pc = new_pc
-  locals_sz = pcreadb()
+  locals_sz = rp()
   push(locals_sz)
   For i = 0 To locals_sz - 1
-    x = pcreadw()
+    x = rp() * 256 + rp()
     If i > op_num - 2 Then push(x) Else push(args(i))
   Next i
 
@@ -822,10 +797,10 @@ Sub init
   If mem_load(0) <> 0 Then Error
 
   ' Read header data.
-  pc = readw(&h06)
-  GLOBAL_VAR = readw(&h0C)
-  BASE_STATIC = readw(&h0E)
-  FILE_LEN = readw(&h1A) * 2
+  pc = rw(&h06)
+  GLOBAL_VAR = rw(&h0C)
+  BASE_STATIC = rw(&h0E)
+  FILE_LEN = rw(&h1A) * 2
 
   ' Initialise dynamic memory.
   FIRST_SWAP_PAGE = BASE_STATIC \ PAGE_SIZE
@@ -843,21 +818,21 @@ End Sub
 ' Gets/sets object attribute
 Function oattr(o, a, s, x)
   Local ad, m, y
-  ad = readw(&h0A) + 62 + (o - 1) * 9 + a \ 8
-  y = readb(ad)
+  ad = rw(&h0A) + 62 + (o - 1) * 9 + a \ 8
+  y = rb(ad)
   m = BIT(7 - a Mod 8)
   If s = 0 Then oattr = (y And m) > 0 : Exit Function
   If x = 0 Then y = (y And (m Xor &hFF)) Else y = (y Or m)
-  writeb(ad, y)
+  wb(ad, y)
   oattr = x
 End Function
 
 ' Gets/sets object relatives
 Function orel(o, r, s, x)
   Local ad
-  ad = readw(&h0A) + 62 + (o - 1) * 9 + r
-  If s = 0 Then orel = readb(ad) : Exit Function
-  writeb(ad, x)
+  ad = rw(&h0A) + 62 + (o - 1) * 9 + r
+  If s = 0 Then orel = rb(ad) : Exit Function
+  wb(ad, x)
   orel = x
 End Function
 
@@ -866,15 +841,15 @@ Function get_next_prop(o, p)
 
   If p = 0 Then
     ad = get_prop_base(o)
-    ad = ad + 1 + 2 * readb(ad) ' Skip length & description
+    ad = ad + 1 + 2 * rb(ad) ' Skip length & description
   Else
     ad = get_prop_addr(o, p)
     If ad = 0 Then Error "Property does not exist"
-    x = readb(ad)
+    x = rb(ad)
     ad = ad + 2 + x\32
   EndIf
 
-  x = readb(ad)
+  x = rb(ad)
   get_next_prop = x And BTM_5_BITS
 End Function
 
@@ -883,23 +858,23 @@ Function get_prop_len(o, p)
   If o > 0 Then
     ad = get_prop_addr(o, p)
     If ad = 0 Then Error "Property does not exist"
-    x = readb(ad)
+    x = rb(ad)
     get_prop_len = x\32 + 1
   EndIf
 End Function
 
 Function get_prop_base(o)
   Local ad
-  ad = readw(&h0A) + 62 + (o - 1) * 9 + 7
-  get_prop_base = readw(ad)
+  ad = rw(&h0A) + 62 + (o - 1) * 9 + 7
+  get_prop_base = rw(ad)
 End Function
 
 Function get_prop_addr(o, p)
   Local ad, x
   ad = get_prop_base(o)
-  ad = ad + 1 + 2 * readb(ad) ' Skip length & description
+  ad = ad + 1 + 2 * rb(ad) ' Skip length & description
   Do
-    x = readb(ad)
+    x = rb(ad)
     If (x And BTM_5_BITS) = p Then get_prop_addr = ad : Exit Function
     If (x And BTM_5_BITS) < p Then get_prop_addr = 0 : Exit Function
     ad = ad + 2 + x\32
@@ -910,15 +885,15 @@ Function get_prop(o, p)
   Local ad, sz, x
   ad = get_prop_addr(o, p)
   If ad > 0 Then
-    x = readb(ad)
+    x = rb(ad)
     If (x And BTM_5_BITS) <> p Then Error
     sz = x\32 + 1
-    If sz = 1 Then get_prop = readb(ad + 1) : Exit Function
-    If sz = 2 Then get_prop = readw(ad + 1) : Exit Function
+    If sz = 1 Then get_prop = rb(ad + 1) : Exit Function
+    If sz = 2 Then get_prop = rw(ad + 1) : Exit Function
     Error "Property length > 2"
   EndIf
-  ad = readw(&h0A) + 2 * (p - 1)
-  get_prop = readw(ad)
+  ad = rw(&h0A) + 2 * (p - 1)
+  get_prop = rw(ad)
 End Function
 
 Sub print_obj(o)
@@ -957,7 +932,7 @@ cont(&hFFFF)
 Print
 Print "Num instructions processed ="; num_ops
 Print "Instructions / second      ="; num_ops / (Timer / 1000)
-Print "Num page faults            ="; page_faults
+Print "Num page faults            ="; pf
 Print
 Memory
 Print

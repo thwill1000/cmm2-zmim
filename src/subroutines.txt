@@ -1,4 +1,4 @@
-zmim.bas: (34 subs)
+zmim.bas: (32 subs)
   cont
   do_call
   do_branch
@@ -15,20 +15,18 @@ zmim.bas: (34 subs)
   mem_load
   oattr
   orel
-  paddr
-  pcreadb
-  pcreadw
   pop
   print_abrv
   print_obj
   print_zstring
   push
-  readb
-  readw
+  rb
+  rp
+  rw
   read_branch
   set_var
-  writeb
-  writew
+  wb
+  ww
   _0op
   _1op
   _2op
@@ -70,4 +68,4 @@ tst_mem.lib:
 tst_obj.lib:
   tst_obj
 
-TOTAL = 54 functions & subroutines
+TOTAL = 52 functions & subroutines

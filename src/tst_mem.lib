@@ -16,7 +16,7 @@ Sub tst_mem
     buf$ = Input$(255, #2)
     buf_sz = Len(buf$)
     For i = 1 To buf_sz
-      If Peek(Var buf$, i) <> readb(ad) Then Error
+      If Peek(Var buf$, i) <> rb(ad) Then Error
       ad = ad + 1
     Next i
   Loop
@@ -30,7 +30,7 @@ Sub tst_mem
     ad = Fix(Rnd * FILE_LEN)
     Seek #2, ad + 1
     buf$ = Input$(1, #2)
-    If Peek(Var buf$, 1) <> readb(ad) Then Error
+    If Peek(Var buf$, 1) <> rb(ad) Then Error
   Next i
   Print
   Print "Time taken ="; Timer; " ms"
@@ -41,8 +41,8 @@ Sub tst_mem
     If i Mod 50 = 0 Then Print ".";
     ad = Fix(Rnd * BASE_STATIC)
     x = Fix(Rnd * 255)
-    writeb(ad, x)
-    If x <> readb(ad) Then Error
+    wb(ad, x)
+    If x <> rb(ad) Then Error
   Next i
   Print
   Print "Time taken ="; Timer; " ms"

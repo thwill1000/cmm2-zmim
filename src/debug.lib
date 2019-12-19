@@ -5,7 +5,7 @@
 Sub dmp_mem(ad, sz)
   Local i, x
   For i = 0 To sz - 1
-    x = readb(ad + i)
+    x = rb(ad + i)
     Print lpad$(Hex$(x), 2, "0"); " ";
     If (i + 1) Mod 16 = 0 Then Print
   Next i
@@ -17,9 +17,9 @@ Sub dmp_obj(o)
 
   If o = 0 Then
     Print "Property defaults:"
-    ad = readw(&h0A)
+    ad = rw(&h0A)
     For i = 0 To 30
-      x = readw(ad)
+      x = rw(ad)
       Print lpad$(Hex$(x), 4, "0"); " ";
       If (i + 1) Mod 10 = 0 Then Print
       ad = ad + 2
@@ -55,12 +55,12 @@ Sub dmp_obj(o)
     If p > 0 Then
       ad = get_prop_addr(o, p)
       sz = get_prop_len(o, p)
-      x = readb(ad)
+      x = rb(ad)
       If x\32 + 1 <> sz Then Error
       Print "             ["; Str$(p); "] ";
       For i = 1 To sz
         ad = ad + 1
-        x = readb(ad)
+        x = rb(ad)
         Print lpad$(Hex$(x), 2, "0"); " ";
       Next i
       Print
@@ -164,11 +164,11 @@ End Sub
 
 Sub dmp_routine(new_pc)
   Local i, locals_sz
-  locals_sz = readb(new_pc)
+  locals_sz = rb(new_pc)
   Print "Routine "; Hex$(new_pc); ", "; Str$(locals_sz); " locals (";
   For i = 0 To locals_sz - 1
     If i > 0 Then Print ", ";
-    x = readw(new_pc + 1 + i * 2)
+    x = rw(new_pc + 1 + i * 2)
     Print lpad$(Hex$(x), 4, "0");
   Next i
   Print ")"
