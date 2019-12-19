@@ -736,10 +736,12 @@ Function get_op(i)
 End Function
 
 Sub do_branch(z, br)
+  Local x
   If Not (z = (br And &h10000) > 0) Then Exit Sub
-  If (br And &hFFFF) = pc - 2 Then do_return(0) : Exit Sub
-  If (br And &hFFFF) = pc - 1 Then do_return(1) : Exit Sub
-  pc = br And &hFFFF ' Bottom 16-bits
+  x = br And &hFFFF ' Bottom 16-bits
+  If x = pc - 1 Then do_return(1) : Exit Sub
+  If x = pc - 2 Then do_return(0) : Exit Sub
+  pc = x
 End Sub
 
 Sub do_return(x)
