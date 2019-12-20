@@ -87,6 +87,7 @@ err = 0
 ' The currently decoded operation
 op_code = 0
 op_num = 0 ' number of operands
+Dim get_op(MAX_NUM_OPERANDS)
 Dim op_type(MAX_NUM_OPERANDS)
 Dim op_value(MAX_NUM_OPERANDS)
 
@@ -258,21 +259,21 @@ End Sub
 Sub long_decode(op)
   op_code = op And BTM_5_BITS
   op_num = 2
-  If op <= &h1F Then
-    op_type(0) = OT_SMALL_CONST
-    op_type(1) = OT_SMALL_CONST
-  ElseIf op <= &h3F Then
-    op_type(0) = OT_SMALL_CONST
-    op_type(1) = OT_VARIABLE
-  ElseIf op <= &h5F Then
-    op_type(0) = OT_VARIABLE
-    op_type(1) = OT_SMALL_CONST
-  Else
-    op_type(0) = OT_VARIABLE
-    op_type(1) = OT_VARIABLE
-  EndIf
   op_value(0) = rp()
   op_value(1) = rp()
+  If op <= &h1F Then
+    op_type(0) = OT_SMALL_CONST : get_op(0) = op_value(0)
+    op_type(1) = OT_SMALL_CONST : get_op(1) = op_value(1)
+  ElseIf op <= &h3F Then
+    op_type(0) = OT_SMALL_CONST : get_op(0) = op_value(0)
+    op_type(1) = OT_VARIABLE    : get_op(1) = get_var(op_value(1))
+  ElseIf op <= &h5F Then
+    op_type(0) = OT_VARIABLE    : get_op(0) = get_var(op_value(0))
+    op_type(1) = OT_SMALL_CONST : get_op(1) = op_value(1)
+  Else
+    op_type(0) = OT_VARIABLE    : get_op(0) = get_var(op_value(0))
+    op_type(1) = OT_VARIABLE    : get_op(1) = get_var(op_value(1))
+  EndIf
 End Sub
 
 Sub short_decode(op)
@@ -281,12 +282,15 @@ Sub short_decode(op)
   If op <= &h8F Then
     op_type(0) = OT_LARGE_CONST
     op_value(0) = rp() * 256 + rp()
+    get_op(0) = op_value(0)
   ElseIf op <= &h9F Then
     op_type(0) = OT_SMALL_CONST
     op_value(0) = rp()
+    get_op(0) = op_value(0)
   ElseIf op <= &hAF Then
     op_type(0) = OT_VARIABLE
     op_value(0) = rp()
+    get_op(0) = get_var(op_value(0))
   Else
     op_num = 0
   EndIf
@@ -305,8 +309,13 @@ Sub var_decode(op)
   For i = 0 To op_num - 1
     If op_type(i) = OT_LARGE_CONST Then
       op_value(i) = rp() * 256 + rp()
-    ElseIf op_type(i) <> OT_OMITTED Then
+      get_op(i) = op_value(i)
+    ElseIf op_type(i) = OT_SMALL_CONST Then
       op_value(i) = rp()
+      get_op(i) = op_value(i)
+    ElseIf op_type(i) = OT_VARIABLE Then
+      op_value(i) = rp()
+      get_op(i) = get_var(op_value(i))
     EndIf
   Next i
 End Sub
@@ -692,14 +701,6 @@ Function read_branch
   If a And BIT(7) Then read_branch = read_branch Or &h10000
 End Function
 
-' Gets the value of an operand.
-' For VARIABLE operands gets the value of the referenced Variable.
-Function get_op(i)
-  Local a
-  a = op_value(i)
-  If op_type(i) = OT_VARIABLE Then get_op = get_var(a) Else get_op = a
-End Function
-
 Sub do_branch(z, br)
   Local x
   If Not (z = (br And &h10000) > 0) Then Exit Sub
@@ -896,7 +897,7 @@ Sub do_step(n)
       Print "[Breakpoint reached] - resetting bp = 0"
       bp = 0
       i = n ' Exit loop
-    ElseIf n = &hFFFF then
+    ElseIf n = &hFFFF Then
       i = 0 ' Loop indefinitely
     EndIf
   Next i
