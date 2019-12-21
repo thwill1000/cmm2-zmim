@@ -691,10 +691,10 @@ End Sub
 
 Sub do_return(x)
   Local st
-  Do While sp > fp + 2 : _ = pop() : Loop
-  pc = pop()
-  st = pop()
-  fp = pop()
+  sp = fp - 1
+  pc = stack(fp + 2)
+  st = stack(fp + 1)
+  fp = stack(fp)
   set_var(st, x)
   dmp_stack()
 End Sub
