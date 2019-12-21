@@ -82,7 +82,7 @@ Function fmt_operand$(i)
   Else
     a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
   EndIf
-  If x > 0 Then a$ = a$ + " (=" + Hex$(get_var(x)) + ")"
+  If x > 0 Then a$ = a$ + " (=" + Hex$(vget(x)) + ")"
   fmt_operand$ = a$
 End Function
 

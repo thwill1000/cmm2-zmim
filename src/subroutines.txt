@@ -1,17 +1,12 @@
-zmim.bas: (32 subs)
-  cont
-  do_call
-  do_branch
-  do_op
-  do_return
+zmim.bas: (34 subs)
   get_next_prop
   get_op
   get_prop
   get_prop_addr
   get_prop_base
   get_prop_len
-  get_var
   init
+  long_decode
   mem_load
   oattr
   orel
@@ -24,12 +19,19 @@ zmim.bas: (32 subs)
   rp
   rw
   read_branch
-  set_var
+  short_decode
+  var_decode
+  vget
+  vset
   wb
   ww
   _0op
   _1op
   _2op
+  _branch
+  _call
+  _return
+  _step
   _varop
 
 util.lib: (3 subs)
@@ -68,4 +70,4 @@ tst_mem.lib:
 tst_obj.lib:
   tst_obj
 
-TOTAL = 52 functions & subroutines
+TOTAL = 54 functions & subroutines

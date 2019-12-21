@@ -180,13 +180,13 @@ End Function
 
 ' Gets variable 'i'.
 ' If i = 0 then pops and returns the top value of the stack.
-Function get_var(i)
+Function vget(i)
   If i = 0 Then
-    get_var = pop()
+    vget = pop()
   ElseIf i < &h10 Then
-    get_var = stack(fp + i + 3)
+    vget = stack(fp + i + 3)
   ElseIf i <= &hFF Then
-    get_var = rw(GLOBAL_VAR + 2 * (i - &h10))
+    vget = rw(GLOBAL_VAR + 2 * (i - &h10))
   Else
     Error "Unknown variable " + Str$(i)
   EndIf
@@ -194,7 +194,7 @@ End Function
 
 ' Sets variable 'i'.
 ' If i = 0 then pushes the value onto the stack.
-Sub set_var(i, x)
+Sub vset(i, x)
   If i = 0 Then
     push(x)
   ElseIf i < &h10 Then
@@ -262,17 +262,17 @@ Sub long_decode(op)
   ov(0) = rp()
   ov(1) = rp()
   If op <= &h1F Then
-    ot(0) = SMALL    : oa(0) = ov(0)
-    ot(1) = SMALL    : oa(1) = ov(1)
+    ot(0) = SMALL : oa(0) = ov(0)
+    ot(1) = SMALL : oa(1) = ov(1)
   ElseIf op <= &h3F Then
-    ot(0) = SMALL    : oa(0) = ov(0)
-    ot(1) = VARIABLE : oa(1) = get_var(ov(1))
+    ot(0) = SMALL : oa(0) = ov(0)
+    ot(1) = VARIABLE : oa(1) = vget(ov(1))
   ElseIf op <= &h5F Then
-    ot(0) = VARIABLE : oa(0) = get_var(ov(0))
-    ot(1) = SMALL    : oa(1) = ov(1)
+    ot(0) = VARIABLE : oa(0) = vget(ov(0))
+    ot(1) = SMALL : oa(1) = ov(1)
   Else
-    ot(0) = VARIABLE : oa(0) = get_var(ov(0))
-    ot(1) = VARIABLE : oa(1) = get_var(ov(1))
+    ot(0) = VARIABLE : oa(0) = vget(ov(0))
+    ot(1) = VARIABLE : oa(1) = vget(ov(1))
   EndIf
 End Sub
 
@@ -284,7 +284,7 @@ Sub short_decode(op)
   ElseIf op <= &h9F Then
     ot(0) = SMALL : ov(0) = rp() : oa(0) = ov(0)
   ElseIf op <= &hAF Then
-    ot(0) = VARIABLE : ov(0) = rp() : oa(0) = get_var(ov(0))
+    ot(0) = VARIABLE : ov(0) = rp() : oa(0) = vget(ov(0))
   Else
     on = 0
   EndIf
@@ -303,7 +303,7 @@ Sub var_decode(op)
   For i = 0 To on - 1
     If ot(i) = LARGE Then ov(i) = rp() * 256 + rp() : oa(i) = ov(i)
     If ot(i) = SMALL Then ov(i) = rp() : oa(i) = ov(i)
-    If ot(i) = VARIABLE Then ov(i) = rp() : oa(i) = get_var(ov(i))
+    If ot(i) = VARIABLE Then ov(i) = rp() : oa(i) = vget(ov(i))
   Next i
 End Sub
 
@@ -320,7 +320,7 @@ Sub _2op
     x = (a = b)
     If (Not x) And (on = 3) Then x = (a = oa(2))
     If (Not x) And (on = 4) Then x = (a = oa(3))
-    do_branch(x, br)
+    _branch(x, br)
 
   ' JL
   ElseIf oc = &h2 Then
@@ -328,7 +328,7 @@ Sub _2op
     dmp_op("JL", -1, br)
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
-    do_branch(a < b, br)
+    _branch(a < b, br)
 
   ' JG
   ElseIf oc = &h3 Then
@@ -336,57 +336,57 @@ Sub _2op
     dmp_op("JG", -1, br)
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
-    do_branch(a > b, br)
+    _branch(a > b, br)
 
   ' DEC_CHK
   ElseIf oc = &h4 Then
     br = read_branch()
     dmp_op("DEC_CHK", -1, br)
-    x = get_var(a) - 1
+    x = vget(a) - 1
     If x < 0 Then x = &hFFFF
-    set_var(a, x)
-    do_branch(x < b, br)
+    vset(a, x)
+    _branch(x < b, br)
 
   ' INC_CHK
   ElseIf oc = &h5 Then
     br = read_branch()
     dmp_op("INC_CHK", -1, br)
-    x = get_var(a) + 1
+    x = vget(a) + 1
     If x > &hFFFF Then x = 0
-    set_var(a, x)
-    do_branch(x > b, br)
+    vset(a, x)
+    _branch(x > b, br)
 
   ' JIN
   ElseIf oc = &h6 Then
     br = read_branch()
     dmp_op("JIN", -1, br)
     x = orel(a, PARENT)
-    do_branch(x = b, br)
+    _branch(x = b, br)
 
   ' TEST
   ElseIf oc = &h7 Then
     br = read_branch()
     dmp_op("TEST", -1, br)
-    do_branch(a And b = b, br)
+    _branch(a And b = b, br)
 
   ' OR
   ElseIf oc = &h8 Then
     st = rp()
     dmp_op("OR", st)
-    set_var(st, a Or b)
+    vset(st, a Or b)
 
   ' AND
   ElseIf oc = &h9 Then
     st = rp()
     dmp_op("AND", st)
-    set_var(st, a And b)
+    vset(st, a And b)
 
   ' TEST_ATTR: a = object, b = attribute
   ElseIf oc = &hA Then
     br = read_branch()
     dmp_op("TEST_ATTR", -1, br)
     x = oattr(a, b)
-    do_branch(x = 1, br)
+    _branch(x = 1, br)
 
   ' SET_ATTR
   ElseIf oc = &hB Then
@@ -401,7 +401,7 @@ Sub _2op
   ' STORE
   ElseIf oc = &hD Then
     dmp_op("STORE", -1)
-    set_var(a, b)
+    vset(a, b)
 
   ' INSERT_OBJ: a = object, b = destination
   ElseIf oc = &hE Then
@@ -416,21 +416,21 @@ Sub _2op
     st = rp()
     dmp_op("LOADW", st)
     x = rw(a + 2 * b)
-    set_var(st, x)
+    vset(st, x)
 
   ' LOADB
   ElseIf oc = &h10 Then
     st = rp()
     dmp_op("LOADB", st)
     x = rb(a + b)
-    set_var(st, x)
+    vset(st, x)
 
   ' GET_PROP
   ElseIf oc = &h11 Then
     st = rp()
     dmp_op("GET_PROP", st)
     x = get_prop(a, b)
-    set_var(st, x)
+    vset(st, x)
 
   ' GET_PROP_ADDR
   ElseIf oc = &h12 Then
@@ -468,7 +468,7 @@ Sub _2op
     EndIf
 
     If x < 0 Then x = 65536 - x
-    set_var(st, x)
+    vset(st, x)
 
   Else
     err = 1
@@ -484,7 +484,7 @@ Sub _1op
   If oc = &h0 Then
     br = read_branch()
     dmp_op("JZ", -1, br)
-    do_branch(a = 0, br)
+    _branch(a = 0, br)
 
   ' GET_SIBLING
   ElseIf oc = &h1 Then
@@ -492,8 +492,8 @@ Sub _1op
     br = read_branch()
     dmp_op("GET_SIBLING", st, br)
     x = orel(a, SIBLING)
-    set_var(st, x)
-    do_branch(x <> 0, br)
+    vset(st, x)
+    _branch(x <> 0, br)
 
   ' GET_CHILD
   ElseIf oc = &h2 Then
@@ -501,15 +501,15 @@ Sub _1op
     br = read_branch()
     dmp_op("GET_CHILD", st, br)
     x = orel(a, CHILD)
-    set_var(st, x)
-    do_branch(x <> 0, br)
+    vset(st, x)
+    _branch(x <> 0, br)
 
   ' GET_PARENT
   ElseIf oc = &h3 Then
     st = rp()
     dmp_op("GET_PARENT", st)
     x = orel(a, PARENT)
-    set_var(st, x)
+    vset(st, x)
 
   ' GET_PROP_LEN
   ElseIf oc = &h4 Then
@@ -520,20 +520,20 @@ Sub _1op
   ' INC
   ElseIf oc = &h5 Then
     dmp_op("INC", -1)
-    x = get_var(a)
+    x = vget(a)
     If x > 32767 Then x = x - 65536
     x = x + 1
     If x < 0 Then x = 65536 - x
-    set_var(a, x)
+    vset(a, x)
 
   ' DEC
   ElseIf oc = &h6 Then
     dmp_op("DEC", -1)
-    x = get_var(a)
+    x = vget(a)
     If x > 32767 Then x = x - 65536
     x = x - 1
     If x < 0 Then x = 65536 - x
-    set_var(a, x)
+    vset(a, x)
 
   ' PRINT_ADDR
   ElseIf oc = &h7 Then
@@ -554,7 +554,7 @@ Sub _1op
   ' RET
   ElseIf oc = &hB Then
     dmp_op("RET", -1)
-    do_return(a)
+    _return(a)
 
   ' JUMP
   ElseIf oc = &hC Then
@@ -585,12 +585,12 @@ Sub _0op
   ' RTRUE
   If oc = &h0 Then
     dmp_op("RTRUE", -1)
-    do_return(1)
+    _return(1)
 
   ' RFALSE
   ElseIf oc = &h1 Then
     dmp_op("RFALSE", -1)
-    do_return(0)
+    _return(0)
 
   ' PRINT
   ElseIf oc = &h2 Then
@@ -608,7 +608,7 @@ Sub _0op
   ElseIf oc = &h8 Then
     dmp_op("RET_POPPED", -1)
     x = pop()
-    do_return(x)
+    _return(x)
 
   ' NEWLINE
   ElseIf oc = &hB Then
@@ -627,7 +627,7 @@ Sub _varop
   If oc = &h0 Then
     st = rp()
     dmp_op("CALL", st)
-    do_call(st)
+    _call(st)
 
   ' STOREW
   ElseIf oc = &h1 Then
@@ -680,30 +680,30 @@ Function read_branch
   If a And BIT(7) Then read_branch = read_branch Or &h10000
 End Function
 
-Sub do_branch(z, br)
+Sub _branch(z, br)
   Local x
   If Not (z = (br And &h10000) > 0) Then Exit Sub
   x = br And &hFFFF ' Bottom 16-bits
-  If x = pc - 1 Then do_return(1) : Exit Sub
-  If x = pc - 2 Then do_return(0) : Exit Sub
+  If x = pc - 1 Then _return(1) : Exit Sub
+  If x = pc - 2 Then _return(0) : Exit Sub
   pc = x
 End Sub
 
-Sub do_return(x)
+Sub _return(x)
   Local st
   sp = fp - 1
   pc = stack(fp + 2)
   st = stack(fp + 1)
   fp = stack(fp)
-  set_var(st, x)
+  vset(st, x)
   dmp_stack()
 End Sub
 
-Sub do_call(st)
+Sub _call(st)
   Local i, nl, x
 
   ' When address 0 is called, nothing happens and return value is false
-  If oa(0) = 0 Then set_var(st, 0) : Exit Sub
+  If oa(0) = 0 Then vset(st, 0) : Exit Sub
 
   push(fp)
   fp = sp
@@ -836,7 +836,7 @@ Sub print_obj(o)
   print_zstring(ad)
 End Sub
 
-Sub do_step(n)
+Sub _step(n)
   Local i, op
 
   If n = 0 Then n = 1 Else If n < 0 Then n = &hFFFF
@@ -892,7 +892,7 @@ Print
 num_ops = 0
 Timer = 0
 
-do_step(-1)
+_step(-1)
 
 Print
 Print "Num instructions processed ="; num_ops
