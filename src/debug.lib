@@ -70,8 +70,8 @@ End Sub
 
 Function fmt_operand$(i)
   Local a$, x
-  x = op_value(i)
-  If op_type(i) <> OT_VARIABLE Then
+  x = ov(i)
+  If ot(i) <> VARIABLE Then
     fmt_operand$ = "#" + lpad$(Hex$(x), 2, "0")
     Exit Function
   EndIf
@@ -88,13 +88,13 @@ End Function
 
 Function fmt_call_operands$
   Local a$, i
-  If op_type(0) = OT_VARIABLE Then
+  If ot(0) = VARIABLE Then
     a$ = fmt_operand$(i)
   Else
-    a$ = Hex$(2 * op_value(0))
+    a$ = Hex$(2 * ov(0))
   EndIf
   a$ = a$ + " ("
-  For i = 1 To op_num - 1
+  For i = 1 To on - 1
     If i > 1 Then a$ = a$ + ", "
     a$ = a$ + fmt_operand$(i)
   Next i
@@ -104,8 +104,8 @@ End Function
 
 Function fmt_jump_operands$
   Local of
-  If op_num > 1 Then Error "Too many operands."
-  of = get_op(0)
+  If on > 1 Then Error "Too many operands."
+  of = oa(0)
   If of And BIT_15 Then of = of - 65536
   fmt_jump_operands$ = Hex$(pc + of - 2)
 End Function
@@ -122,9 +122,9 @@ End Function
 
 Function fmt_store_operands$
   Local a$, i
-  If op_type(0) = OT_VARIABLE Then Error "Unexpected VARIABLE operand"
-  a$ = a$ + fmt_store_value$(op_value(0))
-  For i = 1 To op_num - 1
+  If ot(0) = VARIABLE Then Error "Unexpected VARIABLE operand"
+  a$ = a$ + fmt_store_value$(ov(0))
+  For i = 1 To on - 1
     a$ = a$ + ", " + fmt_operand$(i)
   Next i
   fmt_store_operands$ = a$
@@ -132,7 +132,7 @@ End Function
 
 Function fmt_normal_operands$
   Local a$, i
-  For i = 0 To op_num - 1
+  For i = 0 To on - 1
     If i > 0 Then a$ = a$ + ", "
     a$ = a$ + fmt_operand$(i)
   Next i

@@ -39,11 +39,6 @@ Dim ALPHABET$(2) LENGTH 32
 ALPHABET$(0) = " 123[]abcdefghijklmnopqrstuvwxyz"
 ALPHABET$(1) = " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALPHABET$(2) = " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
-MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
-OT_LARGE_CONST = &b00
-OT_SMALL_CONST = &b01
-OT_VARIABLE = &b10
-OT_OMITTED = &b11
 
 Dim BIT(7)
 For i = 0 To 7 : BIT(i) = 2 ^ i : Next i
@@ -84,12 +79,17 @@ pc = 0
 ' If > 0 then an error has occurred
 err = 0
 
-' The currently decoded operation
-op_code = 0
-op_num = 0 ' number of operands
-Dim get_op(MAX_NUM_OPERANDS)
-Dim op_type(MAX_NUM_OPERANDS)
-Dim op_value(MAX_NUM_OPERANDS)
+MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
+
+' Instruction encoding
+LARGE = &b00 : SMALL = &b01 : VARIABLE = &b10 : OMITTED = &b11
+
+' The currently decoded instruction
+oc = 0                   ' operand code
+on = 0                   ' number of operands
+Dim oa(MAX_NUM_OPERANDS) ' operand values with variables looked-up
+Dim ot(MAX_NUM_OPERANDS) ' operand types
+Dim ov(MAX_NUM_OPERANDS) ' opeanrd raw values
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp
@@ -257,65 +257,65 @@ Sub print_abrv(x)
 End Sub
 
 Sub long_decode(op)
-  op_code = op And BTM_5_BITS
-  op_num = 2
-  op_value(0) = rp()
-  op_value(1) = rp()
+  oc = op And BTM_5_BITS
+  on = 2
+  ov(0) = rp()
+  ov(1) = rp()
   If op <= &h1F Then
-    op_type(0) = OT_SMALL_CONST : get_op(0) = op_value(0)
-    op_type(1) = OT_SMALL_CONST : get_op(1) = op_value(1)
+    ot(0) = SMALL    : oa(0) = ov(0)
+    ot(1) = SMALL    : oa(1) = ov(1)
   ElseIf op <= &h3F Then
-    op_type(0) = OT_SMALL_CONST : get_op(0) = op_value(0)
-    op_type(1) = OT_VARIABLE    : get_op(1) = get_var(op_value(1))
+    ot(0) = SMALL    : oa(0) = ov(0)
+    ot(1) = VARIABLE : oa(1) = get_var(ov(1))
   ElseIf op <= &h5F Then
-    op_type(0) = OT_VARIABLE    : get_op(0) = get_var(op_value(0))
-    op_type(1) = OT_SMALL_CONST : get_op(1) = op_value(1)
+    ot(0) = VARIABLE : oa(0) = get_var(ov(0))
+    ot(1) = SMALL    : oa(1) = ov(1)
   Else
-    op_type(0) = OT_VARIABLE    : get_op(0) = get_var(op_value(0))
-    op_type(1) = OT_VARIABLE    : get_op(1) = get_var(op_value(1))
+    ot(0) = VARIABLE : oa(0) = get_var(ov(0))
+    ot(1) = VARIABLE : oa(1) = get_var(ov(1))
   EndIf
 End Sub
 
 Sub short_decode(op)
-  op_code = op And BTM_4_BITS
-  op_num = 1
+  oc = op And BTM_4_BITS
+  on = 1
   If op <= &h8F Then
-    op_type(0) = OT_LARGE_CONST
-    op_value(0) = rp() * 256 + rp()
-    get_op(0) = op_value(0)
+    ot(0) = LARGE
+    ov(0) = rp() * 256 + rp()
+    oa(0) = ov(0)
   ElseIf op <= &h9F Then
-    op_type(0) = OT_SMALL_CONST
-    op_value(0) = rp()
-    get_op(0) = op_value(0)
+    ot(0) = SMALL
+    ov(0) = rp()
+    oa(0) = ov(0)
   ElseIf op <= &hAF Then
-    op_type(0) = OT_VARIABLE
-    op_value(0) = rp()
-    get_op(0) = get_var(op_value(0))
+    ot(0) = VARIABLE
+    ov(0) = rp()
+    oa(0) = get_var(ov(0))
   Else
-    op_num = 0
+    on = 0
   EndIf
 End Sub
 
 Sub var_decode(op)
   Local i, x
-  op_code = op And BTM_5_BITS
-  op_num = 4
+  oc = op And BTM_5_BITS
+  on = 4
   x = rp()
   For i = 3 To 0 Step -1
-    op_type(i) = x And BTM_2_BITS
-    If op_type(i) = OT_OMITTED Then op_num = op_num - 1
+    ot(i) = x And BTM_2_BITS
+    If ot(i) = OMITTED Then on = on - 1
     x = rshift(x, 2)
   Next i
-  For i = 0 To op_num - 1
-    If op_type(i) = OT_LARGE_CONST Then
-      op_value(i) = rp() * 256 + rp()
-      get_op(i) = op_value(i)
-    ElseIf op_type(i) = OT_SMALL_CONST Then
-      op_value(i) = rp()
-      get_op(i) = op_value(i)
-    ElseIf op_type(i) = OT_VARIABLE Then
-      op_value(i) = rp()
-      get_op(i) = get_var(op_value(i))
+  For i = 0 To on - 1
+    If ot(i) = LARGE Then
+      ov(i) = rp() * 256 + rp()
+      oa(i) = ov(i)
+    ElseIf ot(i) = SMALL Then
+      ov(i) = rp()
+      oa(i) = ov(i)
+    ElseIf ot(i) = VARIABLE Then
+      ov(i) = rp()
+      oa(i) = get_var(ov(i))
     EndIf
   Next i
 End Sub
@@ -323,20 +323,20 @@ End Sub
 Sub _2op
   Local a, b, br, st, x
 
-  a = get_op(0)
-  b = get_op(1)
+  a = oa(0)
+  b = oa(1)
 
   ' JE
-  If op_code = &h1 Then
+  If oc = &h1 Then
     br = read_branch()
     dmp_op("JE", -1, br)
     x = (a = b)
-    If (Not x) And (op_num = 3) Then x = (a = get_op(2))
-    If (Not x) And (op_num = 4) Then x = (a = get_op(3))
+    If (Not x) And (on = 3) Then x = (a = oa(2))
+    If (Not x) And (on = 4) Then x = (a = oa(3))
     do_branch(x, br)
 
   ' JL
-  ElseIf op_code = &h2 Then
+  ElseIf oc = &h2 Then
     br = read_branch()
     dmp_op("JL", -1, br)
     If a > 32767 Then a = a - 65536
@@ -344,7 +344,7 @@ Sub _2op
     do_branch(a < b, br)
 
   ' JG
-  ElseIf op_code = &h3 Then
+  ElseIf oc = &h3 Then
     br = read_branch()
     dmp_op("JG", -1, br)
     If a > 32767 Then a = a - 65536
@@ -352,7 +352,7 @@ Sub _2op
     do_branch(a > b, br)
 
   ' DEC_CHK
-  ElseIf op_code = &h4 Then
+  ElseIf oc = &h4 Then
     br = read_branch()
     dmp_op("DEC_CHK", -1, br)
     x = get_var(a) - 1
@@ -361,7 +361,7 @@ Sub _2op
     do_branch(x < b, br)
 
   ' INC_CHK
-  ElseIf op_code = &h5 Then
+  ElseIf oc = &h5 Then
     br = read_branch()
     dmp_op("INC_CHK", -1, br)
     x = get_var(a) + 1
@@ -370,54 +370,54 @@ Sub _2op
     do_branch(x > b, br)
 
   ' JIN
-  ElseIf op_code = &h6 Then
+  ElseIf oc = &h6 Then
     br = read_branch()
     dmp_op("JIN", -1, br)
     x = orel(a, PARENT)
     do_branch(x = b, br)
 
   ' TEST
-  ElseIf op_code = &h7 Then
+  ElseIf oc = &h7 Then
     br = read_branch()
     dmp_op("TEST", -1, br)
     do_branch(a And b = b, br)
 
   ' OR
-  ElseIf op_code = &h8 Then
+  ElseIf oc = &h8 Then
     st = rp()
     dmp_op("OR", st)
     set_var(st, a Or b)
 
   ' AND
-  ElseIf op_code = &h9 Then
+  ElseIf oc = &h9 Then
     st = rp()
     dmp_op("AND", st)
     set_var(st, a And b)
 
   ' TEST_ATTR: a = object, b = attribute
-  ElseIf op_code = &hA Then
+  ElseIf oc = &hA Then
     br = read_branch()
     dmp_op("TEST_ATTR", -1, br)
     x = oattr(a, b)
     do_branch(x = 1, br)
 
   ' SET_ATTR
-  ElseIf op_code = &hB Then
+  ElseIf oc = &hB Then
     dmp_op("SET_ATTR", -1)
     _ = oattr(a, b, 1, 1)
 
   ' CLEAR_ATTR
-  ElseIf op_code = &hC Then
+  ElseIf oc = &hC Then
     dmp_op("CLEAR_ATTR", -1)
     _ = oattr(a, b, 1, 0)
 
   ' STORE
-  ElseIf op_code = &hD Then
+  ElseIf oc = &hD Then
     dmp_op("STORE", -1)
     set_var(a, b)
 
   ' INSERT_OBJ: a = object, b = destination
-  ElseIf op_code = &hE Then
+  ElseIf oc = &hE Then
     dmp_op("INSERT_OBJ", -1)
     x = orel(b, CHILD)
     _ = orel(b, CHILD, 1, a)
@@ -425,54 +425,54 @@ Sub _2op
     _ = orel(a, SIBLING, 1, x)
 
   ' LOADW
-  ElseIf op_code = &hF Then
+  ElseIf oc = &hF Then
     st = rp()
     dmp_op("LOADW", st)
     x = rw(a + 2 * b)
     set_var(st, x)
 
   ' LOADB
-  ElseIf op_code = &h10 Then
+  ElseIf oc = &h10 Then
     st = rp()
     dmp_op("LOADB", st)
     x = rb(a + b)
     set_var(st, x)
 
   ' GET_PROP
-  ElseIf op_code = &h11 Then
+  ElseIf oc = &h11 Then
     st = rp()
     dmp_op("GET_PROP", st)
     x = get_prop(a, b)
     set_var(st, x)
 
   ' GET_PROP_ADDR
-  ElseIf op_code = &h12 Then
+  ElseIf oc = &h12 Then
     st = rp()
     dmp_op("!GET_PROP_ADDR", st)
     err = 1
 
   ' GET_NEXT_PROP
-  ElseIf op_code = &h13 Then
+  ElseIf oc = &h13 Then
     st = rp()
     dmp_op("!GET_NEXT_PROP", st)
     err = 1
 
-  ElseIf op_code < &h19 Then
+  ElseIf oc < &h19 Then
     st = rp()
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
 
     ' ADD
-    If op_code = &h14 Then
+    If oc = &h14 Then
       dmp_op("ADD", st)
       x = a + b
-    ElseIf op_code = &h15 Then
+    ElseIf oc = &h15 Then
       dmp_op("SUB", st)
       x = a - b
-    ElseIf op_code = &h16 Then
+    ElseIf oc = &h16 Then
       dmp_op("MUL", st)
       x = a * b
-    ElseIf op_code = &h17 Then
+    ElseIf oc = &h17 Then
       dmp_op("DIV", st)
       x = a \ b
     Else
@@ -491,16 +491,16 @@ End Sub
 Sub _1op
   Local a, st, br, x
 
-  a = get_op(0)
+  a = oa(0)
 
   ' JZ
-  If op_code = &h0 Then
+  If oc = &h0 Then
     br = read_branch()
     dmp_op("JZ", -1, br)
     do_branch(a = 0, br)
 
   ' GET_SIBLING
-  ElseIf op_code = &h1 Then
+  ElseIf oc = &h1 Then
     st = rp()
     br = read_branch()
     dmp_op("GET_SIBLING", st, br)
@@ -509,7 +509,7 @@ Sub _1op
     do_branch(x <> 0, br)
 
   ' GET_CHILD
-  ElseIf op_code = &h2 Then
+  ElseIf oc = &h2 Then
     st = rp()
     br = read_branch()
     dmp_op("GET_CHILD", st, br)
@@ -518,20 +518,20 @@ Sub _1op
     do_branch(x <> 0, br)
 
   ' GET_PARENT
-  ElseIf op_code = &h3 Then
+  ElseIf oc = &h3 Then
     st = rp()
     dmp_op("GET_PARENT", st)
     x = orel(a, PARENT)
     set_var(st, x)
 
   ' GET_PROP_LEN
-  ElseIf op_code = &h4 Then
+  ElseIf oc = &h4 Then
     st = rp()
     dmp_op("!GET_PROP_LEN", st)
     err = 1
 
   ' INC
-  ElseIf op_code = &h5 Then
+  ElseIf oc = &h5 Then
     dmp_op("INC", -1)
     x = get_var(a)
     If x > 32767 Then x = x - 65536
@@ -540,7 +540,7 @@ Sub _1op
     set_var(a, x)
 
   ' DEC
-  ElseIf op_code = &h6 Then
+  ElseIf oc = &h6 Then
     dmp_op("DEC", -1)
     x = get_var(a)
     If x > 32767 Then x = x - 65536
@@ -549,40 +549,40 @@ Sub _1op
     set_var(a, x)
 
   ' PRINT_ADDR
-  ElseIf op_code = &h7 Then
+  ElseIf oc = &h7 Then
     dmp_op("!PRINT_ADDR", -1)
     err = 1
 
   ' REMOVE_OBJ
-  ElseIf op_code = &h9 Then
+  ElseIf oc = &h9 Then
     dmp_op("!REMOVE_OBJ", -1)
     err = 1
 
   ' PRINT_OBJECT
-  ElseIf op_code = &hA Then
+  ElseIf oc = &hA Then
     dmp_op("PRINT_OBJECT", -1)
     print_obj(a)
     If dbg Then dbg = dbg Or BIT(7)
 
   ' RET
-  ElseIf op_code = &hB Then
+  ElseIf oc = &hB Then
     dmp_op("RET", -1)
     do_return(a)
 
   ' JUMP
-  ElseIf op_code = &hC Then
+  ElseIf oc = &hC Then
     dmp_op("JUMP", -1)
     If a And &h8000 Then a = a - 65536
     pc = pc + a - 2
 
   ' PRINT_PADDR
-  ElseIf op_code = &hD Then
+  ElseIf oc = &hD Then
     dmp_op("PRINT_PADDR", -1)
     print_zstring(a * 2)
     If dbg Then dbg = dbg Or BIT(7)
 
   ' LOAD
-  ElseIf op_code = &hE Then
+  ElseIf oc = &hE Then
     st = rp()
     dmp_op("!LOAD", st)
     err = 1
@@ -596,35 +596,35 @@ Sub _0op
   Local x
 
   ' RTRUE
-  If op_code = &h0 Then
+  If oc = &h0 Then
     dmp_op("RTRUE", -1)
     do_return(1)
 
   ' RFALSE
-  ElseIf op_code = &h1 Then
+  ElseIf oc = &h1 Then
     dmp_op("RFALSE", -1)
     do_return(0)
 
   ' PRINT
-  ElseIf op_code = &h2 Then
+  ElseIf oc = &h2 Then
     dmp_op("PRINT", -1)
     print_zstring(pc)
     If dbg Then dbg = dbg Or BIT(7)
 
   ' PRINT_RET
-  ElseIf op_code = &h3 Then
+  ElseIf oc = &h3 Then
     dmp_op("!PRINT_RET", -1)
     print_zstring(pc)
     err = 1
 
   ' RET_POPPED
-  ElseIf op_code = &h8 Then
+  ElseIf oc = &h8 Then
     dmp_op("RET_POPPED", -1)
     x = pop()
     do_return(x)
 
   ' NEWLINE
-  ElseIf op_code = &hB Then
+  ElseIf oc = &hB Then
     dmp_op("NEWLINE", -1)
     Print
 
@@ -637,42 +637,42 @@ Sub _varop
   Local a, b, c, st, br, x
 
   ' CALL
-  If op_code = &h0 Then
+  If oc = &h0 Then
     do_call()
 
   ' STOREW
-  ElseIf op_code = &h1 Then
-    a = get_op(0)
-    b = get_op(1)
-    c = get_op(2)
+  ElseIf oc = &h1 Then
+    a = oa(0)
+    b = oa(1)
+    c = oa(2)
     dmp_op("STOREW", -1)
     ww(a + 2 * b, c)
 
   ' STOREB
-  ElseIf op_code = &h2 Then
-    a = get_op(0)
-    b = get_op(1)
-    c = get_op(2)
+  ElseIf oc = &h2 Then
+    a = oa(0)
+    b = oa(1)
+    c = oa(2)
     dmp_op("STOREB", -1)
     wb(a + b, c)
 
   ' READ
-  ElseIf op_code = &h4 Then
-    a = get_op(0)
-    b = get_op(1)
+  ElseIf oc = &h4 Then
+    a = oa(0)
+    b = oa(1)
     dmp_op("!READ", -1)
     err = 1
 
   ' PRINT_CHAR
-  ElseIf op_code = &h5 Then
-    a = get_op(0)
+  ElseIf oc = &h5 Then
+    a = oa(0)
     dmp_op("PRINT_CHAR", -1)
     Print Chr$(a);
     If dbg Then dbg = dbg Or BIT(7)
 
   ' PRINT_NUM
-  ElseIf op_code = &h6 Then
-    a = get_op(0)
+  ElseIf oc = &h6 Then
+    a = oa(0)
     dmp_op("PRINT_NUM", -1)
     Print Str$(a);
     If dbg Then dbg = dbg Or BIT(7)
@@ -723,8 +723,8 @@ End Sub
 Sub do_call
   Local args(2), i, locals_sz, new_pc, st, x
 
-  new_pc = 2 * get_op(0)
-  For i = 1 To op_num - 1 : args(i - 1) = get_op(i) : Next i
+  new_pc = 2 * oa(0)
+  For i = 1 To on - 1 : args(i - 1) = oa(i) : Next i
   st = rp()
 
   dmp_op("CALL", st)
@@ -741,7 +741,7 @@ Sub do_call
   push(locals_sz)
   For i = 0 To locals_sz - 1
     x = rp() * 256 + rp()
-    If i > op_num - 2 Then push(x) Else push(args(i))
+    If i > on - 2 Then push(x) Else push(args(i))
   Next i
 
   dmp_routine(new_pc)
