@@ -625,7 +625,9 @@ Sub _varop
 
   ' CALL
   If oc = &h0 Then
-    do_call()
+    st = rp()
+    dmp_op("CALL", st)
+    do_call(st)
 
   ' STOREW
   ElseIf oc = &h1 Then
@@ -697,31 +699,25 @@ Sub do_return(x)
   dmp_stack()
 End Sub
 
-Sub do_call
-  Local args(2), i, locals_sz, new_pc, st, x
-
-  new_pc = 2 * oa(0)
-  For i = 1 To on - 1 : args(i - 1) = oa(i) : Next i
-  st = rp()
-
-  dmp_op("CALL", st)
+Sub do_call(st)
+  Local i, nl, x
 
   ' When address 0 is called, nothing happens and return value is false
-  If new_pc = 0 Then set_var(st, 0) : Exit Sub
+  If oa(0) = 0 Then set_var(st, 0) : Exit Sub
 
   push(fp)
   fp = sp
   push(st)
   push(pc)
-  pc = new_pc
-  locals_sz = rp()
-  push(locals_sz)
-  For i = 0 To locals_sz - 1
+  pc = 2 * oa(0)
+  nl = rp() ' number of local variables
+  push(nl)
+  For i = 0 To nl - 1
     x = rp() * 256 + rp()
-    If i > on - 2 Then push(x) Else push(args(i))
+    If i > on - 2 Then push(x) Else push(oa(i + 1))
   Next i
 
-  dmp_routine(new_pc)
+  dmp_routine(2 * oa(0))
   dmp_stack()
 End Sub
 
