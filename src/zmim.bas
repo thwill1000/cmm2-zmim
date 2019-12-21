@@ -280,17 +280,11 @@ Sub short_decode(op)
   oc = op And BTM_4_BITS
   on = 1
   If op <= &h8F Then
-    ot(0) = LARGE
-    ov(0) = rp() * 256 + rp()
-    oa(0) = ov(0)
+    ot(0) = LARGE : ov(0) = rp() * 256 + rp() : oa(0) = ov(0)
   ElseIf op <= &h9F Then
-    ot(0) = SMALL
-    ov(0) = rp()
-    oa(0) = ov(0)
+    ot(0) = SMALL : ov(0) = rp() : oa(0) = ov(0)
   ElseIf op <= &hAF Then
-    ot(0) = VARIABLE
-    ov(0) = rp()
-    oa(0) = get_var(ov(0))
+    ot(0) = VARIABLE : ov(0) = rp() : oa(0) = get_var(ov(0))
   Else
     on = 0
   EndIf
@@ -298,25 +292,18 @@ End Sub
 
 Sub var_decode(op)
   Local i, x
-  oc = op And BTM_5_BITS
+  oc = op And &b11111
   on = 4
   x = rp()
   For i = 3 To 0 Step -1
-    ot(i) = x And BTM_2_BITS
+    ot(i) = x And &b11
     If ot(i) = OMITTED Then on = on - 1
-    x = rshift(x, 2)
+    x = x \ 4
   Next i
   For i = 0 To on - 1
-    If ot(i) = LARGE Then
-      ov(i) = rp() * 256 + rp()
-      oa(i) = ov(i)
-    ElseIf ot(i) = SMALL Then
-      ov(i) = rp()
-      oa(i) = ov(i)
-    ElseIf ot(i) = VARIABLE Then
-      ov(i) = rp()
-      oa(i) = get_var(ov(i))
-    EndIf
+    If ot(i) = LARGE Then ov(i) = rp() * 256 + rp() : oa(i) = ov(i)
+    If ot(i) = SMALL Then ov(i) = rp() : oa(i) = ov(i)
+    If ot(i) = VARIABLE Then ov(i) = rp() : oa(i) = get_var(ov(i))
   Next i
 End Sub
 
