@@ -199,7 +199,7 @@ Sub set_var(i, x)
     push(x)
   ElseIf i < &h10 Then
     stack(fp + i + 3) = x
-  ElseIf i < &hFF Then
+  ElseIf i <= &hFF Then
     ww(GLOBAL_VAR + 2 * (i - &h10), x)
   Else
     Error "Unknown variable " + Str$(i)
