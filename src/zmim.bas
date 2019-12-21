@@ -712,9 +712,9 @@ Sub do_call(st)
   pc = 2 * oa(0)
   nl = rp() ' number of local variables
   push(nl)
-  For i = 0 To nl - 1
+  For i = 1 To nl
     x = rp() * 256 + rp()
-    If i > on - 2 Then push(x) Else push(oa(i + 1))
+    If i < on Then push(oa(i)) Else push(x)
   Next i
 
   dmp_routine(2 * oa(0))
