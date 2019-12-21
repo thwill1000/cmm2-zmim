@@ -621,7 +621,7 @@ Sub _0op
 End Sub
 
 Sub _varop
-  Local a, b, c, st, br, x
+  Local st, br, x
 
   ' CALL
   If oc = &h0 Then
@@ -629,39 +629,29 @@ Sub _varop
 
   ' STOREW
   ElseIf oc = &h1 Then
-    a = oa(0)
-    b = oa(1)
-    c = oa(2)
     dmp_op("STOREW", -1)
-    ww(a + 2 * b, c)
+    ww(oa(0) + 2 * oa(1), oa(2))
 
   ' STOREB
   ElseIf oc = &h2 Then
-    a = oa(0)
-    b = oa(1)
-    c = oa(2)
     dmp_op("STOREB", -1)
-    wb(a + b, c)
+    wb(oa(0) + oa(1), oa(2))
 
   ' READ
   ElseIf oc = &h4 Then
-    a = oa(0)
-    b = oa(1)
     dmp_op("!READ", -1)
     err = 1
 
   ' PRINT_CHAR
   ElseIf oc = &h5 Then
-    a = oa(0)
     dmp_op("PRINT_CHAR", -1)
-    Print Chr$(a);
+    Print Chr$(oa(0));
     If dbg Then dbg = dbg Or BIT(7)
 
   ' PRINT_NUM
   ElseIf oc = &h6 Then
-    a = oa(0)
     dmp_op("PRINT_NUM", -1)
-    Print Str$(a);
+    Print Str$(oa(0));
     If dbg Then dbg = dbg Or BIT(7)
 
   Else
