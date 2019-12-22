@@ -35,6 +35,9 @@ FIRST_SWAP_PAGE = -1
 
 MAX_WORD = 256 * 256 - 1
 
+Dim BUSY$(0) LENGTH 16
+BUSY$(0) = "\\\\||||////----"
+
 Dim ALPHABET$(2) LENGTH 32
 ALPHABET$(0) = " 123[]abcdefghijklmnopqrstuvwxyz"
 ALPHABET$(1) = " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -211,6 +214,8 @@ Sub print_zstring(a)
 
   Local abrv, al, b, c, i, x, zc(2)
 
+  If Not(dbg) Then Print Chr$(8);
+
   ' Should be 'Do While x = 0' but there is an MMBasic bug using that
   ' in recursive functions.
   For x = 0 To 0 Step 0
@@ -246,6 +251,8 @@ Sub print_zstring(a)
     a = a + 2
   Next x
 
+  If Not(dbg) Then Print " ";
+
 End Sub
 
 ' Prints abbreviation 'x'
@@ -253,7 +260,9 @@ Sub print_abrv(x)
   Local a, b
   a = rw(&h18)
   b = rw(a + x * 2)
+  If Not(dbg) Then Print " ";
   print_zstring(b * 2)
+  If Not(dbg) Then Print Chr$(8);
 End Sub
 
 Sub long_decode(op)
@@ -613,7 +622,7 @@ Sub _0op
   ' NEWLINE
   ElseIf oc = &hB Then
     dmp_op("NEWLINE", -1)
-    Print
+    If dbg Then Print Else Print Chr$(8); " " : Print " ";
 
   Else
     err = 1
@@ -642,19 +651,28 @@ Sub _varop
   ' READ
   ElseIf oc = &h4 Then
     dmp_op("!READ", -1)
+    If Not(dbg) Then Print Chr$(8); " ";
     err = 1
 
   ' PRINT_CHAR
   ElseIf oc = &h5 Then
     dmp_op("PRINT_CHAR", -1)
-    Print Chr$(oa(0));
-    If dbg Then dbg = dbg Or BIT(7)
+    If dbg Then
+      Print Chr$(oa(0));
+      dbg = dbg Or BIT(7)
+    Else
+      Print Chr$(8); Chr$(oa(0)); " ";
+    EndIf
 
   ' PRINT_NUM
   ElseIf oc = &h6 Then
     dmp_op("PRINT_NUM", -1)
-    Print Str$(oa(0));
-    If dbg Then dbg = dbg Or BIT(7)
+    If dbg Then
+      Print Str$(oa(0));
+      dbg = dbg Or BIT(7)
+    Else
+      Print Chr$(8); Str$(oa(0)); " ";
+    EndIf
 
   Else
     err = 1
@@ -841,10 +859,15 @@ Sub _step(n)
 
   If n = 0 Then n = 1 Else If n < 0 Then n = &hFFFF
 
+  If Not(dbg) Then Print " ";
+
   For i = 0 To n - 1
+
     If dbg Then
       If dbg And BIT(7) Then Print : dbg = (dbg And (BIT(7) Xor &hFF))
       Print Hex$(pc); ": ";
+    Else
+      Print Chr$(8); Mid$(BUSY$(0), (i Mod 16) + 1, 1);
     EndIf
 
     If pc <> bp Then
@@ -870,9 +893,10 @@ Sub _step(n)
       Print "[Breakpoint reached] - resetting bp = 0"
       bp = 0
       i = n ' Exit loop
-    ElseIf n = &hFFFF Then
+    ElseIf n = &hFFFF And i > 15 Then
       i = 0 ' Loop indefinitely
     EndIf
+
   Next i
 End Sub
 
