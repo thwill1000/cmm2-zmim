@@ -35,7 +35,7 @@ FIRST_SWAP_PAGE = -1
 
 MAX_WORD = 256 * 256 - 1
 
-Dim BUSY$(0) LENGTH 16
+Dim BUSY$(1) LENGTH 16
 BUSY$(0) = "\\\\||||////----"
 
 Dim ALPHABET$(2) LENGTH 32
@@ -209,12 +209,18 @@ Sub vset(i, x)
   EndIf
 End Sub
 
-' Prints ZString starting at 'a' incrementing 'a' by the number of bytes read
+' Prints Z-string starting at 'a' incrementing 'a' by the number of bytes read
 Sub print_zstring(a)
-
-  Local abrv, al, b, c, i, x, zc(2)
+  Local b, c, i, s, x, zc(2)
 
   If Not(dbg) Then Print Chr$(8);
+
+  ' The state of Z-string processing is recorded in 's':
+  '   0, 1, 2 - Expecting a character from alphabet 's'
+  '   3, 4, 5 - Expecting an abbreviation from table 's - 3'
+  '   6       - Expecting the top 5-bits of a ZSCII character
+  '   > 6     - Expecting the btm 5-bits of a ZSCII character whose
+  '             top 5-bits are 's - 7'
 
   ' Should be 'Do While x = 0' but there is an MMBasic bug using that
   ' in recursive functions.
@@ -231,20 +237,34 @@ Sub print_zstring(a)
 
     For i = 0 To 2
       c = zc(i)
-      If abrv > 0 Then
+      If s < 3 Then
+        If c = 0 Then
+          Print " ";
+        ElseIf c < 4 Then
+          s = c + 2
+        ElseIf c < 6 Then
+          s = c - 3
+        Else
+          If c = 6 And s = 2 Then
+            s = 6
+          ElseIf c = 7 And s = 2 Then
+            Print
+            s = 0
+          Else
+            Print Mid$(ALPHABET$(s), c + 1, 1);
+            s = 0
+          EndIf
+        EndIf
+      ElseIf s < 6 Then
         b = a ' Backup the address
-        print_abrv((abrv - 1) * 32 + c)
+        print_abrv((s - 3) * 32 + c)
         a = b ' Restore the address
-        abrv = 0
-      ElseIf c = 7 And al = 2 Then
-        Print
-      ElseIf c = 0 Or c > 5 Then
-        Print Mid$(ALPHABET$(al), c + 1, 1);
-        al = 0
-      ElseIf c < 4 Then
-        abrv = c
+        s = 0
+      ElseIf s = 6 Then
+        s = c + 7
       Else
-        al = c - 3
+        Print Chr$((s - 7) * 32 + c);
+        s = 0
       EndIf
     Next i
 
