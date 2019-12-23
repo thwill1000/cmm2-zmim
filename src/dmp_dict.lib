@@ -2,28 +2,35 @@
 ' For Maximite BASIC v4.5C
 
 Sub dmp_dict
-  Local addr_dict, n, i
+  Local a, col, i, n, sep$, sz
 
-  addr_dict = rw(&h8)
+  Print "    **** Dictionary ****"
   Print
-  n = rb(addr_dict)
-  Print "n = "; n; ""
-  codes$ = Space$(n)
+
+  dbg = 1
+  a = rw(&h8) ' Dictionary address
+
+  n = rb(a) : a = a + 1
+  sep$ = Space$(n)
+  For i = 1 To n : Poke Var sep$, i, rb(a) : a = a + 1 : Next i
+  Print "  Word separators = "; Chr$(34); sep$; Chr$(34)
+
+  sz = rb(a) : a = a + 1
+  n = rw(a) : a = a + 2
+  Print "  Word count ="; n; ", word size ="; sz
+  Print
+
   For i = 1 To n
-    Poke Var codes$, i, rb(addr_dict + i)
-  Next i
-  Print "codes        = "; codes$
-  entry_length = rb(addr_dict + n * 2 + 1)
-  Print "entry length = "; entry_length
-  num_entries = rb(addr_dict + n * 2 + 2 + 2)
-  Print "num entries  = "; num_entries
-  addr_entries = addr_dict + n * 2 + 4 + 4
-  Print Hex$(addr_entries)
-  more()
-  For i = 0 To num_entries
-    print_zstring(addr_entries)
-    print_zstring(addr_entries + 2)
-    addr_entries = addr_entries + entry_length
-    Print
+    Print "["; lpad$(Str$(i), 4, " "); "] ";
+
+    ' Read 4 bytes of text
+    print_zstring(a)
+
+    ' Skip (sz - 4) bytes of data
+    a = a + sz - 4
+
+    col = col + 1
+    Print Chr$(13); Chr$(27); "[" ; Str$(col * 15); "C";
+    If col = 5 Then col = 0 : Print
   Next i
 End Sub
