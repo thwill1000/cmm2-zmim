@@ -920,6 +920,65 @@ Sub _step(n)
   Next i
 End Sub
 
+Function lookup(s$)
+  Local b(3), i, sl, x
+
+  Print "lookup: *" + s$ + "* => ";
+
+  s$ = LCase$(Left$(s$, 6))
+  sl = Len(s$)
+
+  ' Convert s$ into 4-byte Z-string
+  For i = 1 To 6
+
+    If i > sl Then
+      x = x + 5
+    Else
+      x = x + Instr(ALPHABET$(0), Mid$(s$, i, 1)) - 1
+    EndIf
+
+    If i = 3 Then
+      b(0) = x \ 256
+      b(1) = x And &hFF
+      x = 0
+    ElseIf i = 6 Then
+      x = x Or &h8000 ' End of word
+      b(2) = x \ 256
+      b(3) = x And &hFF
+    Else
+      x = x * 32
+    EndIf
+
+  Next i
+
+  Print lpad$(Hex$(b(0)), 2, "0");
+  Print lpad$(Hex$(b(1)), 2, "0");
+  Print lpad$(Hex$(b(2)), 2, "0");
+  Print lpad$(Hex$(b(3)), 2, "0");
+
+  ' Lookup Z-string in dictionary
+
+  lookup = 0 ' not found
+  Print " =>"; lookup
+End Function
+
+Sub _read()
+  Local c, i, n, word$, sep$
+  sep$ = " .," + Chr$(34)
+  Line Input ">> ", s$
+  s$ = s$ + " "
+  n = Len(s$)
+  For i = 1 To n
+    c = Peek(Var s$, i)
+    If Instr(sep$, Chr$(c)) > 0 Then
+      If Len(word$) > 0 Then _ = lookup(word$)
+      word$ = ""
+    Else
+      word$ = word$ + Chr$(c)
+    EndIf
+  Next i
+End Sub
+
 Library Load "util"
 
 If dbg Then
@@ -932,6 +991,10 @@ Memory
 Print
 init()
 Print
+
+'Library Load "dmp_dict.lib"
+'dmp_dict
+'End
 
 num_ops = 0
 Timer = 0

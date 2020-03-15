@@ -2,7 +2,7 @@
 ' For Maximite BASIC v4.5C
 
 Sub dmp_dict
-  Local a, col, i, n, sep$, sz
+  Local a, col, i, n, sep$, sz, x
 
   Print "    **** Dictionary ****"
   Print
@@ -23,6 +23,9 @@ Sub dmp_dict
   For i = 1 To n
     Print "["; lpad$(Str$(i), 4, " "); "] ";
 
+    x = 256 * rb(a) + rb(a + 1) : Print lpad$(Hex$(x), 4, "0");
+    x = 256 * rb(a + 2) + rb(a + 3) : Print lpad$(Hex$(x), 4, "0"); " ";
+
     ' Read 4 bytes of text
     print_zstring(a)
 
@@ -30,7 +33,7 @@ Sub dmp_dict
     a = a + sz - 4
 
     col = col + 1
-    Print Chr$(13); Chr$(27); "[" ; Str$(col * 15); "C";
-    If col = 5 Then col = 0 : Print
+    Print Chr$(13); Chr$(27); "[" ; Str$(col * 24); "C";
+    If col = 3 Then col = 0 : Print
   Next i
 End Sub
