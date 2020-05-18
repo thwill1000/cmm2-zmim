@@ -1,5 +1,5 @@
-' Copyright (c) 2019 Thomas Hugo Williams
-' For Maximite BASIC v4.5C
+' Copyright (c) 2019-20 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.05
 
 Sub dmp_dict
   Local a, col, i, n, sep$, sz, x
@@ -7,7 +7,7 @@ Sub dmp_dict
   Print "    **** Dictionary ****"
   Print
 
-  dbg = 1
+  debug = 1
   a = rw(&h8) ' Dictionary address
 
   n = rb(a) : a = a + 1

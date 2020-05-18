@@ -1,12 +1,12 @@
-' Copyright (c) 2019 Thomas Hugo Williams
-' For Maximite BASIC v4.5C
+' Copyright (c) 2019-20 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.05
 
-Sub tst_mem
+Sub tst_mem()
   Local ad, buf$, buf_sz, i, x
 
   Print "Executing memory tests"
 
-  Open file$ For random As #2
+  Open FILE$ For Random As #2
 
   Print "Testing sequential access:"
   Timer = 0
@@ -15,7 +15,9 @@ Sub tst_mem
     Seek #2, ad + 1
     buf$ = Input$(255, #2)
     buf_sz = Len(buf$)
+    Print buf_sz
     For i = 1 To buf_sz
+      If ad = FILE_LEN Then Print "What the hell!"
       If Peek(Var buf$, i) <> rb(ad) Then Error
       ad = ad + 1
     Next i

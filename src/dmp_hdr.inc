@@ -1,5 +1,5 @@
-' Copyright (c) 2019 Thomas Hugo Williams
-' For Maximite BASIC v4.5C
+' Copyright (c) 2019-20 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.05
 
 ' Prints zmachine header from start of 'mem'
 Sub dmp_hdr

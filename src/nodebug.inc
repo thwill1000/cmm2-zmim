@@ -1,5 +1,5 @@
-' Copyright (c) 2019 Thomas Hugo Williams
-' For Maximite BASIC v4.5C
+' Copyright (c) 2019-20 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.05
 
 Sub dmp_mem(ad, sz) : End Sub
 Sub dmp_obj(o) : End Sub

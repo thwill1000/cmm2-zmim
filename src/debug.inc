@@ -1,8 +1,10 @@
-' Copyright (c) 2019 Thomas Hugo Williams
-' For Maximite BASIC v4.5C
+' Copyright (c) 2019-20 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.05
 
 ' Prints 'sz' bytes from 'mem' starting at 'ad'
 Sub dmp_mem(ad, sz)
+  If Not debug Then Exit Sub
+
   Local i, x
   For i = 0 To sz - 1
     x = rb(ad + i)
@@ -13,6 +15,8 @@ Sub dmp_mem(ad, sz)
 End Sub
 
 Sub dmp_obj(o)
+  If Not debug Then Exit Sub
+
   Local ad, i, p, sz, x
 
   If o = 0 Then
@@ -86,7 +90,7 @@ Function fmt_operand$(i)
   fmt_operand$ = a$
 End Function
 
-Function fmt_call_operands$
+Function fmt_call_operands$()
   Local a$, i
   If ot(0) = VARIABLE Then
     a$ = fmt_operand$(i)
@@ -94,7 +98,7 @@ Function fmt_call_operands$
     a$ = Hex$(2 * ov(0))
   EndIf
   a$ = a$ + " ("
-  For i = 1 To on - 1
+  For i = 1 To onum - 1
     If i > 1 Then a$ = a$ + ", "
     a$ = a$ + fmt_operand$(i)
   Next i
@@ -102,11 +106,11 @@ Function fmt_call_operands$
   fmt_call_operands$ = a$
 End Function
 
-Function fmt_jump_operands$
+Function fmt_jump_operands$()
   Local of
-  If on > 1 Then Error "Too many operands."
+  If onum > 1 Then Error "Too many operands."
   of = oa(0)
-  If of And BIT_15 Then of = of - 65536
+  If of And 2^15 Then of = of - 65536
   fmt_jump_operands$ = Hex$(pc + of - 2)
 End Function
 
@@ -120,19 +124,19 @@ Function fmt_store_value$(st)
   EndIf
 End Function
 
-Function fmt_store_operands$
+Function fmt_store_operands$()
   Local a$, i
   If ot(0) = VARIABLE Then Error "Unexpected VARIABLE operand"
   a$ = a$ + fmt_store_value$(ov(0))
-  For i = 1 To on - 1
+  For i = 1 To onum - 1
     a$ = a$ + ", " + fmt_operand$(i)
   Next i
   fmt_store_operands$ = a$
 End Function
 
-Function fmt_normal_operands$
+Function fmt_normal_operands$()
   Local a$, i
-  For i = 0 To on - 1
+  For i = 0 To onum - 1
     If i > 0 Then a$ = a$ + ", "
     a$ = a$ + fmt_operand$(i)
   Next i
@@ -140,6 +144,8 @@ Function fmt_normal_operands$
 End Function
 
 Sub dmp_op(m$, st, br)
+  If Not debug Then Exit Sub
+
   Print rpad$(m$, 14);
   If m$ = "CALL" Then
     Print fmt_call_operands$();
@@ -163,7 +169,9 @@ Sub dmp_op(m$, st, br)
 End Sub
 
 Sub dmp_routine(new_pc)
-  Local i, locals_sz
+  If Not debug Then Exit Sub
+
+  Local i, locals_sz, x
   locals_sz = rb(new_pc)
   Print "Routine "; Hex$(new_pc); ", "; Str$(locals_sz); " locals (";
   For i = 0 To locals_sz - 1
@@ -179,6 +187,8 @@ End Sub
 '  sp    - current stack index/pointer
 '  stack - the stack (an array of 32-bit floats)
 Sub dmp_stack(s)
+  If Not debug Then Exit Sub
+
   Local i
   Print "TOP: ";
   For i = sp To 0 Step -1

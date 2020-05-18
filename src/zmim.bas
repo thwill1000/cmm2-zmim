@@ -1,39 +1,51 @@
-' ZMIM a Z-Machine Interpreter for the Colour Maximite
-' Copyright (c) 2019 Thomas Hugo Williams
-' For Maximite BASIC v4.5C
+' Copyright (c) 2019-20 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.05
+
+Option Explicit On
+
+#Include "debug.inc"
+#Include "util.inc"
+#Include "dmp_abrv.inc"
+#Include "dmp_dict.inc"
+#Include "dmp_hdr.inc"
+#Include "dmp_mmap.inc"
 
 Mode 1
 Cls
 
-' If > 0 then produce debug output
-' If bit 7 is set then print a new line before the current value of 'pc'
-dbg = 1
-
-Input "Save 'ZMIM.BAS' [y|N]"; s$
-If (s$ = "y") Or (s$ = "Y") Then Save "ZMIM.BAS"
-Input "Run with debug output [Y|n]"; s$
-If (s$ = "n") Or (s$ = "N") Then dbg = 0
+Print "ZMIM: a Z-Machine Interpreter for the Maximite"
+Print "Copyright (c) 2019-20 Thomas Hugo Williams"
+Print "Version 0.1 for Colour Maximite 2, MMBasic 5.05"
 Print
 
-file$ = "B:\zmim\examples\minizork.z3"
-'file$ = "B:\zmim\examples\advent.z3"
-'file$ = "B:\zmim\examples\ZORK1\DATA\ZORK1.DAT"
+' If > 0 then produce debug output
+' If bit 7 is set then print a new line before the current value of 'pc'
+Dim debug = 1
 
-' By convention variables declared in UPPER CASE are constant
-'  - this is not enforced by the language!
-PAGE_SIZE = 512
-NUM_PHYSICAL_PAGES = 80
-NUM_VIRTUAL_PAGES = 128 * 1024 / PAGE_SIZE
+'Input "Save 'ZMIM.BAS' [y|N]"; s$
+'If (s$ = "y") Or (s$ = "Y") Then Save "ZMIM.BAS"
+Dim s$
+Input "Run with debug output [Y|n]"; s$
+If (s$ = "n") Or (s$ = "N") Then debug = 0
+Print
+
+Const FILE$ = "B:\zmim\examples\minizork.z3"
+'FILE$ = "B:\zmim\examples\advent.z3"
+'FILE$ = "B:\zmim\examples\ZORK1\DATA\ZORK1.DAT"
+
+Const PAGE_SIZE = 512
+Const NUM_PHYSICAL_PAGES = 80
+Const NUM_VIRTUAL_PAGES = 128 * 1024 / PAGE_SIZE
 
 ' Memory addresses below this are read on startup and not swapped in/out
 ' - not properly set until the z-machine header is read
-BASE_STATIC = PAGE_SIZE
+Dim BASE_STATIC = PAGE_SIZE
 
-FILE_LEN = PAGE_SIZE
-GLOBAL_VAR = 0
-FIRST_SWAP_PAGE = -1
+Dim FILE_LEN = PAGE_SIZE
+Dim GLOBAL_VAR = 0
+Dim FIRST_SWAP_PAGE = -1
 
-MAX_WORD = 256 * 256 - 1
+Const MAX_WORD = 256 * 256 - 1
 
 Dim BUSY$(1) LENGTH 16
 BUSY$(0) = "\\\\||||////----"
@@ -43,22 +55,23 @@ ALPHABET$(0) = " 123[]abcdefghijklmnopqrstuvwxyz"
 ALPHABET$(1) = " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALPHABET$(2) = " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
 
+Dim i = 0
 Dim BIT(7)
 For i = 0 To 7 : BIT(i) = 2 ^ i : Next i
 
-BTM_2_BITS  = &b00000011
-BTM_4_BITS  = &b00001111
-BTM_5_BITS  = &b00011111
-BTM_6_BITS  = &b00111111
+Const BTM_2_BITS  = &b00000011
+Const BTM_4_BITS  = &b00001111
+Const BTM_5_BITS  = &b00011111
+Const BTM_6_BITS  = &b00111111
 
 ' Constants for orel()
-PARENT = 4 : SIBLING = 5 : CHILD = 6
+Const PARENT = 4 : Const SIBLING = 5 : Const CHILD = 6
 
 Dim m(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
 
-pf = 0 ' Counter for number of page faults
-pp = 0 ' Physical page number
-vp = 0 ' Virtual page number
+Dim pf = 0 ' Counter for number of page faults
+Dim pp = 0 ' Physical page number
+Dim vp = 0 ' Virtual page number
 
 ' Map of physical pages -> virtual pages
 Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)
@@ -66,36 +79,41 @@ Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)
 ' Map of virtual pages -> physical pages
 Dim vp_to_pp(NUM_VIRTUAL_PAGES - 1)
 
-next_page = 0
+Dim next_page = 0
 
 Dim stack(511)
-sp = -1
+Dim sp = -1
 
 ' Current stack frame pointer
-fp = -1
+Dim fp = -1
 
 ' Variable to assign unused result of a Function call to
-_ = 0
+Dim _ = 0
 
-pc = 0
+Dim pc = 0
 
 ' If > 0 then an error has occurred
-err = 0
+Dim err = 0
 
-MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
+Const MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
 
 ' Instruction encoding
-LARGE = &b00 : SMALL = &b01 : VARIABLE = &b10 : OMITTED = &b11
+Const LARGE    = &b00
+Const SMALL    = &b01
+Const VARIABLE = &b10
+Const OMITTED  = &b11
 
 ' The currently decoded instruction
-oc = 0                   ' operand code
-on = 0                   ' number of operands
+Dim oc = 0               ' operand code
+Dim onum = 0             ' number of operands
 Dim oa(MAX_NUM_OPERANDS) ' operand values with variables looked-up
 Dim ot(MAX_NUM_OPERANDS) ' operand types
 Dim ov(MAX_NUM_OPERANDS) ' opeanrd raw values
 
+Dim bp = 0 ' breakpoint address
+
 ' Reads a byte from 'pc' and increments 'pc'
-Function rp
+Function rp()
   If pc < 0 Or pc >= FILE_LEN Then Error
   vp = pc \ PAGE_SIZE
   pp = vp_to_pp(vp)
@@ -106,7 +124,10 @@ End Function
 
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
-  If a < 0 Or a >= FILE_LEN Then Error
+  If a < 0 Or a >= FILE_LEN Then
+    Print a; FILE_LEN
+    Error "foo"
+  EndIf
   If a < BASE_STATIC Then rb = Peek(Var m(0), a) : Exit Function
   vp = a \ PAGE_SIZE
   pp = vp_to_pp(vp)
@@ -135,7 +156,7 @@ Sub ww(a, x)
 End Sub
 
 ' Pops a 16-bit word from the stack.
-Function pop
+Function pop()
   pop = stack(sp)
   sp = sp - 1
 End Function
@@ -158,7 +179,7 @@ Function mem_load(vp)
   If next_page = NUM_PHYSICAL_PAGES Then next_page = FIRST_SWAP_PAGE
 
   ' TODO: Should the file be opened once globally and kept open until exit?
-  Open file$ For random As #1
+  Open FILE$ For random As #1
   Seek #1, vp * PAGE_SIZE + 1
   ad = pp * PAGE_SIZE
   to_read = PAGE_SIZE
@@ -167,6 +188,7 @@ Function mem_load(vp)
     If to_read < 255 Then buf_sz = to_read
     buf$ = Input$(buf_sz, 1)
     For i = 1 To buf_sz
+'      Print ad;
       Poke Var m(0), ad, Peek(Var buf$, i)
       ad = ad + 1
     Next i
@@ -213,7 +235,7 @@ End Sub
 Sub print_zstring(a)
   Local b, c, i, s, x, zc(2)
 
-  If Not(dbg) Then Print Chr$(8);
+  If Not debug Then Print Chr$(8);
 
   ' The state of Z-string processing is recorded in 's':
   '   0, 1, 2 - Expecting a character from alphabet 's'
@@ -271,7 +293,7 @@ Sub print_zstring(a)
     a = a + 2
   Next x
 
-  If Not(dbg) Then Print " ";
+  If Not debug Then Print " ";
 
 End Sub
 
@@ -280,14 +302,14 @@ Sub print_abrv(x)
   Local a, b
   a = rw(&h18)
   b = rw(a + x * 2)
-  If Not(dbg) Then Print " ";
+  If Not debug Then Print " ";
   print_zstring(b * 2)
-  If Not(dbg) Then Print Chr$(8);
+  If Not debug Then Print Chr$(8);
 End Sub
 
 Sub long_decode(op)
   oc = op And BTM_5_BITS
-  on = 2
+  onum = 2
   ov(0) = rp()
   ov(1) = rp()
   If op <= &h1F Then
@@ -307,7 +329,7 @@ End Sub
 
 Sub short_decode(op)
   oc = op And BTM_4_BITS
-  on = 1
+  onum = 1
   If op <= &h8F Then
     ot(0) = LARGE : ov(0) = rp() * 256 + rp() : oa(0) = ov(0)
   ElseIf op <= &h9F Then
@@ -315,21 +337,21 @@ Sub short_decode(op)
   ElseIf op <= &hAF Then
     ot(0) = VARIABLE : ov(0) = rp() : oa(0) = vget(ov(0))
   Else
-    on = 0
+    onum = 0
   EndIf
 End Sub
 
 Sub var_decode(op)
   Local i, x
   oc = op And &b11111
-  on = 4
+  onum = 4
   x = rp()
   For i = 3 To 0 Step -1
     ot(i) = x And &b11
-    If ot(i) = OMITTED Then on = on - 1
+    If ot(i) = OMITTED Then onum = onum - 1
     x = x \ 4
   Next i
-  For i = 0 To on - 1
+  For i = 0 To onum - 1
     If ot(i) = LARGE Then ov(i) = rp() * 256 + rp() : oa(i) = ov(i)
     If ot(i) = SMALL Then ov(i) = rp() : oa(i) = ov(i)
     If ot(i) = VARIABLE Then ov(i) = rp() : oa(i) = vget(ov(i))
@@ -347,8 +369,8 @@ Sub _2op
     br = read_branch()
     dmp_op("JE", -1, br)
     x = (a = b)
-    If (Not x) And (on = 3) Then x = (a = oa(2))
-    If (Not x) And (on = 4) Then x = (a = oa(3))
+    If (Not x) And (onum = 3) Then x = (a = oa(2))
+    If (Not x) And (onum = 4) Then x = (a = oa(3))
     _branch(x, br)
 
   ' JL
@@ -578,7 +600,7 @@ Sub _1op
   ElseIf oc = &hA Then
     dmp_op("PRINT_OBJECT", -1)
     print_obj(a)
-    If dbg Then dbg = dbg Or BIT(7)
+    If debug Then debug = debug Or BIT(7)
 
   ' RET
   ElseIf oc = &hB Then
@@ -595,7 +617,7 @@ Sub _1op
   ElseIf oc = &hD Then
     dmp_op("PRINT_PADDR", -1)
     print_zstring(a * 2)
-    If dbg Then dbg = dbg Or BIT(7)
+    If debug Then debug = debug Or BIT(7)
 
   ' LOAD
   ElseIf oc = &hE Then
@@ -625,7 +647,7 @@ Sub _0op
   ElseIf oc = &h2 Then
     dmp_op("PRINT", -1)
     print_zstring(pc)
-    If dbg Then dbg = dbg Or BIT(7)
+    If debug Then debug = debug Or BIT(7)
 
   ' PRINT_RET
   ElseIf oc = &h3 Then
@@ -642,7 +664,7 @@ Sub _0op
   ' NEWLINE
   ElseIf oc = &hB Then
     dmp_op("NEWLINE", -1)
-    If dbg Then Print Else Print Chr$(8); " " : Print " ";
+    If debug Then Print Else Print Chr$(8); " " : Print " ";
 
   Else
     err = 1
@@ -671,15 +693,15 @@ Sub _varop
   ' READ
   ElseIf oc = &h4 Then
     dmp_op("!READ", -1)
-    If Not(dbg) Then Print Chr$(8); " ";
+    If Not debug Then Print Chr$(8); " ";
     err = 1
 
   ' PRINT_CHAR
   ElseIf oc = &h5 Then
     dmp_op("PRINT_CHAR", -1)
-    If dbg Then
+    If debug Then
       Print Chr$(oa(0));
-      dbg = dbg Or BIT(7)
+      debug = debug Or BIT(7)
     Else
       Print Chr$(8); Chr$(oa(0)); " ";
     EndIf
@@ -687,9 +709,9 @@ Sub _varop
   ' PRINT_NUM
   ElseIf oc = &h6 Then
     dmp_op("PRINT_NUM", -1)
-    If dbg Then
+    If debug Then
       Print Str$(oa(0));
-      dbg = dbg Or BIT(7)
+      debug = debug Or BIT(7)
     Else
       Print Chr$(8); Str$(oa(0)); " ";
     EndIf
@@ -704,7 +726,7 @@ End Sub
 '                   - if = pc - 2 then -> return false.
 '                   - if = pc - 1 then -> return true.
 '         bit 16    - set = branch on True, unset = branch on False.
-Function read_branch
+Function read_branch()
   Local a, of
   a = rp()
   of = a And BTM_6_BITS
@@ -752,7 +774,7 @@ Sub _call(st)
   push(nl)
   For i = 1 To nl
     x = rp() * 256 + rp()
-    If i < on Then push(oa(i)) Else push(x)
+    If i < onum Then push(oa(i)) Else push(x)
   Next i
 
   dmp_routine(2 * oa(0))
@@ -762,7 +784,7 @@ End Sub
 Sub init
   Local i
 
-  Print "Loading "; file$
+  Print "Loading "; FILE$
 
   ' Load page 0 which contains the header.
   Print "  Header page: 0"
@@ -879,12 +901,12 @@ Sub _step(n)
 
   If n = 0 Then n = 1 Else If n < 0 Then n = &hFFFF
 
-  If Not(dbg) Then Print " ";
+  If Not debug Then Print " ";
 
   For i = 0 To n - 1
 
-    If dbg Then
-      If dbg And BIT(7) Then Print : dbg = (dbg And (BIT(7) Xor &hFF))
+    If debug Then
+      If debug And BIT(7) Then Print : debug = (debug And (BIT(7) Xor &hFF))
       Print Hex$(pc); ": ";
     Else
       Print Chr$(8); Mid$(BUSY$(0), (i Mod 16) + 1, 1);
@@ -979,25 +1001,16 @@ Sub _read()
   Next i
 End Sub
 
-Library Load "util"
-
-If dbg Then
-  Library Load "debug.lib"
-Else
-  Library Load "nodebug.lib"
-EndIf
-
-Memory
-Print
 init()
 Print
 
-'Library Load "dmp_dict.lib"
-'dmp_dict
-'End
-
-num_ops = 0
+Dim num_ops = 0
 Timer = 0
+
+#Include "tst_mem.inc"
+tst_mem()
+
+End
 
 _step(-1)
 
@@ -1005,6 +1018,4 @@ Print
 Print "Num instructions processed ="; num_ops
 Print "Instructions / second      ="; num_ops / (Timer / 1000)
 Print "Num page faults            ="; pf
-Print
-Memory
 Print
