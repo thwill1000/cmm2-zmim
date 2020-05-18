@@ -125,8 +125,8 @@ End Function
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
   If a < 0 Or a >= FILE_LEN Then
-    Print a; FILE_LEN
-    Error "foo"
+    Print "Address"; a ; " > file length"; FILE_LEN
+    End : Error
   EndIf
   If a < BASE_STATIC Then rb = Peek(Var m(0), a) : Exit Function
   vp = a \ PAGE_SIZE
@@ -694,7 +694,7 @@ Sub _varop
   ElseIf oc = &h4 Then
     dmp_op("!READ", -1)
     If Not debug Then Print Chr$(8); " ";
-    err = 1
+    _read(oa(0), oa(1))
 
   ' PRINT_CHAR
   ElseIf oc = &h5 Then
@@ -945,7 +945,7 @@ End Sub
 Function lookup(s$)
   Local b(3), i, sl, x
 
-  Print "lookup: *" + s$ + "* => ";
+'  Print "lookup: *" + s$ + "* => ";
 
   s$ = LCase$(Left$(s$, 6))
   sl = Len(s$)
@@ -973,32 +973,68 @@ Function lookup(s$)
 
   Next i
 
-  Print lpad$(Hex$(b(0)), 2, "0");
-  Print lpad$(Hex$(b(1)), 2, "0");
-  Print lpad$(Hex$(b(2)), 2, "0");
-  Print lpad$(Hex$(b(3)), 2, "0");
+'  Print lpad$(Hex$(b(0)), 2, "0");
+'  Print lpad$(Hex$(b(1)), 2, "0");
+'  Print lpad$(Hex$(b(2)), 2, "0");
+'  Print lpad$(Hex$(b(3)), 2, "0");
 
   ' Lookup Z-string in dictionary
+  ' TODO: binary search instead of linear search
+  Local ad, n, sz, word(3)
+  ad = rw(&h8) ' dictionary address
+  n = rb(ad) ' number of word separators
+  ad = ad + 1 + n ' skip word separators
+  sz = rb(ad) : ad = ad + 1 ' entry length
+  n  = rw(ad) : ad = ad + 2 ' number of entries
+  For i = 1 To n
+    word(0) = rb(ad) : ad = ad + 1
+    word(1) = rb(ad) : ad = ad + 1
+    word(2) = rb(ad) : ad = ad + 1
+    word(3) = rb(ad) : ad = ad + 1
+    ad = ad + sz - 4 ' skip (sz - 4) bytes of data
+    If b(0) = word(0) And b(1) = word(1) And b(2) = word(2) And b(3) = word(3) Then
+      lookup = ad - sz
+      i = n + 1
+    EndIf
+  Next i
 
-  lookup = 0 ' not found
-  Print " =>"; lookup
+'  Print " => "; Hex$(lookup)
 End Function
 
-Sub _read()
-  Local c, i, n, word$, sep$
-  sep$ = " .," + Chr$(34)
-  Line Input ">> ", s$
-  s$ = s$ + " "
+Sub _read(text_buf, parse_buf)
+  Local c, i, n, word$, sep$, wc
+
+  Print "text_buf = "; Hex$(text_buf)
+  Print "parse_buf = "; Hex$(parse_buf)
+
+  Line Input s$
+  s$ = LCase$(s$)
   n = Len(s$)
-  For i = 1 To n
+  ' TODO: check for input too long
+  For i = 1 To n : wb(text_buf + i, Peek(Var s$, i)) : Next i
+  wb(text_buf + n + 1, 0)
+  s$ = s$ + " "
+  sep$ = " .," + Chr$(34)
+
+  For i = 1 To n + 1
     c = Peek(Var s$, i)
     If Instr(sep$, Chr$(c)) > 0 Then
       If Len(word$) > 0 Then _ = lookup(word$)
+      Print Hex$(_) ;
+      Print Len(word$);
+      Print i - Len(word$) - 1
+      ww(parse_buf + 2 + wc * 4, _)
+      wb(parse_buf + 4 + wc * 4, Len(word$))
+      wb(parse_buf + 5 + wc * 4, i - Len(word$)) ' position in 'text_buf'
+      wc = wc + 1
       word$ = ""
     Else
       word$ = word$ + Chr$(c)
     EndIf
   Next i
+  wb(parse_buf + 1, wc)
+  dmp_mem(text_buf, 32)
+  dmp_mem(parse_buf, 32)
 End Sub
 
 init()
@@ -1007,12 +1043,16 @@ Print
 Dim num_ops = 0
 Timer = 0
 
-#Include "tst_mem.inc"
-tst_mem()
-
-End
+'#Include "tst_mem.inc"
+'tst_mem()
+'End
 
 _step(-1)
+
+'dmp_dict()
+'Do
+'_read()
+'Loop
 
 Print
 Print "Num instructions processed ="; num_ops

@@ -3,7 +3,7 @@
 
 ' Prints 'sz' bytes from 'mem' starting at 'ad'
 Sub dmp_mem(ad, sz)
-  If Not debug Then Exit Sub
+'  If Not debug Then Exit Sub
 
   Local i, x
   For i = 0 To sz - 1
