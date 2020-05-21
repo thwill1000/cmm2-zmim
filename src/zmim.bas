@@ -125,8 +125,7 @@ End Function
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
   If a < 0 Or a >= FILE_LEN Then
-    Print "Address"; a ; " > file length"; FILE_LEN
-    End : Error
+    Error "Address " + Str$(a) + " > file length " + Str$(FILE_LEN)
   EndIf
   If a < BASE_STATIC Then rb = Peek(Var m(0), a) : Exit Function
   vp = a \ PAGE_SIZE
@@ -1037,17 +1036,51 @@ Sub _read(text_buf, parse_buf)
   dmp_mem(parse_buf, 32)
 End Sub
 
+' Interactive debugger
+Sub gdb()
+  Local c, cmd$(9) Length 20, cn, i, s$
+
+  Do
+    ' TODO: display the next instruction but don't execute it
+
+    ' Read line of input and parse into space separated commands/arguments.
+    cn = 0
+    For i = 0 To 9 : cmd$(i) = "" : Next i
+    Line Input "DEBUG >> ", s$
+    s$ = s$ + " "
+    For i = 1 To Len(s$)
+      c = Peek(Var s$, i)
+      If Chr$(c) = " " Then
+        If Len(cmd$(cn)) > 0 Then cn = cn + 1
+        If cn = 10 Then Error "Too many arguments"
+      Else
+        cmd$(cn) = cmd$(cn) + Chr$(c)
+      EndIf
+    Next i
+
+    If cmd$(0) = "c" Then
+      ' TODO: continue execution until breakpoint
+    ElseIf cmd$(0) = "b" Then
+      ' TODO: set breakpoint
+    ElseIf cmd$(0) = "q" Then
+      Exit Do
+    ElseIf cmd$(0) = "s" Then
+      _step(1)
+    EndIf
+  Loop
+
+End Sub
+
 init()
 Print
 
 Dim num_ops = 0
 Timer = 0
 
-'#Include "tst_mem.inc"
-'tst_mem()
-'End
+gdb()
 
-_step(-1)
+'bp = &h41d3
+'_step(-1)
 
 'dmp_dict()
 'Do
