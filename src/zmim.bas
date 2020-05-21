@@ -13,6 +13,7 @@ Option Explicit On
 Mode 1
 Cls
 
+Print "Sockpuppet Software presents a Toy Plastic Trumpet production of"
 Print "ZMIM: a Z-Machine Interpreter for the Maximite"
 Print "Copyright (c) 2019-20 Thomas Hugo Williams"
 Print "Version 0.1 for Colour Maximite 2, MMBasic 5.05"
