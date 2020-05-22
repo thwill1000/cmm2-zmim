@@ -3,12 +3,18 @@
 
 Option Explicit On
 
+#Include "memory.inc"
+#Include "stack.inc"
+#Include "variable.inc"
 #Include "debug.inc"
 #Include "util.inc"
 #Include "dmp_abrv.inc"
 #Include "dmp_dict.inc"
 #Include "dmp_hdr.inc"
 #Include "dmp_mmap.inc"
+#Include "zstring.inc"
+#Include "objects.inc"
+#Include "instruct.inc"
 
 Mode 1
 Cls
@@ -21,40 +27,23 @@ Print
 
 ' If > 0 then produce debug output
 ' If bit 7 is set then print a new line before the current value of 'pc'
-Dim debug = 1
+Dim debug = 0
 
 'Input "Save 'ZMIM.BAS' [y|N]"; s$
 'If (s$ = "y") Or (s$ = "Y") Then Save "ZMIM.BAS"
-Dim s$
-Input "Run with debug output [Y|n]"; s$
-If (s$ = "n") Or (s$ = "N") Then debug = 0
-Print
+'Dim s$
+'Input "Run with debug output [Y|n]"; s$
+'If (s$ = "n") Or (s$ = "N") Then debug = 0
+'Print
 
 Const FILE$ = "B:\zmim\examples\minizork.z3"
 'FILE$ = "B:\zmim\examples\advent.z3"
 'FILE$ = "B:\zmim\examples\ZORK1\DATA\ZORK1.DAT"
 
-Const PAGE_SIZE = 512
-Const NUM_PHYSICAL_PAGES = 80
-Const NUM_VIRTUAL_PAGES = 128 * 1024 / PAGE_SIZE
-
-' Memory addresses below this are read on startup and not swapped in/out
-' - not properly set until the z-machine header is read
-Dim BASE_STATIC = PAGE_SIZE
-
-Dim FILE_LEN = PAGE_SIZE
 Dim GLOBAL_VAR = 0
-Dim FIRST_SWAP_PAGE = -1
-
-Const MAX_WORD = 256 * 256 - 1
 
 Dim BUSY$(1) LENGTH 16
 BUSY$(0) = "\\\\||||////----"
-
-Dim ALPHABET$(2) LENGTH 32
-ALPHABET$(0) = " 123[]abcdefghijklmnopqrstuvwxyz"
-ALPHABET$(1) = " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-ALPHABET$(2) = " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
 
 Dim i = 0
 Dim BIT(7)
@@ -65,33 +54,8 @@ Const BTM_4_BITS  = &b00001111
 Const BTM_5_BITS  = &b00011111
 Const BTM_6_BITS  = &b00111111
 
-' Constants for orel()
-Const PARENT = 4 : Const SIBLING = 5 : Const CHILD = 6
-
-Dim m(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
-
-Dim pf = 0 ' Counter for number of page faults
-Dim pp = 0 ' Physical page number
-Dim vp = 0 ' Virtual page number
-
-' Map of physical pages -> virtual pages
-Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)
-
-' Map of virtual pages -> physical pages
-Dim vp_to_pp(NUM_VIRTUAL_PAGES - 1)
-
-Dim next_page = 0
-
-Dim stack(511)
-Dim sp = -1
-
-' Current stack frame pointer
-Dim fp = -1
-
 ' Variable to assign unused result of a Function call to
 Dim _ = 0
-
-Dim pc = 0
 
 ' If > 0 then an error has occurred
 Dim err = 0
@@ -109,203 +73,9 @@ Dim oc = 0               ' operand code
 Dim onum = 0             ' number of operands
 Dim oa(MAX_NUM_OPERANDS) ' operand values with variables looked-up
 Dim ot(MAX_NUM_OPERANDS) ' operand types
-Dim ov(MAX_NUM_OPERANDS) ' opeanrd raw values
+Dim ov(MAX_NUM_OPERANDS) ' operand raw values
 
 Dim bp = 0 ' breakpoint address
-
-' Reads a byte from 'pc' and increments 'pc'
-Function rp()
-  If pc < 0 Or pc >= FILE_LEN Then Error
-  vp = pc \ PAGE_SIZE
-  pp = vp_to_pp(vp)
-  If pp = 0 Then pp = mem_load(vp) : pf = pf + 1
-  rp = Peek(Var m(0), pp * PAGE_SIZE + (pc Mod PAGE_SIZE))
-  pc = pc + 1
-End Function
-
-' Reads a byte from 'a' but DOES NOT increment a
-Function rb(a)
-  If a < 0 Or a >= FILE_LEN Then
-    Error "Address " + Str$(a) + " > file length " + Str$(FILE_LEN)
-  EndIf
-  If a < BASE_STATIC Then rb = Peek(Var m(0), a) : Exit Function
-  vp = a \ PAGE_SIZE
-  pp = vp_to_pp(vp)
-  If pp = 0 Then pp = mem_load(vp) : pf = pf + 1
-  rb = Peek(Var m(0), pp * PAGE_SIZE + (a Mod Page_SIZE))
-End Function
-
-' Reads a 16-bit word from 'a' but DOES NOT increment a
-Function rw(a)
-  rw = rb(a) * 256 + rb(a + 1)
-End Function
-
-' Writes byte 'x' to 'a'
-Sub wb(a, x)
-  If a < 0 Or a >= BASE_STATIC Then Error
-  If x < 0 Or x > 255 Then Error
-  Poke Var m(0), a, x
-End Sub
-
-' Writes 16-bit word 'x' to 'a'
-Sub ww(a, x)
-  If a < 0 Or a >= BASE_STATIC - 1 Then Error
-  If x < 0 Or x > MAX_WORD Then Error
-  Poke Var m(0), a, x \ 256
-  Poke Var m(0), a + 1, x Mod 256
-End Sub
-
-' Pops a 16-bit word from the stack.
-Function pop()
-  pop = stack(sp)
-  sp = sp - 1
-End Function
-
-' Pushes a 16-bit word onto the stack.
-Sub push(w)
-  sp = sp + 1
-  stack(sp) = w
-End Sub
-
-' Loads virtual page 'vp' from '$file'.
-' @return physical page number
-Function mem_load(vp)
-  Local ad, buf$, buf_sz, i, pp, to_read
-
-  pp = next_page
-
-  ' TODO: Implement some form of Least Recently Used algorithm.
-  next_page = next_page + 1
-  If next_page = NUM_PHYSICAL_PAGES Then next_page = FIRST_SWAP_PAGE
-
-  ' TODO: Should the file be opened once globally and kept open until exit?
-  Open FILE$ For random As #1
-  Seek #1, vp * PAGE_SIZE + 1
-  ad = pp * PAGE_SIZE
-  to_read = PAGE_SIZE
-  buf_sz = 255
-  Do While to_read > 0
-    If to_read < 255 Then buf_sz = to_read
-    buf$ = Input$(buf_sz, 1)
-    For i = 1 To buf_sz
-'      Print ad;
-      Poke Var m(0), ad, Peek(Var buf$, i)
-      ad = ad + 1
-    Next i
-    to_read = to_read - buf_sz
-  Loop
-  Close #1
-
-  vp_to_pp(pp_to_vp(pp)) = 0
-  vp_to_pp(vp) = pp
-  pp_to_vp(pp) = vp
-
-  mem_load = pp
-End Function
-
-' Gets variable 'i'.
-' If i = 0 then pops and returns the top value of the stack.
-Function vget(i)
-  If i = 0 Then
-    vget = pop()
-  ElseIf i < &h10 Then
-    vget = stack(fp + i + 3)
-  ElseIf i <= &hFF Then
-    vget = rw(GLOBAL_VAR + 2 * (i - &h10))
-  Else
-    Error "Unknown variable " + Str$(i)
-  EndIf
-End Function
-
-' Sets variable 'i'.
-' If i = 0 then pushes the value onto the stack.
-Sub vset(i, x)
-  If i = 0 Then
-    push(x)
-  ElseIf i < &h10 Then
-    stack(fp + i + 3) = x
-  ElseIf i <= &hFF Then
-    ww(GLOBAL_VAR + 2 * (i - &h10), x)
-  Else
-    Error "Unknown variable " + Str$(i)
-  EndIf
-End Sub
-
-' Prints Z-string starting at 'a' incrementing 'a' by the number of bytes read
-Sub print_zstring(a)
-  Local b, c, i, s, x, zc(2)
-
-  If Not debug Then Print Chr$(8);
-
-  ' The state of Z-string processing is recorded in 's':
-  '   0, 1, 2 - Expecting a character from alphabet 's'
-  '   3, 4, 5 - Expecting an abbreviation from table 's - 3'
-  '   6       - Expecting the top 5-bits of a ZSCII character
-  '   > 6     - Expecting the btm 5-bits of a ZSCII character whose
-  '             top 5-bits are 's - 7'
-
-  ' Should be 'Do While x = 0' but there is an MMBasic bug using that
-  ' in recursive functions.
-  For x = 0 To 0 Step 0
-    x = rb(a) * 256 + rb(a + 1)
-
-    For i = 2 To 0 Step -1
-      zc(i) = x And 31 ' &b00011111
-      x = x \ 32 ' rshift 5
-    Next i
-
-    ' x is now the top-bit of the word. If x = 1 then we have reached the end
-    ' of the string and will exit the loop after this iteration.
-
-    For i = 0 To 2
-      c = zc(i)
-      If s < 3 Then
-        If c = 0 Then
-          Print " ";
-        ElseIf c < 4 Then
-          s = c + 2
-        ElseIf c < 6 Then
-          s = c - 3
-        Else
-          If c = 6 And s = 2 Then
-            s = 6
-          ElseIf c = 7 And s = 2 Then
-            Print
-            s = 0
-          Else
-            Print Mid$(ALPHABET$(s), c + 1, 1);
-            s = 0
-          EndIf
-        EndIf
-      ElseIf s < 6 Then
-        b = a ' Backup the address
-        print_abrv((s - 3) * 32 + c)
-        a = b ' Restore the address
-        s = 0
-      ElseIf s = 6 Then
-        s = c + 7
-      Else
-        Print Chr$((s - 7) * 32 + c);
-        s = 0
-      EndIf
-    Next i
-
-    a = a + 2
-  Next x
-
-  If Not debug Then Print " ";
-
-End Sub
-
-' Prints abbreviation 'x'
-Sub print_abrv(x)
-  Local a, b
-  a = rw(&h18)
-  b = rw(a + x * 2)
-  If Not debug Then Print " ";
-  print_zstring(b * 2)
-  If Not debug Then Print Chr$(8);
-End Sub
 
 Sub long_decode(op)
   oc = op And BTM_5_BITS
@@ -809,93 +579,6 @@ Sub init
   Print "  Paged memory starts at page "; Str$(FIRST_SWAP_PAGE)
 End Sub
 
-' Gets/sets object attribute
-Function oattr(o, a, s, x)
-  Local ad, m, y
-  ad = rw(&h0A) + 62 + (o - 1) * 9 + a \ 8
-  y = rb(ad)
-  m = BIT(7 - a Mod 8)
-  If s = 0 Then oattr = (y And m) > 0 : Exit Function
-  If x = 0 Then y = (y And (m Xor &hFF)) Else y = (y Or m)
-  wb(ad, y)
-  oattr = x
-End Function
-
-' Gets/sets object relatives
-Function orel(o, r, s, x)
-  Local ad
-  ad = rw(&h0A) + 62 + (o - 1) * 9 + r
-  If s = 0 Then orel = rb(ad) : Exit Function
-  wb(ad, x)
-  orel = x
-End Function
-
-Function get_next_prop(o, p)
-  Local ad, x
-
-  If p = 0 Then
-    ad = get_prop_base(o)
-    ad = ad + 1 + 2 * rb(ad) ' Skip length & description
-  Else
-    ad = get_prop_addr(o, p)
-    If ad = 0 Then Error "Property does not exist"
-    x = rb(ad)
-    ad = ad + 2 + x\32
-  EndIf
-
-  x = rb(ad)
-  get_next_prop = x And BTM_5_BITS
-End Function
-
-Function get_prop_len(o, p)
-  Local ad, x
-  If o > 0 Then
-    ad = get_prop_addr(o, p)
-    If ad = 0 Then Error "Property does not exist"
-    x = rb(ad)
-    get_prop_len = x\32 + 1
-  EndIf
-End Function
-
-Function get_prop_base(o)
-  Local ad
-  ad = rw(&h0A) + 62 + (o - 1) * 9 + 7
-  get_prop_base = rw(ad)
-End Function
-
-Function get_prop_addr(o, p)
-  Local ad, x
-  ad = get_prop_base(o)
-  ad = ad + 1 + 2 * rb(ad) ' Skip length & description
-  Do
-    x = rb(ad)
-    If (x And BTM_5_BITS) = p Then get_prop_addr = ad : Exit Function
-    If (x And BTM_5_BITS) < p Then get_prop_addr = 0 : Exit Function
-    ad = ad + 2 + x\32
-  Loop
-End Function
-
-Function get_prop(o, p)
-  Local ad, sz, x
-  ad = get_prop_addr(o, p)
-  If ad > 0 Then
-    x = rb(ad)
-    If (x And BTM_5_BITS) <> p Then Error
-    sz = x\32 + 1
-    If sz = 1 Then get_prop = rb(ad + 1) : Exit Function
-    If sz = 2 Then get_prop = rw(ad + 1) : Exit Function
-    Error "Property length > 2"
-  EndIf
-  ad = rw(&h0A) + 2 * (p - 1)
-  get_prop = rw(ad)
-End Function
-
-Sub print_obj(o)
-  Local ad
-  ad = get_prop_base(o) + 1
-  print_zstring(ad)
-End Sub
-
 Sub _step(n)
   Local i, op
 
@@ -973,11 +656,6 @@ Function lookup(s$)
 
   Next i
 
-'  Print lpad$(Hex$(b(0)), 2, "0");
-'  Print lpad$(Hex$(b(1)), 2, "0");
-'  Print lpad$(Hex$(b(2)), 2, "0");
-'  Print lpad$(Hex$(b(3)), 2, "0");
-
   ' Lookup Z-string in dictionary
   ' TODO: binary search instead of linear search
   Local ad, n, sz, word(3)
@@ -1002,7 +680,7 @@ Function lookup(s$)
 End Function
 
 Sub _read(text_buf, parse_buf)
-  Local c, i, n, word$, sep$, wc
+  Local c, i, n, word$, s$, sep$, wc
 
   Print "text_buf = "; Hex$(text_buf)
   Print "parse_buf = "; Hex$(parse_buf)
@@ -1039,10 +717,42 @@ End Sub
 
 ' Interactive debugger
 Sub gdb()
-  Local c, cmd$(9) Length 20, cn, i, s$
+  Local br, c, cmd$(9) Length 20, cn, i, old_pc, old_sp, op, s$, st
 
   Do
-    ' TODO: display the next instruction but don't execute it
+    ' Decode and display the next instruction but don't execute it.
+    Print Hex$(pc); ": ";
+    old_pc = pc
+    old_sp = sp
+    op = rp()
+    If op < &h80 Then
+      long_decode(op)
+      s$ = inst_2op$(oc)
+    ElseIf op < &hC0 Then
+      short_decode(op)
+      If op < &hB0 Then s$ = inst_1op$(oc) Else s$ = inst_0op$(oc)
+    Else
+      var_decode(op)
+      If op < &hE0 Then s$ = inst_2op$(oc) Else s$ = inst_varop$(oc)
+    EndIf
+    If Left$(s$, 1) = "B" Then
+      st = -1
+      br = read_branch()
+    ElseIf Left$(s$, 1) = "S" Then
+      st = rp()
+      br = 0
+    ElseIf Left$(s$, 1) = "X" Then
+      st = rp()
+      br = read_branch()
+    Else
+      st = -1
+      br = 0
+    EndIf
+    debug = 1
+    dmp_op(Mid$(s$, 2), st, br)
+    debug = 0
+    pc = old_pc
+    sp = old_sp
 
     ' Read line of input and parse into space separated commands/arguments.
     cn = 0
@@ -1060,7 +770,7 @@ Sub gdb()
     Next i
 
     If cmd$(0) = "c" Then
-      ' TODO: continue execution until breakpoint
+      _step(-1)
     ElseIf cmd$(0) = "b" Then
       ' TODO: set breakpoint
     ElseIf cmd$(0) = "q" Then
@@ -1073,6 +783,7 @@ Sub gdb()
 End Sub
 
 init()
+instruct_init()
 Print
 
 Dim num_ops = 0
@@ -1083,13 +794,10 @@ gdb()
 'bp = &h41d3
 '_step(-1)
 
-'dmp_dict()
-'Do
-'_read()
-'Loop
-
 Print
 Print "Num instructions processed ="; num_ops
 Print "Instructions / second      ="; num_ops / (Timer / 1000)
 Print "Num page faults            ="; pf
 Print
+
+End
