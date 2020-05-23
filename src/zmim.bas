@@ -40,12 +40,9 @@ Const E_UNIMPLEMENTED = 2
 Const E_BREAK = 3
 Const E_QUIT = 4
 
-' If > 0 then an error has occurred
-Dim err = E_OK
-
 Dim bp = 0 ' breakpoint address
 
-Sub _2op
+Function execute_2op()
   Local a, b, x, _
 
   a = oa(0)
@@ -142,11 +139,11 @@ Sub _2op
 
   ' GET_PROP_ADDR
   ElseIf oc = &h12 Then
-    err = E_UNIMPLEMENTED
+    execute_2op = E_UNIMPLEMENTED
 
   ' GET_NEXT_PROP
   ElseIf oc = &h13 Then
-    err = E_UNIMPLEMENTED
+    execute_2op = E_UNIMPLEMENTED
 
   ElseIf oc < &h19 Then
     If a > 32767 Then a = a - 65536
@@ -162,18 +159,18 @@ Sub _2op
     ElseIf oc = &h17 Then
       x = a \ b
     Else
-      err = E_UNIMPLEMENTED
+      execute_2op = E_UNIMPLEMENTED
     EndIf
 
     If x < 0 Then x = 65536 - x
     vset(st, x)
 
   Else
-    err = E_UNKNOWN
+    execute_2op = E_UNKNOWN
   EndIf
-End Sub
+End Function
 
-Sub _1op
+Function execute_1op()
   Local a, x
 
   a = oa(0)
@@ -201,7 +198,7 @@ Sub _1op
 
   ' GET_PROP_LEN
   ElseIf oc = &h4 Then
-    err = E_UNIMPLEMENTED
+    execute_1op = E_UNIMPLEMENTED
 
   ' INC
   ElseIf oc = &h5 Then
@@ -221,16 +218,15 @@ Sub _1op
 
   ' PRINT_ADDR
   ElseIf oc = &h7 Then
-    err = E_UNIMPLEMENTED
+    execute_1op = E_UNIMPLEMENTED
 
   ' REMOVE_OBJ
   ElseIf oc = &h9 Then
-    err = E_UNIMPLEMENTED
+    execute_1op = E_UNIMPLEMENTED
 
   ' PRINT_OBJECT
   ElseIf oc = &hA Then
     print_obj(a)
-    If debug Then debug = debug Or BIT(7)
 
   ' RET
   ElseIf oc = &hB Then
@@ -244,18 +240,17 @@ Sub _1op
   ' PRINT_PADDR
   ElseIf oc = &hD Then
     print_zstring(a * 2)
-    If debug Then debug = debug Or BIT(7)
 
   ' LOAD
   ElseIf oc = &hE Then
-    err = E_UNIMPLEMENTED
+    execute_1op = E_UNIMPLEMENTED
 
   Else
-    err = E_UNKNOWN
+    execute_1op = E_UNKNOWN
   EndIf
-End Sub
+End Function
 
-Sub _0op
+Function execute_0op()
   Local x
 
   ' RTRUE
@@ -269,12 +264,11 @@ Sub _0op
   ' PRINT
   ElseIf oc = &h2 Then
     print_zstring(pc)
-    If debug Then debug = debug Or BIT(7)
 
   ' PRINT_RET
   ElseIf oc = &h3 Then
     print_zstring(pc)
-    err = E_UNIMPLEMENTED
+    execute_0op = E_UNIMPLEMENTED
 
   ' RET_POPPED
   ElseIf oc = &h8 Then
@@ -283,15 +277,14 @@ Sub _0op
 
   ' NEWLINE
   ElseIf oc = &hB Then
-'    If debug Then Print Else Print Chr$(8); " " : Print " ";
     Print
 
   Else
-    err = E_UNKNOWN
+    execute_0op = E_UNKNOWN
   EndIf
-End Sub
+End Function
 
-Sub _varop
+Function execute_varop()
   Local x
 
   ' CALL
@@ -308,34 +301,21 @@ Sub _varop
 
   ' READ
   ElseIf oc = &h4 Then
-'    If Not debug Then Print Chr$(8); " ";
     Print " ";
-    _read(oa(0), oa(1))
+    execute_varop = _read(oa(0), oa(1))
 
   ' PRINT_CHAR
   ElseIf oc = &h5 Then
-'    If debug Then
-'      Print Chr$(oa(0));
-'      debug = debug Or BIT(7)
-'    Else
-'      Print Chr$(8); Chr$(oa(0)); " ";
-'    EndIf
     Print Chr$(oa(0));
 
   ' PRINT_NUM
   ElseIf oc = &h6 Then
-'    If debug Then
-'      Print Str$(oa(0));
-'      debug = debug Or BIT(7)
-'    Else
-'      Print Chr$(8); Str$(oa(0)); " ";
-'    EndIf
     Print Str$(oa(0));
 
   Else
-    err = E_UNKNOWN
+    execute_varop = E_UNKNOWN
   EndIf
-End Sub
+End Function
 
 Sub _branch(z, br)
   Local x
@@ -381,44 +361,29 @@ End Sub
 Function execute()
   Local op, pc_old, sp_old
 
-  err = E_OK
-
-'  If debug Then
-'    If debug And BIT(7) Then Print : debug = (debug And (BIT(7) Xor &hFF))
-'    Print Hex$(pc); ": ";
-'  Else
-'    Print Chr$(8); Mid$(BUSY$(0), (num_ops Mod 16) + 1, 1);
-'  EndIf
-
-  ' Store the PC and SP in case we want to roll-back.
+  ' Store the PC and SP in case we need to roll-back.
   pc_old = pc : sp_old = sp
 
-  If pc <> bp Then
-    op = decode()
-    num_ops = num_ops + 1
-    If op < &h80 Then
-      _2op()
-    ElseIf op < &hB0 Then
-      _1op()
-    ElseIf op < &hC0 Then
-      _0op()
-    ElseIf op < &hE0 Then
-      _2op()
-    Else
-      _varop()
-    EndIf
+  op = decode()
+  num_ops = num_ops + 1
+  If op < &h80 Then
+    execute = execute_2op()
+  ElseIf op < &hB0 Then
+    execute = execute_1op()
+  ElseIf op < &hC0 Then
+    execute = execute_0op()
+  ElseIf op < &hE0 Then
+    execute = execute_2op()
+  Else
+    execute = execute_varop()
   EndIf
 
-  execute = err
   If execute = E_UNKNOWN Then
     Print "Unsupported instruction "; Hex$(op)
   ElseIf execute = E_UNIMPLEMENTED Then
     Print "Unimplemented instruction "; Hex$(op)
-  ElseIf pc = bp Then
-    Print "[Breakpoint reached] - resetting bp = 0"
-    bp = 0
-    execute = E_BREAK
   EndIf
+
   If execute <> E_OK Then pc = pc_old : sp = sp_old
 
 End Function
@@ -477,20 +442,15 @@ Function lookup(s$)
 '  Print " => "; Hex$(lookup)
 End Function
 
-Sub _read(text_buf, parse_buf)
+Function _read(text_buf, parse_buf)
   Local c, i, n, word$, s$, sep$, wc, _
-
-'  Print "text_buf = "; Hex$(text_buf)
-'  Print "parse_buf = "; Hex$(parse_buf)
 
   Line Input s$
   s$ = LCase$(s$)
 
-  If Left$(s$, 1) = "*" Then
-    If s$ = "*break" Then
-      err = E_BREAK
-      Exit Sub
-    EndIf
+  If s$ = "*break" Then
+    _read = E_BREAK
+    Exit Function
   EndIf
 
   n = Len(s$)
@@ -504,9 +464,6 @@ Sub _read(text_buf, parse_buf)
     c = Peek(Var s$, i)
     If Instr(sep$, Chr$(c)) > 0 Then
       If Len(word$) > 0 Then _ = lookup(word$)
-      'Print Hex$(_) ;
-      'Print Len(word$);
-      'Print i - Len(word$) - 1
       ww(parse_buf + 2 + wc * 4, _)
       wb(parse_buf + 4 + wc * 4, Len(word$))
       wb(parse_buf + 5 + wc * 4, i - Len(word$)) ' position in 'text_buf'
@@ -516,19 +473,16 @@ Sub _read(text_buf, parse_buf)
       word$ = word$ + Chr$(c)
     EndIf
   Next i
-  wb(parse_buf + 1, wc)
-'  dmp_mem(text_buf, 32)
-'  dmp_mem(parse_buf, 32)
 
-'  Print " ";
-End Sub
+  wb(parse_buf + 1, wc)
+
+End Function
 
 ' Interactive debugger
 Function gdb()
   Local c, cmd$(9) Length 20, cn, i, op, pc_old, s$, sp_old
 
   ' Decode and display the next instruction but don't execute it.
-  Print Hex$(pc); ": ";
   pc_old = pc : sp_old = sp
   debug = 1
   op = decode()
@@ -550,22 +504,29 @@ Function gdb()
     EndIf
   Next i
 
-  If cmd$(0) = "c" Then
+  If cmd$(0) = "c"         Then ' Continue
     gdb = E_OK
-  ElseIf cmd$(0) = "b" Then
+  ElseIf cmd$(0) = "b"     Then ' Set breakpoint
     Error "Implement this"
-  ElseIf cmd$(0) = "q" Then
+  ElseIf cmd$(0) = "q"     Then ' Quit
     gdb = E_QUIT
-  ElseIf cmd$(0) = "s" Then
+  ElseIf cmd$(0) = "s"     Then ' Step
     If oc = &h4 And op >= &hE0 Then Print ">";
     gdb = execute()
     If gdb = E_OK Then gdb = E_BREAK
+  ElseIf cmd$(0) = "tron"  Then ' Enable trace
+  ElseIf cmd$(0) = "troff" Then ' Disable trace
+  ElseIf cmd$(0) = "a"     Then ' Memory dump
+  ElseIf cmd$(0) = "st"    Then ' Stack dump
+  Else
+    Print "Unknown debug command"
+    gdb = E_BREAK
   EndIf
 
 End Function
 
 Sub main()
-  Local err, s$
+  Local state, s$
 
   Mode 1
   Cls
@@ -581,7 +542,7 @@ Sub main()
   Print
 
   Input "Start in debugger [Y|n]"; s$
-  If LCase$(s$) = "n" Then err = E_OK Else err = E_BREAK
+  If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
   Print
 
   mem_init("B:\zmim\examples\minizork.z3")
@@ -595,13 +556,18 @@ Sub main()
 
   debug = 0
 
-  Do While err <> E_QUIT
-    Do While err = E_OK
-      err = execute()
-    Loop
-    Do While err <> E_OK And err <> E_QUIT
-      err = gdb()
-    Loop
+  Do While state <> E_QUIT
+    If pc = bp Then
+      Print "[Breakpoint reached] - resetting bp = 0"
+      bp = 0
+      state = E_BREAK
+    EndIf
+
+    If state = E_OK Then
+      state = execute()
+    Else
+      state = gdb()
+    EndIf
   Loop
 
   Print

@@ -41,6 +41,8 @@ End Sub
 Function decode()
   Local op, s$
 
+  If debug Then Print Hex$(pc); ": ";
+
   op = rp()
 
   If op < &h80 Then
