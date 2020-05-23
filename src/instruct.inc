@@ -24,7 +24,7 @@ End Sub
 Function instruct_format$(a$)
   Local p, s$
 
-  If Instr(a$, " BS") > 0 Then
+  If Instr(a$, " SB") > 0 Then
     s$ = "X"
   ElseIf Instr(a$, " B") > 0 Then
     s$ = "B"
@@ -36,14 +36,13 @@ Function instruct_format$(a$)
   p = Instr(a$, " ")
   If p = 0 Then p = Len(a$) + 1
   s$ = s$ + Left$(a$, p - 1)
-
   instruct_format$ = s$
 End Function
 
 ' 2-operand instructions &h0 - &h18
 Data 25
 Data "Unknown&h0",  "JE B",     "JL B",       "JG B",            "DEC_CHK B"
-Data "INC_CHK B",   "JIN B",    "TEST B",     "OR",              "AND"
+Data "INC_CHK B",   "JIN B",    "TEST B",     "OR S",            "AND S"
 Data "TEST_ATTR B", "SET_ATTR", "CLEAR_ATTR", "STORE",           "INSERT_OBJ"
 Data "LOADW S",     "LOADB S",  "GET_PROP S", "GET_PROP_ADDR S", "GEN_NEXT_PROP S"
 Data "ADD S",       "SUB S",    "MUL S",      "DIV S",           "MOD S"

@@ -76,6 +76,43 @@ Dim ot(MAX_NUM_OPERANDS) ' operand types
 Dim ov(MAX_NUM_OPERANDS) ' operand raw values
 
 Dim bp = 0 ' breakpoint address
+Dim st = 0
+Dim br = 0
+
+Function inst_decode()
+  Local op, s$
+
+  op = rp()
+
+  If op < &h80 Then
+    long_decode(op)
+    s$ = inst_2op$(oc)
+  ElseIf op < &hC0 Then
+    short_decode(op)
+    If op < &hB0 Then s$ = inst_1op$(oc) Else s$ = inst_0op$(oc)
+  Else
+    var_decode(op)
+    If op < &hE0 Then s$ = inst_2op$(oc) Else s$ = inst_varop$(oc)
+  EndIf
+
+  If Left$(s$, 1) = "B" Then
+    st = -1
+    br = read_branch()
+  ElseIf Left$(s$, 1) = "S" Then
+    st = rp()
+    br = 0
+  ElseIf Left$(s$, 1) = "X" Then
+    st = rp()
+    br = read_branch()
+  Else
+    st = -1
+    br = 0
+  EndIf
+
+  dmp_op(Mid$(s$, 2), st, br)
+
+  inst_decode = op
+End Function
 
 Sub long_decode(op)
   oc = op And BTM_5_BITS
@@ -129,15 +166,13 @@ Sub var_decode(op)
 End Sub
 
 Sub _2op
-  Local a, b, br, st, x
+  Local a, b, x
 
   a = oa(0)
   b = oa(1)
 
   ' JE
   If oc = &h1 Then
-    br = read_branch()
-    dmp_op("JE", -1, br)
     x = (a = b)
     If (Not x) And (onum = 3) Then x = (a = oa(2))
     If (Not x) And (onum = 4) Then x = (a = oa(3))
@@ -145,24 +180,18 @@ Sub _2op
 
   ' JL
   ElseIf oc = &h2 Then
-    br = read_branch()
-    dmp_op("JL", -1, br)
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
     _branch(a < b, br)
 
   ' JG
   ElseIf oc = &h3 Then
-    br = read_branch()
-    dmp_op("JG", -1, br)
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
     _branch(a > b, br)
 
   ' DEC_CHK
   ElseIf oc = &h4 Then
-    br = read_branch()
-    dmp_op("DEC_CHK", -1, br)
     x = vget(a) - 1
     If x < 0 Then x = &hFFFF
     vset(a, x)
@@ -170,8 +199,6 @@ Sub _2op
 
   ' INC_CHK
   ElseIf oc = &h5 Then
-    br = read_branch()
-    dmp_op("INC_CHK", -1, br)
     x = vget(a) + 1
     If x > &hFFFF Then x = 0
     vset(a, x)
@@ -179,54 +206,40 @@ Sub _2op
 
   ' JIN
   ElseIf oc = &h6 Then
-    br = read_branch()
-    dmp_op("JIN", -1, br)
     x = orel(a, PARENT)
     _branch(x = b, br)
 
   ' TEST
   ElseIf oc = &h7 Then
-    br = read_branch()
-    dmp_op("TEST", -1, br)
     _branch(a And b = b, br)
 
   ' OR
   ElseIf oc = &h8 Then
-    st = rp()
-    dmp_op("OR", st)
     vset(st, a Or b)
 
   ' AND
   ElseIf oc = &h9 Then
-    st = rp()
-    dmp_op("AND", st)
     vset(st, a And b)
 
   ' TEST_ATTR: a = object, b = attribute
   ElseIf oc = &hA Then
-    br = read_branch()
-    dmp_op("TEST_ATTR", -1, br)
     x = oattr(a, b)
     _branch(x = 1, br)
 
   ' SET_ATTR
   ElseIf oc = &hB Then
-    dmp_op("SET_ATTR", -1)
     _ = oattr(a, b, 1, 1)
 
   ' CLEAR_ATTR
   ElseIf oc = &hC Then
-    dmp_op("CLEAR_ATTR", -1)
     _ = oattr(a, b, 1, 0)
 
   ' STORE
   ElseIf oc = &hD Then
-    dmp_op("STORE", -1)
     vset(a, b)
 
   ' INSERT_OBJ: a = object, b = destination
   ElseIf oc = &hE Then
-    dmp_op("INSERT_OBJ", -1)
     x = orel(b, CHILD)
     _ = orel(b, CHILD, 1, a)
     _ = orel(a, PARENT, 1, b)
@@ -234,57 +247,41 @@ Sub _2op
 
   ' LOADW
   ElseIf oc = &hF Then
-    st = rp()
-    dmp_op("LOADW", st)
     x = rw(a + 2 * b)
     vset(st, x)
 
   ' LOADB
   ElseIf oc = &h10 Then
-    st = rp()
-    dmp_op("LOADB", st)
     x = rb(a + b)
     vset(st, x)
 
   ' GET_PROP
   ElseIf oc = &h11 Then
-    st = rp()
-    dmp_op("GET_PROP", st)
     x = get_prop(a, b)
     vset(st, x)
 
   ' GET_PROP_ADDR
   ElseIf oc = &h12 Then
-    st = rp()
-    dmp_op("!GET_PROP_ADDR", st)
     err = 1
 
   ' GET_NEXT_PROP
   ElseIf oc = &h13 Then
-    st = rp()
-    dmp_op("!GET_NEXT_PROP", st)
     err = 1
 
   ElseIf oc < &h19 Then
-    st = rp()
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
 
     ' ADD
     If oc = &h14 Then
-      dmp_op("ADD", st)
       x = a + b
     ElseIf oc = &h15 Then
-      dmp_op("SUB", st)
       x = a - b
     ElseIf oc = &h16 Then
-      dmp_op("MUL", st)
       x = a * b
     ElseIf oc = &h17 Then
-      dmp_op("DIV", st)
       x = a \ b
     Else
-      dmp_op("!MOD", st)
       err = 1
     EndIf
 
@@ -297,50 +294,37 @@ Sub _2op
 End Sub
 
 Sub _1op
-  Local a, st, br, x
+  Local a, x
 
   a = oa(0)
 
   ' JZ
   If oc = &h0 Then
-    br = read_branch()
-    dmp_op("JZ", -1, br)
     _branch(a = 0, br)
 
   ' GET_SIBLING
   ElseIf oc = &h1 Then
-    st = rp()
-    br = read_branch()
-    dmp_op("GET_SIBLING", st, br)
     x = orel(a, SIBLING)
     vset(st, x)
     _branch(x <> 0, br)
 
   ' GET_CHILD
   ElseIf oc = &h2 Then
-    st = rp()
-    br = read_branch()
-    dmp_op("GET_CHILD", st, br)
     x = orel(a, CHILD)
     vset(st, x)
     _branch(x <> 0, br)
 
   ' GET_PARENT
   ElseIf oc = &h3 Then
-    st = rp()
-    dmp_op("GET_PARENT", st)
     x = orel(a, PARENT)
     vset(st, x)
 
   ' GET_PROP_LEN
   ElseIf oc = &h4 Then
-    st = rp()
-    dmp_op("!GET_PROP_LEN", st)
     err = 1
 
   ' INC
   ElseIf oc = &h5 Then
-    dmp_op("INC", -1)
     x = vget(a)
     If x > 32767 Then x = x - 65536
     x = x + 1
@@ -349,7 +333,6 @@ Sub _1op
 
   ' DEC
   ElseIf oc = &h6 Then
-    dmp_op("DEC", -1)
     x = vget(a)
     If x > 32767 Then x = x - 65536
     x = x - 1
@@ -358,41 +341,33 @@ Sub _1op
 
   ' PRINT_ADDR
   ElseIf oc = &h7 Then
-    dmp_op("!PRINT_ADDR", -1)
     err = 1
 
   ' REMOVE_OBJ
   ElseIf oc = &h9 Then
-    dmp_op("!REMOVE_OBJ", -1)
     err = 1
 
   ' PRINT_OBJECT
   ElseIf oc = &hA Then
-    dmp_op("PRINT_OBJECT", -1)
     print_obj(a)
     If debug Then debug = debug Or BIT(7)
 
   ' RET
   ElseIf oc = &hB Then
-    dmp_op("RET", -1)
     _return(a)
 
   ' JUMP
   ElseIf oc = &hC Then
-    dmp_op("JUMP", -1)
     If a And &h8000 Then a = a - 65536
     pc = pc + a - 2
 
   ' PRINT_PADDR
   ElseIf oc = &hD Then
-    dmp_op("PRINT_PADDR", -1)
     print_zstring(a * 2)
     If debug Then debug = debug Or BIT(7)
 
   ' LOAD
   ElseIf oc = &hE Then
-    st = rp()
-    dmp_op("!LOAD", st)
     err = 1
 
   Else
@@ -405,35 +380,29 @@ Sub _0op
 
   ' RTRUE
   If oc = &h0 Then
-    dmp_op("RTRUE", -1)
     _return(1)
 
   ' RFALSE
   ElseIf oc = &h1 Then
-    dmp_op("RFALSE", -1)
     _return(0)
 
   ' PRINT
   ElseIf oc = &h2 Then
-    dmp_op("PRINT", -1)
     print_zstring(pc)
     If debug Then debug = debug Or BIT(7)
 
   ' PRINT_RET
   ElseIf oc = &h3 Then
-    dmp_op("!PRINT_RET", -1)
     print_zstring(pc)
     err = 1
 
   ' RET_POPPED
   ElseIf oc = &h8 Then
-    dmp_op("RET_POPPED", -1)
     x = pop()
     _return(x)
 
   ' NEWLINE
   ElseIf oc = &hB Then
-    dmp_op("NEWLINE", -1)
     If debug Then Print Else Print Chr$(8); " " : Print " ";
 
   Else
@@ -442,33 +411,27 @@ Sub _0op
 End Sub
 
 Sub _varop
-  Local st, br, x
+  Local x
 
   ' CALL
   If oc = &h0 Then
-    st = rp()
-    dmp_op("CALL", st)
     _call(st)
 
   ' STOREW
   ElseIf oc = &h1 Then
-    dmp_op("STOREW", -1)
     ww(oa(0) + 2 * oa(1), oa(2))
 
   ' STOREB
   ElseIf oc = &h2 Then
-    dmp_op("STOREB", -1)
     wb(oa(0) + oa(1), oa(2))
 
   ' READ
   ElseIf oc = &h4 Then
-    dmp_op("!READ", -1)
     If Not debug Then Print Chr$(8); " ";
     _read(oa(0), oa(1))
 
   ' PRINT_CHAR
   ElseIf oc = &h5 Then
-    dmp_op("PRINT_CHAR", -1)
     If debug Then
       Print Chr$(oa(0));
       debug = debug Or BIT(7)
@@ -478,7 +441,6 @@ Sub _varop
 
   ' PRINT_NUM
   ElseIf oc = &h6 Then
-    dmp_op("PRINT_NUM", -1)
     If debug Then
       Print Str$(oa(0));
       debug = debug Or BIT(7)
@@ -596,17 +558,18 @@ Sub _step(n)
     EndIf
 
     If pc <> bp Then
-      op = rp()
+      op = inst_decode()
       num_ops = num_ops + 1
       If op < &h80 Then
-        long_decode(op)
         _2op()
+      ElseIf op < &hB0 Then
+        _1op()
       ElseIf op < &hC0 Then
-        short_decode(op)
-        If op < &hB0 Then _1op() Else _0op()
+        _0op()
+      ElseIf op < &hE0 Then
+        _2op()
       Else
-        var_decode(op)
-        If op < &hE0 Then _2op() Else _varop()
+        _varop()
       EndIf
     EndIf
 
@@ -717,39 +680,15 @@ End Sub
 
 ' Interactive debugger
 Sub gdb()
-  Local br, c, cmd$(9) Length 20, cn, i, old_pc, old_sp, op, s$, st
+  Local c, cmd$(9) Length 20, cn, i, old_pc, old_sp, s$
 
   Do
     ' Decode and display the next instruction but don't execute it.
     Print Hex$(pc); ": ";
     old_pc = pc
     old_sp = sp
-    op = rp()
-    If op < &h80 Then
-      long_decode(op)
-      s$ = inst_2op$(oc)
-    ElseIf op < &hC0 Then
-      short_decode(op)
-      If op < &hB0 Then s$ = inst_1op$(oc) Else s$ = inst_0op$(oc)
-    Else
-      var_decode(op)
-      If op < &hE0 Then s$ = inst_2op$(oc) Else s$ = inst_varop$(oc)
-    EndIf
-    If Left$(s$, 1) = "B" Then
-      st = -1
-      br = read_branch()
-    ElseIf Left$(s$, 1) = "S" Then
-      st = rp()
-      br = 0
-    ElseIf Left$(s$, 1) = "X" Then
-      st = rp()
-      br = read_branch()
-    Else
-      st = -1
-      br = 0
-    EndIf
     debug = 1
-    dmp_op(Mid$(s$, 2), st, br)
+    _ = inst_decode()
     debug = 0
     pc = old_pc
     sp = old_sp
@@ -789,10 +728,11 @@ Print
 Dim num_ops = 0
 Timer = 0
 
-gdb()
+'gdb()
 
 'bp = &h41d3
-'_step(-1)
+debug = 1
+_step(-1)
 
 Print
 Print "Num instructions processed ="; num_ops
