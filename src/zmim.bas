@@ -14,31 +14,11 @@ Option Explicit On
 #Include "dmp_mmap.inc"
 #Include "zstring.inc"
 #Include "objects.inc"
-#Include "instruct.inc"
-
-Mode 1
-Cls
-
-Print "Sockpuppet Software presents a Toy Plastic Trumpet production of"
-Print "ZMIM: a Z-Machine Interpreter for the Maximite"
-Print "Copyright (c) 2019-20 Thomas Hugo Williams"
-Print "Version 0.1 for Colour Maximite 2, MMBasic 5.05"
-Print
+#Include "decode.inc"
 
 ' If > 0 then produce debug output
 ' If bit 7 is set then print a new line before the current value of 'pc'
 Dim debug = 0
-
-'Input "Save 'ZMIM.BAS' [y|N]"; s$
-'If (s$ = "y") Or (s$ = "Y") Then Save "ZMIM.BAS"
-'Dim s$
-'Input "Run with debug output [Y|n]"; s$
-'If (s$ = "n") Or (s$ = "N") Then debug = 0
-'Print
-
-Const FILE$ = "B:\zmim\examples\minizork.z3"
-'FILE$ = "B:\zmim\examples\advent.z3"
-'FILE$ = "B:\zmim\examples\ZORK1\DATA\ZORK1.DAT"
 
 Dim GLOBAL_VAR = 0
 
@@ -54,119 +34,19 @@ Const BTM_4_BITS  = &b00001111
 Const BTM_5_BITS  = &b00011111
 Const BTM_6_BITS  = &b00111111
 
-' Variable to assign unused result of a Function call to
-Dim _ = 0
+Const E_OK = 0
+Const E_UNKNOWN = 1
+Const E_UNIMPLEMENTED = 2
+Const E_BREAK = 3
+Const E_QUIT = 4
 
 ' If > 0 then an error has occurred
-Dim err = 0
-
-Const MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
-
-' Instruction encoding
-Const LARGE    = &b00
-Const SMALL    = &b01
-Const VARIABLE = &b10
-Const OMITTED  = &b11
-
-' The currently decoded instruction
-Dim oc = 0               ' operand code
-Dim onum = 0             ' number of operands
-Dim oa(MAX_NUM_OPERANDS) ' operand values with variables looked-up
-Dim ot(MAX_NUM_OPERANDS) ' operand types
-Dim ov(MAX_NUM_OPERANDS) ' operand raw values
+Dim err = E_OK
 
 Dim bp = 0 ' breakpoint address
-Dim st = 0
-Dim br = 0
-
-Function inst_decode()
-  Local op, s$
-
-  op = rp()
-
-  If op < &h80 Then
-    long_decode(op)
-    s$ = inst_2op$(oc)
-  ElseIf op < &hC0 Then
-    short_decode(op)
-    If op < &hB0 Then s$ = inst_1op$(oc) Else s$ = inst_0op$(oc)
-  Else
-    var_decode(op)
-    If op < &hE0 Then s$ = inst_2op$(oc) Else s$ = inst_varop$(oc)
-  EndIf
-
-  If Left$(s$, 1) = "B" Then
-    st = -1
-    br = read_branch()
-  ElseIf Left$(s$, 1) = "S" Then
-    st = rp()
-    br = 0
-  ElseIf Left$(s$, 1) = "X" Then
-    st = rp()
-    br = read_branch()
-  Else
-    st = -1
-    br = 0
-  EndIf
-
-  dmp_op(Mid$(s$, 2), st, br)
-
-  inst_decode = op
-End Function
-
-Sub long_decode(op)
-  oc = op And BTM_5_BITS
-  onum = 2
-  ov(0) = rp()
-  ov(1) = rp()
-  If op <= &h1F Then
-    ot(0) = SMALL : oa(0) = ov(0)
-    ot(1) = SMALL : oa(1) = ov(1)
-  ElseIf op <= &h3F Then
-    ot(0) = SMALL : oa(0) = ov(0)
-    ot(1) = VARIABLE : oa(1) = vget(ov(1))
-  ElseIf op <= &h5F Then
-    ot(0) = VARIABLE : oa(0) = vget(ov(0))
-    ot(1) = SMALL : oa(1) = ov(1)
-  Else
-    ot(0) = VARIABLE : oa(0) = vget(ov(0))
-    ot(1) = VARIABLE : oa(1) = vget(ov(1))
-  EndIf
-End Sub
-
-Sub short_decode(op)
-  oc = op And BTM_4_BITS
-  onum = 1
-  If op <= &h8F Then
-    ot(0) = LARGE : ov(0) = rp() * 256 + rp() : oa(0) = ov(0)
-  ElseIf op <= &h9F Then
-    ot(0) = SMALL : ov(0) = rp() : oa(0) = ov(0)
-  ElseIf op <= &hAF Then
-    ot(0) = VARIABLE : ov(0) = rp() : oa(0) = vget(ov(0))
-  Else
-    onum = 0
-  EndIf
-End Sub
-
-Sub var_decode(op)
-  Local i, x
-  oc = op And &b11111
-  onum = 4
-  x = rp()
-  For i = 3 To 0 Step -1
-    ot(i) = x And &b11
-    If ot(i) = OMITTED Then onum = onum - 1
-    x = x \ 4
-  Next i
-  For i = 0 To onum - 1
-    If ot(i) = LARGE Then ov(i) = rp() * 256 + rp() : oa(i) = ov(i)
-    If ot(i) = SMALL Then ov(i) = rp() : oa(i) = ov(i)
-    If ot(i) = VARIABLE Then ov(i) = rp() : oa(i) = vget(ov(i))
-  Next i
-End Sub
 
 Sub _2op
-  Local a, b, x
+  Local a, b, x, _
 
   a = oa(0)
   b = oa(1)
@@ -262,11 +142,11 @@ Sub _2op
 
   ' GET_PROP_ADDR
   ElseIf oc = &h12 Then
-    err = 1
+    err = E_UNIMPLEMENTED
 
   ' GET_NEXT_PROP
   ElseIf oc = &h13 Then
-    err = 1
+    err = E_UNIMPLEMENTED
 
   ElseIf oc < &h19 Then
     If a > 32767 Then a = a - 65536
@@ -282,14 +162,14 @@ Sub _2op
     ElseIf oc = &h17 Then
       x = a \ b
     Else
-      err = 1
+      err = E_UNIMPLEMENTED
     EndIf
 
     If x < 0 Then x = 65536 - x
     vset(st, x)
 
   Else
-    err = 1
+    err = E_UNKNOWN
   EndIf
 End Sub
 
@@ -321,7 +201,7 @@ Sub _1op
 
   ' GET_PROP_LEN
   ElseIf oc = &h4 Then
-    err = 1
+    err = E_UNIMPLEMENTED
 
   ' INC
   ElseIf oc = &h5 Then
@@ -341,11 +221,11 @@ Sub _1op
 
   ' PRINT_ADDR
   ElseIf oc = &h7 Then
-    err = 1
+    err = E_UNIMPLEMENTED
 
   ' REMOVE_OBJ
   ElseIf oc = &h9 Then
-    err = 1
+    err = E_UNIMPLEMENTED
 
   ' PRINT_OBJECT
   ElseIf oc = &hA Then
@@ -368,10 +248,10 @@ Sub _1op
 
   ' LOAD
   ElseIf oc = &hE Then
-    err = 1
+    err = E_UNIMPLEMENTED
 
   Else
-    err = 1
+    err = E_UNKNOWN
   EndIf
 End Sub
 
@@ -394,7 +274,7 @@ Sub _0op
   ' PRINT_RET
   ElseIf oc = &h3 Then
     print_zstring(pc)
-    err = 1
+    err = E_UNIMPLEMENTED
 
   ' RET_POPPED
   ElseIf oc = &h8 Then
@@ -403,10 +283,11 @@ Sub _0op
 
   ' NEWLINE
   ElseIf oc = &hB Then
-    If debug Then Print Else Print Chr$(8); " " : Print " ";
+'    If debug Then Print Else Print Chr$(8); " " : Print " ";
+    Print
 
   Else
-    err = 1
+    err = E_UNKNOWN
   EndIf
 End Sub
 
@@ -427,50 +308,34 @@ Sub _varop
 
   ' READ
   ElseIf oc = &h4 Then
-    If Not debug Then Print Chr$(8); " ";
+'    If Not debug Then Print Chr$(8); " ";
+    Print " ";
     _read(oa(0), oa(1))
 
   ' PRINT_CHAR
   ElseIf oc = &h5 Then
-    If debug Then
-      Print Chr$(oa(0));
-      debug = debug Or BIT(7)
-    Else
-      Print Chr$(8); Chr$(oa(0)); " ";
-    EndIf
+'    If debug Then
+'      Print Chr$(oa(0));
+'      debug = debug Or BIT(7)
+'    Else
+'      Print Chr$(8); Chr$(oa(0)); " ";
+'    EndIf
+    Print Chr$(oa(0));
 
   ' PRINT_NUM
   ElseIf oc = &h6 Then
-    If debug Then
-      Print Str$(oa(0));
-      debug = debug Or BIT(7)
-    Else
-      Print Chr$(8); Str$(oa(0)); " ";
-    EndIf
+'    If debug Then
+'      Print Str$(oa(0));
+'      debug = debug Or BIT(7)
+'    Else
+'      Print Chr$(8); Str$(oa(0)); " ";
+'    EndIf
+    Print Str$(oa(0));
 
   Else
-    err = 1
+    err = E_UNKNOWN
   EndIf
 End Sub
-
-' Reads branch offset.
-' @return bits 0-15 - new value for the program counter.
-'                   - if = pc - 2 then -> return false.
-'                   - if = pc - 1 then -> return true.
-'         bit 16    - set = branch on True, unset = branch on False.
-Function read_branch()
-  Local a, of
-  a = rp()
-  of = a And BTM_6_BITS
-
-  If (a And BIT(6)) = 0 Then
-    of = 256 * of + rp()
-    If a And BIT(5) Then of = of - 16384
-  EndIf
-
-  read_branch = pc + of - 2
-  If a And BIT(7) Then read_branch = read_branch Or &h10000
-End Function
 
 Sub _branch(z, br)
   Local x
@@ -513,80 +378,50 @@ Sub _call(st)
   dmp_stack()
 End Sub
 
-Sub init
-  Local i
+Function execute()
+  Local op, pc_old, sp_old
 
-  Print "Loading "; FILE$
+  err = E_OK
 
-  ' Load page 0 which contains the header.
-  Print "  Header page: 0"
-  If mem_load(0) <> 0 Then Error
+'  If debug Then
+'    If debug And BIT(7) Then Print : debug = (debug And (BIT(7) Xor &hFF))
+'    Print Hex$(pc); ": ";
+'  Else
+'    Print Chr$(8); Mid$(BUSY$(0), (num_ops Mod 16) + 1, 1);
+'  EndIf
 
-  ' Read header data.
-  pc = rw(&h06)
-  GLOBAL_VAR = rw(&h0C)
-  BASE_STATIC = rw(&h0E)
-  FILE_LEN = rw(&h1A) * 2
+  ' Store the PC and SP in case we want to roll-back.
+  pc_old = pc : sp_old = sp
 
-  ' Initialise dynamic memory.
-  FIRST_SWAP_PAGE = BASE_STATIC \ PAGE_SIZE
-  If BASE_STATIC Mod PAGE_SIZE > 0 Then FIRST_SWAP_PAGE = FIRST_SWAP_PAGE + 1
-  Print "  Dynamic pages: ";
-  For i = 1 To FIRST_SWAP_PAGE - 1
-    If i > 1 Then Print ", ";
-    Print Str$(i);
-    If mem_load(i) <> i Then Error
-  Next i
-  Print
-  Print "  Paged memory starts at page "; Str$(FIRST_SWAP_PAGE)
-End Sub
-
-Sub _step(n)
-  Local i, op
-
-  If n = 0 Then n = 1 Else If n < 0 Then n = &hFFFF
-
-  If Not debug Then Print " ";
-
-  For i = 0 To n - 1
-
-    If debug Then
-      If debug And BIT(7) Then Print : debug = (debug And (BIT(7) Xor &hFF))
-      Print Hex$(pc); ": ";
+  If pc <> bp Then
+    op = decode()
+    num_ops = num_ops + 1
+    If op < &h80 Then
+      _2op()
+    ElseIf op < &hB0 Then
+      _1op()
+    ElseIf op < &hC0 Then
+      _0op()
+    ElseIf op < &hE0 Then
+      _2op()
     Else
-      Print Chr$(8); Mid$(BUSY$(0), (i Mod 16) + 1, 1);
+      _varop()
     EndIf
+  EndIf
 
-    If pc <> bp Then
-      op = inst_decode()
-      num_ops = num_ops + 1
-      If op < &h80 Then
-        _2op()
-      ElseIf op < &hB0 Then
-        _1op()
-      ElseIf op < &hC0 Then
-        _0op()
-      ElseIf op < &hE0 Then
-        _2op()
-      Else
-        _varop()
-      EndIf
-    EndIf
+  execute = err
+  If execute = E_UNKNOWN Then
+    Print "Unsupported instruction "; Hex$(op)
+  ElseIf execute = E_UNIMPLEMENTED Then
+    Print "Unimplemented instruction "; Hex$(op)
+  ElseIf pc = bp Then
+    Print "[Breakpoint reached] - resetting bp = 0"
+    bp = 0
+    execute = E_BREAK
+  EndIf
+  If execute <> E_OK Then pc = pc_old : sp = sp_old
 
-    If err > 0 Then
-      Print
-      Print "Unsupported instruction "; Hex$(op)
-      i = n ' Exit loop
-    ElseIf pc = bp Then
-      Print "[Breakpoint reached] - resetting bp = 0"
-      bp = 0
-      i = n ' Exit loop
-    ElseIf n = &hFFFF And i > 15 Then
-      i = 0 ' Loop indefinitely
-    EndIf
-
-  Next i
-End Sub
+End Function
 
 Function lookup(s$)
   Local b(3), i, sl, x
@@ -643,13 +478,21 @@ Function lookup(s$)
 End Function
 
 Sub _read(text_buf, parse_buf)
-  Local c, i, n, word$, s$, sep$, wc
+  Local c, i, n, word$, s$, sep$, wc, _
 
-  Print "text_buf = "; Hex$(text_buf)
-  Print "parse_buf = "; Hex$(parse_buf)
+'  Print "text_buf = "; Hex$(text_buf)
+'  Print "parse_buf = "; Hex$(parse_buf)
 
   Line Input s$
   s$ = LCase$(s$)
+
+  If Left$(s$, 1) = "*" Then
+    If s$ = "*break" Then
+      err = E_BREAK
+      Exit Sub
+    EndIf
+  EndIf
+
   n = Len(s$)
   ' TODO: check for input too long
   For i = 1 To n : wb(text_buf + i, Peek(Var s$, i)) : Next i
@@ -661,9 +504,9 @@ Sub _read(text_buf, parse_buf)
     c = Peek(Var s$, i)
     If Instr(sep$, Chr$(c)) > 0 Then
       If Len(word$) > 0 Then _ = lookup(word$)
-      Print Hex$(_) ;
-      Print Len(word$);
-      Print i - Len(word$) - 1
+      'Print Hex$(_) ;
+      'Print Len(word$);
+      'Print i - Len(word$) - 1
       ww(parse_buf + 2 + wc * 4, _)
       wb(parse_buf + 4 + wc * 4, Len(word$))
       wb(parse_buf + 5 + wc * 4, i - Len(word$)) ' position in 'text_buf'
@@ -674,70 +517,98 @@ Sub _read(text_buf, parse_buf)
     EndIf
   Next i
   wb(parse_buf + 1, wc)
-  dmp_mem(text_buf, 32)
-  dmp_mem(parse_buf, 32)
+'  dmp_mem(text_buf, 32)
+'  dmp_mem(parse_buf, 32)
+
+'  Print " ";
 End Sub
 
 ' Interactive debugger
-Sub gdb()
-  Local c, cmd$(9) Length 20, cn, i, old_pc, old_sp, s$
+Function gdb()
+  Local c, cmd$(9) Length 20, cn, i, op, pc_old, s$, sp_old
 
-  Do
-    ' Decode and display the next instruction but don't execute it.
-    Print Hex$(pc); ": ";
-    old_pc = pc
-    old_sp = sp
-    debug = 1
-    _ = inst_decode()
-    debug = 0
-    pc = old_pc
-    sp = old_sp
+  ' Decode and display the next instruction but don't execute it.
+  Print Hex$(pc); ": ";
+  pc_old = pc : sp_old = sp
+  debug = 1
+  op = decode()
+  debug = 0
+  pc = pc_old : sp = sp_old
 
-    ' Read line of input and parse into space separated commands/arguments.
-    cn = 0
-    For i = 0 To 9 : cmd$(i) = "" : Next i
-    Line Input "DEBUG >> ", s$
-    s$ = s$ + " "
-    For i = 1 To Len(s$)
-      c = Peek(Var s$, i)
-      If Chr$(c) = " " Then
-        If Len(cmd$(cn)) > 0 Then cn = cn + 1
-        If cn = 10 Then Error "Too many arguments"
-      Else
-        cmd$(cn) = cmd$(cn) + Chr$(c)
-      EndIf
-    Next i
-
-    If cmd$(0) = "c" Then
-      _step(-1)
-    ElseIf cmd$(0) = "b" Then
-      ' TODO: set breakpoint
-    ElseIf cmd$(0) = "q" Then
-      Exit Do
-    ElseIf cmd$(0) = "s" Then
-      _step(1)
+  ' Read line of input and parse into space separated commands/arguments.
+  cn = 0
+  For i = 0 To 9 : cmd$(i) = "" : Next i
+  Line Input "DEBUG >> ", s$
+  s$ = s$ + " "
+  For i = 1 To Len(s$)
+    c = Peek(Var s$, i)
+    If Chr$(c) = " " Then
+      If Len(cmd$(cn)) > 0 Then cn = cn + 1
+      If cn = 10 Then Error "Too many arguments"
+    Else
+      cmd$(cn) = cmd$(cn) + Chr$(c)
     EndIf
+  Next i
+
+  If cmd$(0) = "c" Then
+    gdb = E_OK
+  ElseIf cmd$(0) = "b" Then
+    Error "Implement this"
+  ElseIf cmd$(0) = "q" Then
+    gdb = E_QUIT
+  ElseIf cmd$(0) = "s" Then
+    If oc = &h4 And op >= &hE0 Then Print ">";
+    gdb = execute()
+    If gdb = E_OK Then gdb = E_BREAK
+  EndIf
+
+End Function
+
+Sub main()
+  Local err, s$
+
+  Mode 1
+  Cls
+
+  Print "             Sockpuppet Studios"
+  Print "                  presents"
+  Print "       A Toy Plastic Trumpet Production"
+  Print
+  Print "ZMIM: a Z-Machine Interpreter for the Maximite"
+  Print
+  Print "Copyright (c) 2019-20 Thomas Hugo Williams"
+  Print "Version 0.1 for Colour Maximite 2, MMBasic 5.05"
+  Print
+
+  Input "Start in debugger [Y|n]"; s$
+  If LCase$(s$) = "n" Then err = E_OK Else err = E_BREAK
+  Print
+
+  mem_init("B:\zmim\examples\minizork.z3")
+  'mem_init("B:\zmim\examples\advent.z3"
+  'mem_init("B:\zmim\examples\ZORK1\DATA\ZORK1.DAT"
+  decode_init()
+  Print
+
+  Dim num_ops = 0
+  Timer = 0
+
+  debug = 0
+
+  Do While err <> E_QUIT
+    Do While err = E_OK
+      err = execute()
+    Loop
+    Do While err <> E_OK And err <> E_QUIT
+      err = gdb()
+    Loop
   Loop
 
+  Print
+  Print "Num instructions processed ="; num_ops
+  Print "Instructions / second      ="; num_ops / (Timer / 1000)
+  Print "Num page faults            ="; pf
+  Print
 End Sub
 
-init()
-instruct_init()
-Print
-
-Dim num_ops = 0
-Timer = 0
-
-'gdb()
-
-'bp = &h41d3
-debug = 1
-_step(-1)
-
-Print
-Print "Num instructions processed ="; num_ops
-Print "Instructions / second      ="; num_ops / (Timer / 1000)
-Print "Num page faults            ="; pf
-Print
-
-End
+main()

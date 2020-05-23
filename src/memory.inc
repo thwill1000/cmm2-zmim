@@ -84,7 +84,7 @@ Function mem_load(vp)
   If next_page = NUM_PHYSICAL_PAGES Then next_page = FIRST_SWAP_PAGE
 
   ' TODO: Should the file be opened once globally and kept open until exit?
-  Open FILE$ For random As #1
+  Open MEM_FILE$ For random As #1
   Seek #1, vp * PAGE_SIZE + 1
   ad = pp * PAGE_SIZE
   to_read = PAGE_SIZE
@@ -106,3 +106,33 @@ Function mem_load(vp)
 
   mem_load = pp
 End Function
+
+Sub mem_init(f$)
+  Local i
+
+  Dim MEM_FILE$ = f$
+
+  Print "Loading "; MEM_FILE$
+
+  ' Load page 0 which contains the header.
+  Print "  Header page: 0"
+  If mem_load(0) <> 0 Then Error
+
+  ' Read header data.
+  pc = rw(&h06)
+  GLOBAL_VAR = rw(&h0C)
+  BASE_STATIC = rw(&h0E)
+  FILE_LEN = rw(&h1A) * 2
+
+  ' Initialise dynamic memory.
+  FIRST_SWAP_PAGE = BASE_STATIC \ PAGE_SIZE
+  If BASE_STATIC Mod PAGE_SIZE > 0 Then FIRST_SWAP_PAGE = FIRST_SWAP_PAGE + 1
+  Print "  Dynamic pages: ";
+  For i = 1 To FIRST_SWAP_PAGE - 1
+    If i > 1 Then Print ", ";
+    Print Str$(i);
+    If mem_load(i) <> i Then Error
+  Next i
+  Print
+  Print "  Paged memory starts at page "; Str$(FIRST_SWAP_PAGE)
+End Sub

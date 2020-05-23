@@ -10,7 +10,7 @@ ALPHABET$(2) = " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
 Sub print_zstring(a)
   Local b, c, i, s, x, zc(2)
 
-  If Not debug Then Print Chr$(8);
+'  If Not debug Then Print Chr$(8);
 
   ' The state of Z-string processing is recorded in 's':
   '   0, 1, 2 - Expecting a character from alphabet 's'
@@ -68,7 +68,7 @@ Sub print_zstring(a)
     a = a + 2
   Next x
 
-  If Not debug Then Print " ";
+'  If Not debug Then Print " ";
 
 End Sub
 
@@ -77,7 +77,7 @@ Sub print_abrv(x)
   Local a, b
   a = rw(&h18)
   b = rw(a + x * 2)
-  If Not debug Then Print " ";
+'  If Not debug Then Print " ";
   print_zstring(b * 2)
-  If Not debug Then Print Chr$(8);
+'  If Not debug Then Print Chr$(8);
 End Sub
