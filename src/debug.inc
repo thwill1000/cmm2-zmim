@@ -3,20 +3,17 @@
 
 ' Prints 'sz' bytes from 'mem' starting at 'ad'
 Sub dmp_mem(ad, sz)
-'  If Not debug Then Exit Sub
-
   Local i, x
+  Print "&h" + lpad$(Hex$(ad), 4, "0")
   For i = 0 To sz - 1
     x = rb(ad + i)
     Print lpad$(Hex$(x), 2, "0"); " ";
-    If (i + 1) Mod 16 = 0 Then Print
+    If ((i + 1) Mod 16 = 0) And (i <> sz - 1) Then Print
   Next i
   Print
 End Sub
 
 Sub dmp_obj(o)
-  If Not debug Then Exit Sub
-
   Local ad, i, p, sz, x
 
   If o = 0 Then
@@ -144,8 +141,6 @@ Function fmt_normal_operands$()
 End Function
 
 Sub dmp_op(m$, st, br)
-  If Not debug Then Exit Sub
-
   Print rpad$(m$, 14);
   If m$ = "CALL" Then
     Print fmt_call_operands$();
@@ -169,8 +164,6 @@ Sub dmp_op(m$, st, br)
 End Sub
 
 Sub dmp_routine(new_pc)
-  If Not debug Then Exit Sub
-
   Local i, locals_sz, x
   locals_sz = rb(new_pc)
   Print "Routine "; Hex$(new_pc); ", "; Str$(locals_sz); " locals (";
@@ -187,10 +180,9 @@ End Sub
 '  sp    - current stack index/pointer
 '  stack - the stack (an array of 32-bit floats)
 Sub dmp_stack(s)
-  If Not debug Then Exit Sub
-
   Local i
   Print "TOP: ";
+  If sp = -1 Then Print "*empty*"
   For i = sp To 0 Step -1
     If i = fp Then
       Print " --> ";

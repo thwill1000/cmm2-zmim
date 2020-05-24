@@ -18,7 +18,7 @@ Option Explicit On
 
 ' If > 0 then produce debug output
 ' If bit 7 is set then print a new line before the current value of 'pc'
-Dim debug = 0
+'Dim debug = 0
 
 Dim GLOBAL_VAR = 0
 
@@ -39,8 +39,11 @@ Const E_UNKNOWN = 1
 Const E_UNIMPLEMENTED = 2
 Const E_BREAK = 3
 Const E_QUIT = 4
+Const E_DEBUG = 5
 
-Dim bp = 0 ' breakpoint address
+Dim num_ops = 0 ' Number of instructions processed.
+Dim ztrace = 0  ' Is instruction tracing enabled?
+Dim bp = 0      ' Breakpoint address.
 
 Function execute_2op()
   Local a, b, x, _
@@ -333,7 +336,7 @@ Sub _return(x)
   st = stack(fp + 1)
   fp = stack(fp)
   vset(st, x)
-  dmp_stack()
+  If ztrace Then dmp_stack()
 End Sub
 
 Sub _call(st)
@@ -354,17 +357,16 @@ Sub _call(st)
     If i < onum Then push(oa(i)) Else push(x)
   Next i
 
-  dmp_routine(2 * oa(0))
-  dmp_stack()
+  If ztrace Then dmp_routine(2 * oa(0)) : dmp_stack()
 End Sub
 
-Function execute()
+Function execute(tr)
   Local op, pc_old, sp_old
 
   ' Store the PC and SP in case we need to roll-back.
   pc_old = pc : sp_old = sp
 
-  op = decode()
+  op = decode(tr)
   num_ops = num_ops + 1
   If op < &h80 Then
     execute = execute_2op()
@@ -463,12 +465,14 @@ Function _read(text_buf, parse_buf)
   For i = 1 To n + 1
     c = Peek(Var s$, i)
     If Instr(sep$, Chr$(c)) > 0 Then
-      If Len(word$) > 0 Then _ = lookup(word$)
-      ww(parse_buf + 2 + wc * 4, _)
-      wb(parse_buf + 4 + wc * 4, Len(word$))
-      wb(parse_buf + 5 + wc * 4, i - Len(word$)) ' position in 'text_buf'
-      wc = wc + 1
-      word$ = ""
+      If Len(word$) > 0 Then
+        _ = lookup(word$)
+        ww(parse_buf + 2 + wc * 4, _)
+        wb(parse_buf + 4 + wc * 4, Len(word$))
+        wb(parse_buf + 5 + wc * 4, i - Len(word$)) ' position in 'text_buf'
+        wc = wc + 1
+        word$ = ""
+      EndIf
     Else
       word$ = word$ + Chr$(c)
     EndIf
@@ -480,48 +484,72 @@ End Function
 
 ' Interactive debugger
 Function gdb()
-  Local c, cmd$(9) Length 20, cn, i, op, pc_old, s$, sp_old
+  Local a, b, c, cmd$(9) Length 20, cn, i, op, pc_old, s$, sp_old
 
   ' Decode and display the next instruction but don't execute it.
   pc_old = pc : sp_old = sp
-  debug = 1
-  op = decode()
-  debug = 0
+  op = decode(1)
   pc = pc_old : sp = sp_old
 
-  ' Read line of input and parse into space separated commands/arguments.
-  cn = 0
-  For i = 0 To 9 : cmd$(i) = "" : Next i
-  Line Input "DEBUG >> ", s$
-  s$ = s$ + " "
-  For i = 1 To Len(s$)
-    c = Peek(Var s$, i)
-    If Chr$(c) = " " Then
-      If Len(cmd$(cn)) > 0 Then cn = cn + 1
-      If cn = 10 Then Error "Too many arguments"
-    Else
-      cmd$(cn) = cmd$(cn) + Chr$(c)
-    EndIf
-  Next i
+  Do
+    ' Read line of input and parse into space separated commands/arguments.
+    cn = 0
+    For i = 0 To 9 : cmd$(i) = "" : Next i
+    Line Input "DEBUG >> ", s$
+    s$ = s$ + " "
+    For i = 1 To Len(s$)
+      c = Peek(Var s$, i)
+      If Chr$(c) = " " Then
+        If Len(cmd$(cn)) > 0 Then cn = cn + 1
+        If cn = 10 Then Error "Too many arguments"
+      Else
+        cmd$(cn) = cmd$(cn) + Chr$(c)
+      EndIf
+    Next i
 
-  If cmd$(0) = "c"         Then ' Continue
-    gdb = E_OK
-  ElseIf cmd$(0) = "b"     Then ' Set breakpoint
-    Error "Implement this"
-  ElseIf cmd$(0) = "q"     Then ' Quit
-    gdb = E_QUIT
-  ElseIf cmd$(0) = "s"     Then ' Step
-    If oc = &h4 And op >= &hE0 Then Print ">";
-    gdb = execute()
-    If gdb = E_OK Then gdb = E_BREAK
-  ElseIf cmd$(0) = "tron"  Then ' Enable trace
-  ElseIf cmd$(0) = "troff" Then ' Disable trace
-  ElseIf cmd$(0) = "a"     Then ' Memory dump
-  ElseIf cmd$(0) = "st"    Then ' Stack dump
-  Else
-    Print "Unknown debug command"
-    gdb = E_BREAK
-  EndIf
+    gdb = E_DEBUG
+
+    If cmd$(0) = "c"         Then ' Continue
+      If oc = &h4 And op >= &hE0 Then Print ">"; ' Display READ prompt
+      gdb = E_OK
+
+    ElseIf cmd$(0) = "b"     Then ' Set breakpoint
+      bp = Val(cmd$(1))
+      Print "Breakpoint set to &h"; Hex$(bp)
+
+    ElseIf cmd$(0) = "q"     Then ' Quit
+      gdb = E_QUIT
+
+    ElseIf cmd$(0) = "s"     Then ' Step
+      If oc = &h4 And op >= &hE0 Then Print ">"; ' Display READ prompt
+      gdb = execute(0)
+      If gdb = E_OK Then gdb = E_BREAK
+
+    ElseIf cmd$(0) = "tron"  Then ' Enable trace
+      Print "Trace ON"
+      ztrace = 1
+
+    ElseIf cmd$(0) = "troff" Then ' Disable trace
+      Print "Trace OFF"
+      ztrace = 0
+
+    ElseIf cmd$(0) = "d"     Then ' Memory dump
+      If Len(cmd$(1)) > 0 Then a = Val(cmd$(1)) Else a = pc
+      If Len(cmd$(2)) > 0 Then b = Val(cmd$(2)) Else b = 32
+      dmp_mem(a, b)
+
+    ElseIf cmd$(0) = "C"     Then ' Stack dump
+      dmp_stack(Val(cmd$(1)))
+
+    Elseif cmd$(0) = "val"   Then ' Parse and print value
+      Print(Val(cmd$(1)))
+
+    Else
+      Print "Unknown debug command"
+
+    EndIf
+
+  Loop While gdb = E_DEBUG
 
 End Function
 
@@ -551,10 +579,7 @@ Sub main()
   decode_init()
   Print
 
-  Dim num_ops = 0
   Timer = 0
-
-  debug = 0
 
   Do While state <> E_QUIT
     If pc = bp Then
@@ -564,7 +589,7 @@ Sub main()
     EndIf
 
     If state = E_OK Then
-      state = execute()
+      state = execute(ztrace)
     Else
       state = gdb()
     EndIf

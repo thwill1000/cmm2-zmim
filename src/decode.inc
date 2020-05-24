@@ -38,10 +38,13 @@ Sub decode_init()
   For i = 0 To x - 1 : Read s$ : inst_varop$(i) = decode_format$(s$) : Next i
 End Sub
 
-Function decode()
+' Decode next instruction into global variables.
+'
+' @param tr  if true then print the instruction.
+Function decode(tr)
   Local op, s$
 
-  If debug Then Print Hex$(pc); ": ";
+  If tr Then Print Hex$(pc); ": ";
 
   op = rp()
 
@@ -70,7 +73,7 @@ Function decode()
     br = 0
   EndIf
 
-  dmp_op(Mid$(s$, 2), st, br)
+  If tr Then dmp_op(Mid$(s$, 2), st, br)
 
   decode = op
 End Function
