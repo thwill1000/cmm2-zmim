@@ -1,14 +1,19 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-' Prints 'sz' bytes from 'mem' starting at 'ad'
-Sub dmp_mem(ad, sz)
+' Prints 'n' bytes from 'mem' starting at 'a'
+Sub dmp_mem(a, n)
   Local i, x
-  Print "&h" + lpad$(Hex$(ad), 4, "0")
-  For i = 0 To sz - 1
-    x = rb(ad + i)
-    Print lpad$(Hex$(x), 2, "0"); " ";
-    If ((i + 1) Mod 16 = 0) And (i <> sz - 1) Then Print
+  If n = 0 Then n = 128
+  For i = 0 To n - 1
+    If i Mod 16 = 0 Then Print "[" + lpad$(Hex$(a + i), 5, "0") + "] ";
+    If a + i < FILE_LEN Then
+      x = rb(a + i)
+      Print lpad$(Hex$(x), 2, "0"); " ";
+    Else
+      Print "XX ";
+    EndIf
+    If ((i + 1) Mod 16 = 0) And (i <> n - 1) Then Print
   Next i
   Print
 End Sub
@@ -179,31 +184,58 @@ End Sub
 '  fp    - current frame index/pointer
 '  sp    - current stack index/pointer
 '  stack - the stack (an array of 32-bit floats)
-Sub dmp_stack(s)
-  Local i
+Sub dmp_stack(a)
+  Local i, tmp_fp, x
   Print "TOP: ";
   If sp = -1 Then Print "*empty*"
+  tmp_fp = fp
   For i = sp To 0 Step -1
-    If i = fp Then
-      Print " --> ";
-    ElseIf i < sp Then
-      Print "     ";
-    EndIf
-    Print lpad$(Hex$(stack(i)), 4, "0");
-    If i = fp Then
-      Print " previous fp";
-    ElseIf i = fp + 1 Then
-      Print " store result";
-    ElseIf i = fp + 2 Then
-      Print " return address";
-    ElseIf i = fp + 3 Then
-      Print " num locals";
-    ElseIf stack(i) And &h8000 Then
-      Print " "; stack(i) - &h10000;
+    If i < sp Then Print "     ";
+    x = stack(i)
+
+    Print "&h" + lpad$(Hex$(x), 4, "0") + "  ";
+
+    If x = -1 Then
+      ' Nothing
+    ElseIf x And &h8000 Then
+      Print lpad$(Str$(x - &h10000), 6, " ") + "  ";
     Else
-      Print stack(i);
+      Print lpad$(Str$(x), 6, " ") + "  ";
+    EndIf
+
+    If tmp_fp = -1 Then
+      ' Nothing
+    ElseIf i > tmp_fp + 3 Then
+      Print "L" + lpad$(Str$(i - tmp_fp - 4), 2, "0");
+    ElseIf i = tmp_fp Then
+      If x = -1 Then Print "" Else Print "previous fp";
+      If a <> 0 Then Print : Print String$(35, "-");
+      tmp_fp = x
+    ElseIf i = tmp_fp + 1 Then
+      Print "store result";
+    ElseIf i = tmp_fp + 2 Then
+      Print "return address";
+    ElseIf i = tmp_fp + 3 Then
+      Print "num locals";
     EndIf
     Print
-    If (s = 0) And (i = fp) Then i = 0
+    If a = 0 And i = fp Then Exit For
+  Next i
+End Sub
+
+' Dump global variable.
+Sub dmp_global(a, n)
+  Local i, x
+  If n < 1 Then n = 1
+  If a > 239 Then a = 239
+  For i = a To a + n - 1
+    If i > 239 Then Exit For
+    x = vget(i + 16)
+    Print "G" + lpad$(Str$(i), 2, "0") + " = &h" + lpad$(Hex$(x), 4, "0");
+    If x And &h8000 Then
+      Print "  " + Str$(x - &h10000)
+    Else
+      Print "  " + Str$(x)
+    EndIf
   Next i
 End Sub

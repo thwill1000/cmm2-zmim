@@ -16,10 +16,6 @@ Option Explicit On
 #Include "objects.inc"
 #Include "decode.inc"
 
-' If > 0 then produce debug output
-' If bit 7 is set then print a new line before the current value of 'pc'
-'Dim debug = 0
-
 Dim GLOBAL_VAR = 0
 
 Dim BUSY$(1) LENGTH 16
@@ -483,7 +479,7 @@ Function _read(text_buf, parse_buf)
 End Function
 
 ' Interactive debugger
-Function gdb()
+Function debug()
   Local a, b, c, cmd$(9) Length 20, cn, i, op, pc_old, s$, sp_old
 
   ' Decode and display the next instruction but don't execute it.
@@ -507,49 +503,68 @@ Function gdb()
       EndIf
     Next i
 
-    gdb = E_DEBUG
+    debug = E_DEBUG
 
-    If cmd$(0) = "c"         Then ' Continue
-      If oc = &h4 And op >= &hE0 Then Print ">"; ' Display READ prompt
-      gdb = E_OK
-
-    ElseIf cmd$(0) = "b"     Then ' Set breakpoint
+    If cmd$(0) = "b" Then
+      ' Set breakpoint
       bp = Val(cmd$(1))
       Print "Breakpoint set to &h"; Hex$(bp)
 
-    ElseIf cmd$(0) = "q"     Then ' Quit
-      gdb = E_QUIT
-
-    ElseIf cmd$(0) = "s"     Then ' Step
+    ElseIf cmd$(0) = "c" Then
+      ' Continue
       If oc = &h4 And op >= &hE0 Then Print ">"; ' Display READ prompt
-      gdb = execute(0)
-      If gdb = E_OK Then gdb = E_BREAK
+      debug = E_OK
 
-    ElseIf cmd$(0) = "tron"  Then ' Enable trace
-      Print "Trace ON"
-      ztrace = 1
+    ElseIf cmd$(0) = "C" Then
+      ' Stack dump
+      dmp_stack(Val(cmd$(1)))
 
-    ElseIf cmd$(0) = "troff" Then ' Disable trace
+    ElseIf cmd$(0) = "d" Then
+      ' Memory dump
+      If Len(cmd$(1)) = 0 Then a = pc Else a = Val(cmd$(1))
+      dmp_mem(a, Val(cmd$(2)))
+
+    ElseIf cmd$(0) = "G" Then
+      ' Dump global variables
+      dmp_global(Val(cmd$(1)), Val(cmd$(2)))
+
+    ElseIf cmd$(0) = "H" Then
+      ' Dump header
+      dmp_hdr()
+
+    ElseIf cmd$(0) = "q" Then
+      ' Quit
+      debug = E_QUIT
+
+    ElseIf cmd$(0) = "s" Then
+      ' Step
+      If oc = &h4 And op >= &hE0 Then Print ">"; ' Display READ prompt
+      debug = execute(0)
+      If debug = E_OK Then debug = E_BREAK
+
+    ElseIf cmd$(0) = "troff" Then
+      ' Disable trace
       Print "Trace OFF"
       ztrace = 0
 
-    ElseIf cmd$(0) = "d"     Then ' Memory dump
-      If Len(cmd$(1)) > 0 Then a = Val(cmd$(1)) Else a = pc
-      If Len(cmd$(2)) > 0 Then b = Val(cmd$(2)) Else b = 32
-      dmp_mem(a, b)
+    ElseIf cmd$(0) = "tron" Then
+      ' Enable trace
+      Print "Trace ON"
+      ztrace = 1
 
-    ElseIf cmd$(0) = "C"     Then ' Stack dump
-      dmp_stack(Val(cmd$(1)))
-
-    Elseif cmd$(0) = "val"   Then ' Parse and print value
-      Print(Val(cmd$(1)))
+    Elseif cmd$(0) = "x" Then
+      ' Parse and print value
+      a = Val(cmd$(1))
+      Print Str$(a);
+      Print "  &h" + LPad$(Hex$(a), 4, "0");
+      Print "  &b" + LPad$(Bin$(a), 16, "0")
 
     Else
       Print "Unknown debug command"
 
     EndIf
 
-  Loop While gdb = E_DEBUG
+  Loop While debug = E_DEBUG
 
 End Function
 
@@ -591,7 +606,7 @@ Sub main()
     If state = E_OK Then
       state = execute(ztrace)
     Else
-      state = gdb()
+      state = debug()
     EndIf
   Loop
 
