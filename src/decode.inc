@@ -187,6 +187,6 @@ Data "Unknown&h5", "Unknown&h6", "Unknown&h7", "RET_POPPED", "Unknown&h9"
 Data "Unknown&hA", "NEWLINE"
 
 ' Var-operand instructions &h0 - &h6
-Data 7
+Data 10
 Data "CALL S",     "STOREW",    "STOREB", "Unknown&h3", "READ"
-Data "PRINT_CHAR", "PRINT_NUM"
+Data "PRINT_CHAR", "PRINT_NUM", "RANDOM", "PUSH",       "PULL S"

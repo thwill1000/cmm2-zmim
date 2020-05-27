@@ -42,14 +42,11 @@ Function get_next_prop(o, p)
   get_next_prop = x And BTM_5_BITS
 End Function
 
-Function get_prop_len(o, p)
-  Local ad, x
-  If o > 0 Then
-    ad = get_prop_addr(o, p)
-    If ad = 0 Then Error "Property does not exist"
-    x = rb(ad)
-    get_prop_len = x\32 + 1
-  EndIf
+Function get_prop_len(ad)
+  Local x
+  If ad = 0 Then Error "Property does not exist"
+  x = rb(ad)
+  get_prop_len = x\32 + 1
 End Function
 
 Function get_prop_base(o)

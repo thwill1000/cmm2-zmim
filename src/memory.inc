@@ -17,8 +17,6 @@ Const MAX_WORD = 256 * 256 - 1
 Dim m(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
 
 Dim pf = 0 ' Counter for number of page faults
-Dim pp = 0 ' Physical page number
-Dim vp = 0 ' Virtual page number
 
 ' Map of physical pages -> virtual pages
 Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)
@@ -32,6 +30,7 @@ Dim pc = 0
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
+  Local pp, vp
   If pc < 0 Or pc >= FILE_LEN Then Error
   vp = pc \ PAGE_SIZE
   pp = vp_to_pp(vp)
@@ -42,6 +41,7 @@ End Function
 
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
+  Local pp, vp
   If a < 0 Or a >= FILE_LEN Then
     Error "Address " + Str$(a) + " > file length " + Str$(FILE_LEN)
   EndIf
@@ -66,8 +66,10 @@ End Sub
 
 ' Writes 16-bit word 'x' to 'a'
 Sub ww(a, x)
-  If a < 0 Or a >= BASE_STATIC - 1 Then Error
-  If x < 0 Or x > MAX_WORD Then Error
+  If a < 0 Or a >= BASE_STATIC - 1 Then
+    Error "Address for write is invalid: &h" + lpad$(Hex$(a), 4, "0")
+  EndIf
+  If x < 0 Or x > MAX_WORD Then Error "Value for write is invalid: " + Str$(x)
   Poke Var m(0), a, x \ 256
   Poke Var m(0), a + 1, x Mod 256
 End Sub

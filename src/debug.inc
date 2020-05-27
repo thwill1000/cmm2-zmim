@@ -21,7 +21,7 @@ End Sub
 Sub dmp_obj(o)
   Local ad, i, p, sz, x
 
-  If o = 0 Then
+  If o <= 0 Then
     Print "Property defaults:"
     ad = rw(&h0A)
     For i = 0 To 30
@@ -60,7 +60,7 @@ Sub dmp_obj(o)
     p = get_next_prop(o, p)
     If p > 0 Then
       ad = get_prop_addr(o, p)
-      sz = get_prop_len(o, p)
+      sz = get_prop_len(ad)
       x = rb(ad)
       If x\32 + 1 <> sz Then Error
       Print "             ["; Str$(p); "] ";

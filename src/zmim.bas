@@ -321,6 +321,19 @@ Function execute_varop()
   ElseIf oc = &h6 Then
     Print Str$(oa(0));
 
+  ' RANDOM
+  ElseIf oc = &h7 Then
+    execute_varop = E_UNIMPLEMENTED
+
+  ' PUSH
+  ElseIf oc = &h8 Then
+    push(oa(0))
+
+  ' PULL
+  ElseIf oc = &h9
+    x = pop(oa(0))
+    vset(st, x)
+
   Else
     execute_varop = E_UNKNOWN
   EndIf
@@ -545,6 +558,10 @@ Function debug()
     ElseIf cmd$(0) = "q" Then
       ' Quit
       debug = E_QUIT
+
+    ElseIf cmd$(0) = "o" Then
+      ' Dump object
+      dmp_obj(Val(cmd$(1)))
 
     ElseIf cmd$(0) = "s" Then
       ' Step
