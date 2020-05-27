@@ -42,7 +42,7 @@ Dim ztrace = 0  ' Is instruction tracing enabled?
 Dim bp = 0      ' Breakpoint address.
 
 Function execute_2op()
-  Local a, b, x, _
+  Local a, b, x, y, _
 
   a = oa(0)
   b = oa(1)
@@ -68,17 +68,25 @@ Function execute_2op()
 
   ' DEC_CHK
   ElseIf oc = &h4 Then
-    x = vget(a) - 1
-    If x < 0 Then x = &hFFFF
+    x = vget(a)
+    If x > 32767 Then x = x - 65536
+    If b > 32767 Then b = b - 65536
+    x = x - 1
+    y = x < b
+    If x < 0 Then x = 65536 - x
     vset(a, x)
-    _branch(x < b, br)
+    _branch(y, br)
 
   ' INC_CHK
   ElseIf oc = &h5 Then
-    x = vget(a) + 1
-    If x > &hFFFF Then x = 0
+    x = vget(a)
+    If x > 32767 Then x = x - 65536
+    If b > 32767 Then b = b - 65536
+    x = x + 1
+    y = x > b
+    If x < 0 Then x = 65536 - x
     vset(a, x)
-    _branch(x > b, br)
+    _branch(y, br)
 
   ' JIN
   ElseIf oc = &h6 Then
@@ -138,7 +146,8 @@ Function execute_2op()
 
   ' GET_PROP_ADDR
   ElseIf oc = &h12 Then
-    execute_2op = E_UNIMPLEMENTED
+    x = get_prop_addr(a, b)
+    vset(st, x)
 
   ' GET_NEXT_PROP
   ElseIf oc = &h13 Then
@@ -197,7 +206,8 @@ Function execute_1op()
 
   ' GET_PROP_LEN
   ElseIf oc = &h4 Then
-    execute_1op = E_UNIMPLEMENTED
+    x = get_prop_len(a)
+    vset(st, x)
 
   ' INC
   ElseIf oc = &h5 Then
