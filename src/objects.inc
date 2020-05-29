@@ -34,8 +34,8 @@ Function get_next_prop(o, p)
   Else
     ad = get_prop_addr(o, p)
     If ad = 0 Then Error "Property does not exist"
-    x = rb(ad)
-    ad = ad + 2 + x\32
+    x = rb(ad - 1)
+    ad = ad + 1 + x\32
   EndIf
 
   x = rb(ad)
@@ -45,7 +45,7 @@ End Function
 Function get_prop_len(ad)
   Local x
   If ad = 0 Then Error "Property does not exist"
-  x = rb(ad)
+  x = rb(ad - 1)
   get_prop_len = x\32 + 1
 End Function
 
@@ -61,7 +61,7 @@ Function get_prop_addr(o, p)
   ad = ad + 1 + 2 * rb(ad) ' Skip length & description
   Do
     x = rb(ad)
-    If (x And BTM_5_BITS) = p Then get_prop_addr = ad : Exit Function
+    If (x And BTM_5_BITS) = p Then get_prop_addr = ad + 1 : Exit Function
     If (x And BTM_5_BITS) < p Then get_prop_addr = 0 : Exit Function
     ad = ad + 2 + x\32
   Loop
@@ -71,11 +71,11 @@ Function get_prop(o, p)
   Local ad, sz, x
   ad = get_prop_addr(o, p)
   If ad > 0 Then
-    x = rb(ad)
+    x = rb(ad - 1)
     If (x And BTM_5_BITS) <> p Then Error
     sz = x\32 + 1
-    If sz = 1 Then get_prop = rb(ad + 1) : Exit Function
-    If sz = 2 Then get_prop = rw(ad + 1) : Exit Function
+    If sz = 1 Then get_prop = rb(ad) : Exit Function
+    If sz = 2 Then get_prop = rw(ad) : Exit Function
     Error "Property length > 2"
   EndIf
   ad = rw(&h0A) + 2 * (p - 1)

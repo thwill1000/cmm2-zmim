@@ -31,7 +31,9 @@ Dim pc = 0
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
   Local pp, vp
-  If pc < 0 Or pc >= FILE_LEN Then Error
+  If pc < 0 Or pc >= FILE_LEN Then
+    Error "PC " + Str$(pc) + " > file length " + Str$(FILE_LEN)
+  EndIf
   vp = pc \ PAGE_SIZE
   pp = vp_to_pp(vp)
   If pp = 0 Then pp = mem_load(vp) : pf = pf + 1

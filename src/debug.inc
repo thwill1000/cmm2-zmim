@@ -61,12 +61,12 @@ Sub dmp_obj(o)
     If p > 0 Then
       ad = get_prop_addr(o, p)
       sz = get_prop_len(ad)
-      x = rb(ad)
+      x = rb(ad - 1)
       If x\32 + 1 <> sz Then Error
       Print "             ["; Str$(p); "] ";
       For i = 1 To sz
-        ad = ad + 1
         x = rb(ad)
+        ad = ad + 1
         Print lpad$(Hex$(x), 2, "0"); " ";
       Next i
       Print

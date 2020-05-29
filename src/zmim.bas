@@ -15,6 +15,7 @@ Option Explicit On
 #Include "zstring.inc"
 #Include "objects.inc"
 #Include "decode.inc"
+#Include "tst_obj.inc"
 
 Dim GLOBAL_VAR = 0
 

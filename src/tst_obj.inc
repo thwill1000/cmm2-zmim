@@ -2,7 +2,7 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 Sub tst_obj
-  Local ad, i, o, x
+  Local ad, i, o, x, _
 
   Print "Executing object tests"
 
@@ -22,14 +22,14 @@ Sub tst_obj
   For i = 1 To 31
     If i = 17 Then
       ad = get_prop_addr(o, i)
-      If rb(ad + 1) <> &h2D Then Error
-      If rb(ad + 2) <> &h23 Then Error
-      If rb(ad + 3) <> &h35 Then Error
-      If rb(ad + 4) <> &h8F Then Error
+      If rb(ad) <> &h2D Then Error
+      If rb(ad + 1) <> &h23 Then Error
+      If rb(ad + 2) <> &h35 Then Error
+      If rb(ad + 3) <> &h8F Then Error
     Else
       x = get_prop(o, i)
       If i = 13 And x <> &h05 Then Error
-      If i = 18 And x <> &h43A7 Then Error
+      If i = 18 And x <> &h43A7 Then Error Hex$(x)
       If i <> 13 And i <> 18 And x <> &h00 Then Error
     EndIf
   Next i
