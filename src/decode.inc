@@ -184,7 +184,7 @@ Data "PRINT_OBJECT", "RET",            "JUMP",         "PRINT_PADDR",  "LOAD S"
 Data 12
 Data "RTRUE",      "RFALSE",     "PRINT",      "PRINT_RET",  "Unknown&h4"
 Data "Unknown&h5", "Unknown&h6", "Unknown&h7", "RET_POPPED", "Unknown&h9"
-Data "Unknown&hA", "NEWLINE"
+Data "QUIT",       "NEWLINE"
 
 ' Var-operand instructions &h0 - &h6
 Data 10

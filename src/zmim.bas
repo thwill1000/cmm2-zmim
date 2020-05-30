@@ -40,6 +40,7 @@ Const E_DEBUG = 5
 Dim num_ops = 0 ' Number of instructions processed.
 Dim ztrace = 0  ' Is instruction tracing enabled?
 Dim bp = 0      ' Breakpoint address.
+Dim rtime = 0   ' Time (ms) spent waiting for user input.
 
 Function execute_2op()
   Local a, b, x, y, _
@@ -285,6 +286,10 @@ Function execute_0op()
     x = pop()
     _return(x)
 
+  ' QUIT
+  ElseIf oc = &hA Then
+    execute_0op = E_QUIT
+
   ' NEWLINE
   ElseIf oc = &hB Then
     Print
@@ -410,69 +415,49 @@ Function execute(tr)
 
 End Function
 
+' Lookup w$ in the vocabulary. w$ should already be in lower-case
 Function lookup(w$)
-  Local b(3), i, sl, x, s$
+  Local a, i, n, sz, z(3)
 
-'  Print "lookup: *" + w$ + "* => ";
-
-  s$ = LCase$(Left$(w$, 6))
-  sl = Len(s$)
-
-  ' Convert s$ into 4-byte Z-string
+  ' Convert w$ into 4-byte Z-string
+  sz = Len(w$) : If sz > 6 Then sz = 6
   For i = 1 To 6
-
-    If i > sl Then
-      x = x + 5
-    Else
-      x = x + Instr(ALPHABET$(0), Mid$(s$, i, 1)) - 1
-    EndIf
-
+    If i > sz Then a = a + 5 Else a = a + Instr(ALPHABET$(0), Mid$(w$, i, 1)) - 1
     If i = 3 Then
-      b(0) = x \ 256
-      b(1) = x And &hFF
-      x = 0
-    ElseIf i = 6 Then
-      x = x Or &h8000 ' End of word
-      b(2) = x \ 256
-      b(3) = x And &hFF
+      z(0) = a \ 256 : z(1) = a And &hFF : a = 0
+    ElseIf i = 6 Then ' End of word
+      a = a Or &h8000 : z(2) = a \ 256 : z(3) = a And &hFF
     Else
-      x = x * 32
+      a = a * 32
     EndIf
-
   Next i
 
   ' Lookup Z-string in dictionary
   ' TODO: binary search instead of linear search
-  Local ad, n, sz, word(3)
-  ad = rw(&h8) ' dictionary address
-  n = rb(ad) ' number of word separators
-  ad = ad + 1 + n ' skip word separators
-  sz = rb(ad) : ad = ad + 1 ' entry length
-  n  = rw(ad) : ad = ad + 2 ' number of entries
+  a = rw(&h08) ' dictionary address
+  n = rb(a) ' number of word separators
+  sz = rb(a + 1 + n) ' entry length
+  n  = rw(a + 2 + n) ' number of entries
+  a = a + 3 + n
   For i = 1 To n
-    word(0) = rb(ad) : ad = ad + 1
-    word(1) = rb(ad) : ad = ad + 1
-    word(2) = rb(ad) : ad = ad + 1
-    word(3) = rb(ad) : ad = ad + 1
-    ad = ad + sz - 4 ' skip (sz - 4) bytes of data
-    If b(0) = word(0) And b(1) = word(1) And b(2) = word(2) And b(3) = word(3) Then
-      lookup = ad - sz
-      i = n + 1
+    If z(0)=rb(a) And z(1)=rb(a+1) And z(2)=rb(a+2) And z(3)=rb(a+3) Then
+      lookup = a : Exit For
     EndIf
+    a = a + sz
   Next i
 
-'  Print " => "; Hex$(lookup)
 End Function
 
 Function _read(text_buf, parse_buf)
   Local ad, c, i, n, word$, s$, sep$, wc
 
+  rtime = rtime - Timer
   Line Input s$
+  rtime = rtime + Timer
   s$ = LCase$(s$)
 
   If s$ = "*break" Then
-    _read = E_BREAK
-    Exit Function
+    _read = E_BREAK : Exit Function
   EndIf
 
   n = Len(s$)
@@ -515,7 +500,9 @@ Function debug()
     ' Read line of input and parse into space separated commands/arguments.
     cn = 0
     For i = 0 To 9 : cmd$(i) = "" : Next i
+    rtime = rtime - Timer
     Line Input "DEBUG >> ", s$
+    rtime = rtime + Timer
     s$ = s$ + " "
     For i = 1 To Len(s$)
       c = Peek(Var s$, i)
@@ -580,6 +567,10 @@ Function debug()
       Print "Trace ON"
       ztrace = 1
 
+    ElseIf cmd$(0) = "V" Then
+      ' Lookup vocabulary
+      Print "&h" + lpad$(Hex$(lookup(Lcase$(cmd$(1)))), 4, "0")
+
     Elseif cmd$(0) = "x" Then
       ' Parse and print value
       a = Val(cmd$(1))
@@ -640,9 +631,9 @@ Sub main()
 
   Print
   Print "Num instructions processed ="; num_ops
-  Print "Instructions / second      ="; num_ops / (Timer / 1000)
-  Print "Num page faults            ="; pf
-  Print
+  Print "Instructions / second      = "; Format$(num_ops / ((Timer - rtime) / 1000), "%.1f")
+  If MM.DEVICE$ <> "Colour Maximite 2" Then Print "Num page faults            ="; pf
+
 End Sub
 
 main()
