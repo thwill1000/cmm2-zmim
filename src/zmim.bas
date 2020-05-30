@@ -3,7 +3,8 @@
 
 Option Explicit On
 
-#Include "memory.inc"
+'#Include "memory.inc"
+#Include "memory_fast.inc"
 #Include "stack.inc"
 #Include "variable.inc"
 #Include "debug.inc"
@@ -16,8 +17,6 @@ Option Explicit On
 #Include "objects.inc"
 #Include "decode.inc"
 #Include "tst_obj.inc"
-
-Dim GLOBAL_VAR = 0
 
 Dim BUSY$(1) LENGTH 16
 BUSY$(0) = "\\\\||||////----"
