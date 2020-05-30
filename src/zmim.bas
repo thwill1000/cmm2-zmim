@@ -74,7 +74,7 @@ Function execute_2op()
     If b > 32767 Then b = b - 65536
     x = x - 1
     y = x < b
-    If x < 0 Then x = 65536 - x
+    If x < 0 Then x = 65536 + x
     vset(a, x)
     _branch(y, br)
 
@@ -85,7 +85,7 @@ Function execute_2op()
     If b > 32767 Then b = b - 65536
     x = x + 1
     y = x > b
-    If x < 0 Then x = 65536 - x
+    If x < 0 Then x = 65536 + x
     vset(a, x)
     _branch(y, br)
 
@@ -171,7 +171,7 @@ Function execute_2op()
       execute_2op = E_UNIMPLEMENTED
     EndIf
 
-    If x < 0 Then x = 65536 - x
+    If x < 0 Then x = 65536 + x
     vset(st, x)
 
   Else
@@ -215,7 +215,7 @@ Function execute_1op()
     x = vget(a)
     If x > 32767 Then x = x - 65536
     x = x + 1
-    If x < 0 Then x = 65536 - x
+    If x < 0 Then x = 65536 + x
     vset(a, x)
 
   ' DEC
@@ -223,7 +223,7 @@ Function execute_1op()
     x = vget(a)
     If x > 32767 Then x = x - 65536
     x = x - 1
-    If x < 0 Then x = 65536 - x
+    If x < 0 Then x = 65536 + x
     vset(a, x)
 
   ' PRINT_ADDR
