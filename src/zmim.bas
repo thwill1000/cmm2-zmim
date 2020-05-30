@@ -96,7 +96,7 @@ Function execute_2op()
 
   ' TEST
   ElseIf oc = &h7 Then
-    _branch(a And b = b, br)
+    _branch((a And b) = b, br)
 
   ' OR
   ElseIf oc = &h8 Then
@@ -278,7 +278,8 @@ Function execute_0op()
   ' PRINT_RET
   ElseIf oc = &h3 Then
     print_zstring(pc)
-    execute_0op = E_UNIMPLEMENTED
+    Print
+    _return(1)
 
   ' RET_POPPED
   ElseIf oc = &h8 Then
@@ -410,12 +411,12 @@ Function execute(tr)
 
 End Function
 
-Function lookup(s$)
-  Local b(3), i, sl, x
+Function lookup(w$)
+  Local b(3), i, sl, x, s$
 
-'  Print "lookup: *" + s$ + "* => ";
+'  Print "lookup: *" + w$ + "* => ";
 
-  s$ = LCase$(Left$(s$, 6))
+  s$ = LCase$(Left$(w$, 6))
   sl = Len(s$)
 
   ' Convert s$ into 4-byte Z-string
@@ -465,7 +466,7 @@ Function lookup(s$)
 End Function
 
 Function _read(text_buf, parse_buf)
-  Local c, i, n, word$, s$, sep$, wc, _
+  Local ad, c, i, n, word$, s$, sep$, wc
 
   Line Input s$
   s$ = LCase$(s$)
@@ -486,8 +487,8 @@ Function _read(text_buf, parse_buf)
     c = Peek(Var s$, i)
     If Instr(sep$, Chr$(c)) > 0 Then
       If Len(word$) > 0 Then
-        _ = lookup(word$)
-        ww(parse_buf + 2 + wc * 4, _)
+        ad = lookup(word$)
+        ww(parse_buf + 2 + wc * 4, ad)
         wb(parse_buf + 4 + wc * 4, Len(word$))
         wb(parse_buf + 5 + wc * 4, i - Len(word$)) ' position in 'text_buf'
         wc = wc + 1
