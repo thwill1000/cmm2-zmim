@@ -45,7 +45,7 @@ Dim bp(NUM_BP - 1) ' The addresses of up to 10 breakpoints, -1 for unset.
 Dim rtime = 0      ' Time (ms) spent waiting for user input.
 
 Function execute_2op()
-  Local a, b, x, y, _
+  Local a, b, x, y, z, _
 
   a = oa(0)
   b = oa(1)
@@ -127,10 +127,13 @@ Function execute_2op()
 
   ' INSERT_OBJ: a = object, b = destination
   ElseIf oc = &hE Then
-    x = orel(b, CHILD)
-    _ = orel(b, CHILD, 1, a)
-    _ = orel(a, PARENT, 1, b)
-    _ = orel(a, SIBLING, 1, x)
+    x = orel(b, CHILD)         ' original child of destination
+    y = orel(a, SIBLING)       ' original sibling of object
+    z = orel(a, PARENT)        ' original parent of object
+    _ = orel(b, CHILD, 1, a)   ' object is new child of destination
+    _ = orel(a, PARENT, 1, b)  ' destination is new parent of object
+    _ = orel(a, SIBLING, 1, x) ' original child of destination is new sibling of object
+    _ = orel(z, CHILD, 1, y)   ' original sibling of object is new child of original parent
 
   ' LOADW
   ElseIf oc = &hF Then
@@ -640,7 +643,7 @@ Function debug()
 End Function
 
 Sub main()
-  Local i, state, s$
+  Local i, old_pc, state, s$
 
   Mode 1
   Cls
@@ -670,12 +673,15 @@ Sub main()
   Timer = 0
 
   Do While state <> E_QUIT
-    For i = 0 To NUM_BP - 1
-      If pc = bp(i) Then
-        Print "[Breakpoint " + Str$(i) + " reached]"
-        state = E_BREAK
-      EndIf
-    Next i
+    If pc <> old_pc Then ' Prevents repeatedly hitting breakpoint when continuing
+      For i = 0 To NUM_BP - 1
+        If pc = bp(i) Then
+          Print "[Breakpoint " + Str$(i) + " reached]"
+          state = E_BREAK
+        EndIf
+      Next i
+      old_pc = pc
+    EndIf
 
     If state = E_OK Then
       state = execute(ztrace)
