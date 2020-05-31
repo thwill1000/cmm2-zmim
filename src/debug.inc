@@ -6,7 +6,7 @@ Sub dmp_mem(a, n)
   Local i, x
   If n = 0 Then n = 128
   For i = 0 To n - 1
-    If i Mod 16 = 0 Then Print "[" + lpad$(Hex$(a + i), 5, "0") + "] ";
+    If i Mod 16 = 0 Then Print "[" + fmt_hex$(a + i) + "] ";
     If a + i < FILE_LEN Then
       x = rb(a + i)
       Print lpad$(Hex$(x), 2, "0"); " ";
@@ -193,7 +193,7 @@ Sub dmp_stack(a)
     If i < sp Then Print "     ";
     x = stack(i)
 
-    Print "&h" + lpad$(Hex$(x), 4, "0") + "  ";
+    Print fmt_hex$(x) + "  ";
 
     If x = -1 Then
       ' Nothing

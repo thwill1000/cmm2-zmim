@@ -18,3 +18,8 @@ Function rpad$(s$, i, c$)
   If c$ = "" Then c$ = " "
   If a < i Then rpad$ = s$ + String$(i - a, c$) Else rpad$ = s$
 End Function
+
+Function fmt_hex$(x, i)
+  If i < 1 Then i = 4
+  fmt_hex$ = "&h" + lpad$(Hex$(x), i, "0")
+End Function

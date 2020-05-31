@@ -37,10 +37,12 @@ Const E_BREAK = 3
 Const E_QUIT = 4
 Const E_DEBUG = 5
 
-Dim num_ops = 0 ' Number of instructions processed.
-Dim ztrace = 0  ' Is instruction tracing enabled?
-Dim bp = 0      ' Breakpoint address.
-Dim rtime = 0   ' Time (ms) spent waiting for user input.
+Const NUM_BP = 10
+
+Dim num_ops = 0    ' Number of instructions processed.
+Dim ztrace = 0     ' Is instruction tracing enabled?
+Dim bp(NUM_BP - 1) ' The addresses of up to 10 breakpoints, -1 for unset.
+Dim rtime = 0      ' Time (ms) spent waiting for user input.
 
 Function execute_2op()
   Local a, b, x, y, _
@@ -517,9 +519,41 @@ Function debug()
     debug = E_DEBUG
 
     If cmd$(0) = "b" Then
-      ' Set breakpoint
-      bp = Val(cmd$(1))
-      Print "Breakpoint set to &h"; Hex$(bp)
+      ' Set address breakpoint
+      a = Val(cmd$(1))
+      If a >= 0 And a < FILE_LEN Then
+        For i = 0 To NUM_BP - 1
+          If bp(i) = a Then
+            Print "Duplicate breakpoint [" + Str$(i) + "]"
+            a = -1
+            Exit For
+          EndIf
+        Next i
+        For i = 0 To NUM_BP - 1
+          If a = -1 Then
+            ' Duplicate breakpoint previously reported
+            Exit For
+          ElseIf bp(i) = -1 Then
+            bp(i) = a
+            Print "Set breakpoint [" + Str$(i) + "] at " + fmt_hex$(bp(i))
+            Exit For
+          EndIf
+          If i = 9 Then Print "No free address breakpoints"
+        Next i
+      Else
+        Print "Invalid breakpoint address"
+      EndIf
+
+    ElseIf cmd$(0) = "B" Then
+      ' List address breakpoints
+      a = 0
+      For i = 0 To NUM_BP - 1
+        If bp(i) <> -1 Then
+          Print "[" + Str$(i) + "] " + fmt_hex$(bp(i))
+          a = a + 1
+        EndIf
+      Next i
+      If a = 0 Then Print "No address breakpoints set"
 
     ElseIf cmd$(0) = "c" Then
       ' Continue
@@ -567,16 +601,34 @@ Function debug()
       Print "Trace ON"
       ztrace = 1
 
-    ElseIf cmd$(0) = "V" Then
-      ' Lookup vocabulary
-      Print "&h" + lpad$(Hex$(lookup(Lcase$(cmd$(1)))), 4, "0")
+    ElseIf cmd$(0) = "v" Then
+      ' Clear address breakpoint
+      a = Val(cmd$(1))
+      If a < 0 Or a >= NUM_BP Then
+        Print "Invalid address breakpoint"
+      ElseIf bp(a) = -1 Then
+        Print "Address breakpoint [" + Str$(a) + "] already cleared"
+      Else
+        bp(a) = -1
+        Print "Address breakpoint [" + Str$(a) + "] cleared"
+      EndIf
 
-    Elseif cmd$(0) = "x" Then
+    ElseIf cmd$(0) = "V" Then
+      ' Lookup word in vocabulary
+      a = lookup(LCase$(cmd$(1)))
+      Print fmt_hex$(a)
+
+    ElseIf cmd$(0) = "x" Then
       ' Parse and print value
       a = Val(cmd$(1))
       Print Str$(a);
-      Print "  &h" + LPad$(Hex$(a), 4, "0");
+      Print "  " + fmt_hex$(a)
       Print "  &b" + LPad$(Bin$(a), 16, "0")
+
+    ElseIf cmd$(0) = "z" Then
+      ' Clear all breakpoints
+      For i = 0 To NUM_BP - 1 : bp(i) = -1 : Next i
+      Print "All breakpoints cleared"
 
     Else
       Print "Unknown debug command"
@@ -588,7 +640,7 @@ Function debug()
 End Function
 
 Sub main()
-  Local state, s$
+  Local i, state, s$
 
   Mode 1
   Cls
@@ -613,14 +665,17 @@ Sub main()
   decode_init()
   Print
 
+  For i = 0 To NUM_BP - 1 : bp(i) = -1 : Next i
+
   Timer = 0
 
   Do While state <> E_QUIT
-    If pc = bp Then
-      Print "[Breakpoint reached] - resetting bp = 0"
-      bp = 0
-      state = E_BREAK
-    EndIf
+    For i = 0 To NUM_BP - 1
+      If pc = bp(i) Then
+        Print "[Breakpoint " + Str$(i) + " reached]"
+        state = E_BREAK
+      EndIf
+    Next i
 
     If state = E_OK Then
       state = execute(ztrace)
