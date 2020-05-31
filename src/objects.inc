@@ -82,6 +82,16 @@ Function get_prop(o, p)
   get_prop = rw(ad)
 End Function
 
+Sub put_prop(o, p, x)
+  Local a, sz
+  a = get_prop_addr(o, p)
+  If a = 0 Then Error "Object " + Str$(o) + " does not have property " + Str$(p)
+  sz = get_prop_len(a)
+  If sz < 0 Or sz > 2 Then Error "Object " + Str$(o) + " has length " + Str$(sz)
+  If sz = 1 Then wb(a, x And &hFF)
+  If sz = 2 Then ww(a, x)
+End Sub
+
 Sub print_obj(o)
   Local ad
   ad = get_prop_base(o) + 1

@@ -7,7 +7,6 @@ Sub dmp_dict
   Print "    **** Dictionary ****"
   Print
 
-  debug = 1
   a = rw(&h8) ' Dictionary address
 
   n = rb(a) : a = a + 1

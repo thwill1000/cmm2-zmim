@@ -30,11 +30,11 @@ Sub decode_init()
   For i = 0 To x - 1 : Read s$ : inst_1op$(i) = decode_format$(s$) : Next i
 
   Read x
-  Dim inst_0op$(x - 1) LENGTH 11
+  Dim inst_0op$(x - 1) LENGTH 12
   For i = 0 To x - 1 : Read s$ : inst_0op$(i) = decode_format$(s$) : Next i
 
   Read x
-  Dim inst_varop$(x - 1) LENGTH 11
+  Dim inst_varop$(x - 1) LENGTH 14
   For i = 0 To x - 1 : Read s$ : inst_varop$(i) = decode_format$(s$) : Next i
 End Sub
 
@@ -174,19 +174,23 @@ Data "TEST_ATTR B", "SET_ATTR", "CLEAR_ATTR", "STORE",           "INSERT_OBJ"
 Data "LOADW S",     "LOADB S",  "GET_PROP S", "GET_PROP_ADDR S", "GEN_NEXT_PROP S"
 Data "ADD S",       "SUB S",    "MUL S",      "DIV S",           "MOD S"
 
-' 1-operand instructions &h0 - &hD
-Data 15
+' 1-operand instructions &h0 - &hF
+Data 16
 Data "JZ B",         "GET_SIBLING SB", "GET_CHILD SB", "GET_PARENT S", "GET_PROP_LEN S"
 Data "INC",          "DEC",            "PRINT_ADDR",   "Unknown&h8",   "REMOVE_OBJ"
 Data "PRINT_OBJECT", "RET",            "JUMP",         "PRINT_PADDR",  "LOAD S"
+Data "NOT S"
 
-' 0-operand instructions
-Data 12
-Data "RTRUE",      "RFALSE",     "PRINT",      "PRINT_RET",  "Unknown&h4"
-Data "Unknown&h5", "Unknown&h6", "Unknown&h7", "RET_POPPED", "Unknown&h9"
-Data "QUIT",       "NEWLINE"
+' 0-operand instructions &h0 - &hD
+Data 14
+Data "RTRUE",        "RFALSE",      "PRINT",       "PRINT_RET",   "NOP"
+Data "SAVE B",       "RESTORE B",   "RESTART",     "RET_POPPED",  "POP"
+Data "QUIT",         "NEW_LINE",    "SHOW_STATUS", "VERIFY B"
 
-' Var-operand instructions &h0 - &h6
-Data 10
-Data "CALL S",     "STOREW",    "STOREB", "Unknown&h3", "READ"
-Data "PRINT_CHAR", "PRINT_NUM", "RANDOM", "PUSH",       "PULL S"
+' Var-operand instructions &h0 - &h15
+Data 22
+Data "CALL S",       "STOREW",      "STOREB",      "PUT_PROP",    "READ"
+Data "PRINT_CHAR",   "PRINT_NUM",   "RANDOM",      "PUSH",        "PULL"
+Data "SPLIT_WINDOW", "SET_WINDOW",  "Unknown&hC",  "Unknown&hD",  "Unknown&hE"
+Data "Unknown&hF",   "Unknown&h10", "Unknown&h11", "Unknown&h12", "OUTPUT_STREAM"
+Data "INPUT_STREAM", "SOUND_EFFECT"

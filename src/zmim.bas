@@ -319,6 +319,10 @@ Function execute_varop()
   ElseIf oc = &h2 Then
     wb(oa(0) + oa(1), oa(2))
 
+  ' PUT_PROP
+  ElseIf oc = &h3 Then
+    put_prop(oa(0), oa(1), oa(2))
+
   ' READ
   ElseIf oc = &h4 Then
     Print " ";
@@ -341,9 +345,9 @@ Function execute_varop()
     push(oa(0))
 
   ' PULL
-  ElseIf oc = &h9
-    x = pop(oa(0))
-    vset(st, x)
+  ElseIf oc = &h9 Then
+    x = pop()
+    vset(oa(0), x)
 
   Else
     execute_varop = E_UNKNOWN
@@ -411,9 +415,9 @@ Function execute(tr)
   EndIf
 
   If execute = E_UNKNOWN Then
-    Print "Unsupported instruction "; Hex$(op)
+    Print "Unsupported instruction "; fmt_hex$(op, 2)
   ElseIf execute = E_UNIMPLEMENTED Then
-    Print "Unimplemented instruction "; Hex$(op)
+    Print "Unimplemented instruction "; fmt_hex$(op, 2)
   EndIf
 
   If execute <> E_OK Then pc = pc_old : sp = sp_old
@@ -439,11 +443,13 @@ Function lookup(w$)
 
   ' Lookup Z-string in dictionary
   ' TODO: binary search instead of linear search
-  a = rw(&h08) ' dictionary address
-  n = rb(a) ' number of word separators
-  sz = rb(a + 1 + n) ' entry length
-  n  = rw(a + 2 + n) ' number of entries
-  a = a + 3 + n
+  a = rw(&h08)  ' dictionary address
+  n = rb(a)     ' number of word separators
+  a = a + n + 1 ' skip word separators
+  sz = rb(a)    ' entry length
+  n = rw(a + 1) ' number of entries
+  a = a + 3
+
   For i = 1 To n
     If z(0)=rb(a) And z(1)=rb(a+1) And z(2)=rb(a+2) And z(3)=rb(a+3) Then
       lookup = a : Exit For
@@ -568,9 +574,13 @@ Function debug()
       dmp_stack(Val(cmd$(1)))
 
     ElseIf cmd$(0) = "d" Then
-      ' Memory dump
+      ' Dump memory
       If Len(cmd$(1)) = 0 Then a = pc Else a = Val(cmd$(1))
       dmp_mem(a, Val(cmd$(2)))
+
+    ElseIf cmd$(0) = "dict" Then
+      ' Dump dictionary
+      dmp_dict()
 
     ElseIf cmd$(0) = "G" Then
       ' Dump global variables
