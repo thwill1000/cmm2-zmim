@@ -7,15 +7,16 @@ Option Explicit On
 #Include "memory_fast.inc"
 #Include "stack.inc"
 #Include "variable.inc"
-#Include "debug.inc"
+#Include "decode.inc"
+#Include "zstring.inc"
+#Include "objects.inc"
 #Include "util.inc"
+#Include "file.inc"
+#Include "debug.inc"
 #Include "dmp_abrv.inc"
 #Include "dmp_dict.inc"
 #Include "dmp_hdr.inc"
 #Include "dmp_mmap.inc"
-#Include "zstring.inc"
-#Include "objects.inc"
-#Include "decode.inc"
 #Include "tst_obj.inc"
 
 Dim BUSY$(1) LENGTH 16
@@ -668,14 +669,16 @@ Sub main()
   Print "Version 0.1 for Colour Maximite 2, MMBasic 5.05"
   Print
 
-  Input "Start in debugger [Y|n]"; s$
-  If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
+  Print "Select a story file from 'A:/zmim/stories':"
+  s$ = file_choose$("A:/zmim/stories", "*.z3")
   Print
 
-  mem_init("B:\zmim\examples\minizork.z3")
-  'mem_init("B:\zmim\examples\advent.z3"
-  'mem_init("B:\zmim\examples\ZORK1\DATA\ZORK1.DAT"
+  mem_init(s$)
   decode_init()
+  Print
+
+  Input "Start in debugger [Y|n]"; s$
+  If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
   Print
 
   For i = 0 To NUM_BP - 1 : bp(i) = -1 : Next i
