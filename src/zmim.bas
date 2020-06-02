@@ -54,8 +54,8 @@ Function execute_2op()
   ' JE
   If oc = &h1 Then
     x = (a = b)
-    If (Not x) And (onum = 3) Then x = (a = oa(2))
-    If (Not x) And (onum = 4) Then x = (a = oa(3))
+    If (Not x) And (onum > 2) Then x = (a = oa(2))
+    If (Not x) And (onum > 3) Then x = (a = oa(3))
     _branch(x, br)
 
   ' JL
@@ -164,17 +164,21 @@ Function execute_2op()
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
 
-    ' ADD
     If oc = &h14 Then
+      ' ADD
       x = a + b
     ElseIf oc = &h15 Then
+      ' SUB
       x = a - b
     ElseIf oc = &h16 Then
+      ' MUL
       x = a * b
     ElseIf oc = &h17 Then
+      ' DIV
       x = a \ b
     Else
-      execute_2op = E_UNIMPLEMENTED
+      ' MOD
+      x = a Mod b
     EndIf
 
     If x < 0 Then x = 65536 + x
@@ -259,7 +263,13 @@ Function execute_1op()
 
   ' LOAD
   ElseIf oc = &hE Then
-    execute_1op = E_UNIMPLEMENTED
+    x = vget(a)
+    vset(st, x)
+
+  ' NOT
+  ElseIf oc = &hF Then
+    x = a Xor &b1111111111111111
+    vset(st, x)
 
   Else
     execute_1op = E_UNKNOWN
@@ -291,6 +301,10 @@ Function execute_0op()
   ElseIf oc = &h8 Then
     x = pop()
     _return(x)
+
+  ' POP - discards top item in stack
+  ElseIf oc = &h9 Then
+    x = pop()
 
   ' QUIT
   ElseIf oc = &hA Then

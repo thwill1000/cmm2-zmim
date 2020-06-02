@@ -153,7 +153,7 @@ Sub dmp_op(m$, st, br)
     Print fmt_jump_operands$();
   ElseIf m$ = "STORE" Or m$ = "DEC_CHK" Or m$ = "INC_CHK" Then
     Print fmt_store_operands$();
-  ElseIf m$ = "DEC" Or m$ = "INC" Then
+  ElseIf m$ = "DEC" Or m$ = "INC" Or m$ = "PULL" Or m$= "LOAD" Then
     Print fmt_store_operands$();
   Else
     Print fmt_normal_operands$();
