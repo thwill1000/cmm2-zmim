@@ -190,7 +190,7 @@ Data "QUIT",         "NEW_LINE",    "SHOW_STATUS", "VERIFY B"
 ' Var-operand instructions &h0 - &h15
 Data 22
 Data "CALL S",       "STOREW",      "STOREB",      "PUT_PROP",    "READ"
-Data "PRINT_CHAR",   "PRINT_NUM",   "RANDOM",      "PUSH",        "PULL"
+Data "PRINT_CHAR",   "PRINT_NUM",   "RANDOM S",      "PUSH",        "PULL"
 Data "SPLIT_WINDOW", "SET_WINDOW",  "Unknown&hC",  "Unknown&hD",  "Unknown&hE"
 Data "Unknown&hF",   "Unknown&h10", "Unknown&h11", "Unknown&h12", "OUTPUT_STREAM"
 Data "INPUT_STREAM", "SOUND_EFFECT"

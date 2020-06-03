@@ -12,6 +12,7 @@ Option Explicit On
 #Include "objects.inc"
 #Include "util.inc"
 #Include "file.inc"
+#Include "random.inc"
 #Include "debug.inc"
 #Include "dmp_abrv.inc"
 #Include "dmp_dict.inc"
@@ -124,7 +125,8 @@ Function execute_2op()
 
   ' STORE
   ElseIf oc = &hD Then
-    vset(a, b)
+    ' Note special handing for op with indirect reference to the stack pointer
+    If a = 0 Then stack(sp) = b Else vset(a, b)
 
   ' INSERT_OBJ: a = object, b = destination
   ElseIf oc = &hE Then
@@ -158,7 +160,8 @@ Function execute_2op()
 
   ' GET_NEXT_PROP
   ElseIf oc = &h13 Then
-    execute_2op = E_UNIMPLEMENTED
+    x = get_next_prop(a, b)
+    vset(st, x)
 
   ElseIf oc < &h19 Then
     If a > 32767 Then a = a - 65536
@@ -190,7 +193,7 @@ Function execute_2op()
 End Function
 
 Function execute_1op()
-  Local a, x
+  Local a, x, y, z, _
 
   a = oa(0)
 
@@ -238,11 +241,22 @@ Function execute_1op()
 
   ' PRINT_ADDR
   ElseIf oc = &h7 Then
-    execute_1op = E_UNIMPLEMENTED
+    print_zstring(a)
 
   ' REMOVE_OBJ
   ElseIf oc = &h9 Then
-    execute_1op = E_UNIMPLEMENTED
+    x = orel(a, PARENT)       ' parent of object
+    y = orel(a, SIBLING)      ' sibling of object
+    z = orel(x, CHILD)        ' first child of parent
+    _ = orel(a, PARENT, 1, 0) ' object no longer has parent
+    If z = a Then
+      _ = orel(x, CHILD, 1, y) ' if object was first child then now its sibling is
+    Else
+      Do
+        If orel(z, SIBLING) = a Then _ = orel(z, SIBLING, 1, y) : Exit Do
+        z = orel(z, SIBLING)
+      Loop Until z = 0
+    EndIf
 
   ' PRINT_OBJECT
   ElseIf oc = &hA Then
@@ -263,7 +277,8 @@ Function execute_1op()
 
   ' LOAD
   ElseIf oc = &hE Then
-    x = vget(a)
+    ' Note special handing for op with indirect reference to the stack pointer
+    If a = 0 Then x = stack(sp) Else x = vget(a)
     vset(st, x)
 
   ' NOT
@@ -310,9 +325,18 @@ Function execute_0op()
   ElseIf oc = &hA Then
     execute_0op = E_QUIT
 
-  ' NEWLINE
+  ' NEW_LINE
   ElseIf oc = &hB Then
     Print
+
+  ' SHOW_STATUS
+  ElseIf oc = &hC Then
+    execute_0op = E_UNIMPLEMENTED
+
+  ' VERIFY
+  ElseIf oc = &hD Then
+    ' Actually verifying the story checksum is pointless, always branch.
+    _branch(1, br)
 
   Else
     execute_0op = E_UNKNOWN
@@ -349,11 +373,24 @@ Function execute_varop()
 
   ' PRINT_NUM
   ElseIf oc = &h6 Then
-    Print Str$(oa(0));
+    x = oa(0)
+    If x > 32767 Then x = x - 65536
+    Print Str$(x);
 
   ' RANDOM
   ElseIf oc = &h7 Then
-    execute_varop = E_UNIMPLEMENTED
+    x = oa(0)
+    If x > 32767 Then x = x - 65536
+    If x = 0 Then
+      x = cmm2rnd(-1) ' Reseed from Timer
+      x = 0
+    ElseIf x < 0 Then
+      x = cmm2rnd(Abs(x))
+      x = 0
+    Else
+      x = 1 + Cint(cmm2rnd() * x)
+    EndIf
+    vset(st, x)
 
   ' PUSH
   ElseIf oc = &h8 Then
@@ -362,7 +399,8 @@ Function execute_varop()
   ' PULL
   ElseIf oc = &h9 Then
     x = pop()
-    vset(oa(0), x)
+    ' Note special handing for op with indirect reference to the stack pointer
+    If oa(0) = 0 Then stack(sp) = x Else vset(oa(0), x)
 
   Else
     execute_varop = E_UNKNOWN
