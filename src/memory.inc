@@ -116,7 +116,7 @@ Sub mem_init(f$)
 
   Dim MEM_FILE$ = f$
 
-  Print "Loading "; MEM_FILE$
+  Print "Loading '"; MEM_FILE$; "'"
 
   ' Load page 0 which contains the header.
   Print "  Header page: 0"

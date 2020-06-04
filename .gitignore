@@ -1,3 +1,4 @@
+zmim.code-workspace
 dat/
-examples/*
-!examples/minizork.z3
+stories/*
+!stories/minizork.z3

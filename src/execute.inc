@@ -471,13 +471,16 @@ Function _read(text_buf, parse_buf)
   Local ad, c, i, n, word$, s$, sep$, wc
 
   rtime = rtime - Timer
-  Line Input s$
-  rtime = rtime + Timer
-  s$ = LCase$(s$)
 
-  If s$ = "*break" Then
-    _read = E_BREAK : Exit Function
-  EndIf
+  s$ = LCase$(read_line$())
+  If Left$(s$, 1) = "*" Then _read = ex_special(s$)
+
+  rtime = rtime + Timer
+
+  If _read <> E_OK Then Exit Function
+
+  ' Write non-empty input to a script
+  If script And S_WRITE Then If s$ <> "" Then Print #2, s$
 
   n = Len(s$)
   ' TODO: check for input too long
@@ -504,4 +507,34 @@ Function _read(text_buf, parse_buf)
 
   wb(parse_buf + 1, wc)
 
+End Function
+
+Function read_line$()
+  ' Read input from a script
+  If script And S_READ Then
+    Line Input #3, read_line$
+    If read_line$ = "" Then script = script And S_WRITE Else Print read_line$
+  EndIf
+
+  ' Otherwise read input from the console
+  If Not(script And S_READ) Then Line Input read_line$
+End Function
+
+Function ex_special(cmd$)
+  Local f$, _
+
+  If cmd$ = "*break" Then
+    ex_special = E_BREAK
+
+  ElseIf cmd$ = "*replay" Then
+    Print "Select a script file from 'A:/zmim/scripts/"; story$(0); ":"
+    f$ = file_choose$("A:/zmim/scripts/" + story$(0), "*.scr")
+    If f$ <> "" Then
+      Open f$ For Input As #3
+      script = script Or S_READ
+    EndIf
+    Print ">";
+    ex_special = E_REPEAT
+
+  EndIf
 End Function

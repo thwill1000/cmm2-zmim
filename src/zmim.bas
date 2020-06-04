@@ -39,6 +39,7 @@ Const E_UNIMPLEMENTED = 2
 Const E_BREAK = 3
 Const E_QUIT = 4
 Const E_DEBUG = 5
+Const E_REPEAT = 6 ' Repeat last operation
 
 Const NUM_BP = 10
 
@@ -46,9 +47,14 @@ Dim num_ops = 0    ' Number of instructions processed.
 Dim ztrace = 0     ' Is instruction tracing enabled?
 Dim bp(NUM_BP - 1) ' The addresses of up to 10 breakpoints, -1 for unset.
 Dim rtime = 0      ' Time (ms) spent waiting for user input.
+Dim script = 0     ' Bit 1 is set for writing (via #2), bit 2 is set for reading (via #3)
+Dim story$(1) Length 20 ' Name of current story
+
+Const S_WRITE = &b01
+Const S_READ = &b10
 
 Sub main()
-  Local i, old_pc, state, s$
+  Local f$, i, old_pc, state, s$, x
 
   Mode 1
   Cls
@@ -64,16 +70,34 @@ Sub main()
   Print
 
   Print "Select a story file from 'A:/zmim/stories':"
-  s$ = file_choose$("A:/zmim/stories", "*.z3")
+  Do While f$ = ""
+    f$ = file_choose$("A:/zmim/stories", "*.z3")
+  Loop
   Print
 
-  mem_init(s$)
-  decode_init()
+  mem_init(f$)
   Print
+
+  story$(0) = Mid$(f$, 17, Len(f$) - 19)
+  f$ = "A:/zmim/scripts/" + story$(0) + "/" + story$(0) + ".scr"
+  Print "Write transcript to '"; f$; "' [Y|n]";
+  Input s$
+  If LCase$(s$) <> "n" Then
+    ChDir("A:/zmim/scripts")
+    s$ = Dir$(story$(0), File)
+    If s$ <> "" Then Error
+    s$ = Dir$(story$(0), Dir)
+    If s$ = "" Then MkDir(story$(0))
+    ChDir("A:/zmim")
+    Open f$ For Output As #2
+    script = S_WRITE
+  EndIf
 
   Input "Start in debugger [Y|n]"; s$
   If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
   Print
+
+  decode_init()
 
   For i = 0 To NUM_BP - 1 : bp(i) = -1 : Next i
 
@@ -90,7 +114,7 @@ Sub main()
       old_pc = pc
     EndIf
 
-    If state = E_OK Then
+    If state = E_OK Or state = E_REPEAT Then
       state = exec(ztrace)
     Else
       state = debug()
@@ -101,6 +125,9 @@ Sub main()
   Print "Num instructions processed ="; num_ops
   Print "Instructions / second      = "; Format$(num_ops / ((Timer - rtime) / 1000), "%.1f")
   If MM.DEVICE$ <> "Colour Maximite 2" Then Print "Num page faults            ="; pf
+
+  If script And S_WRITE Then Close #2
+  If script And S_READ Then Close #3
 
 End Sub
 

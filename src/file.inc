@@ -7,36 +7,40 @@ Function file_choose$(d$, fspec$)
   c$ = Cwd$
   Chdir d$
 
-  ' Count number of entries 'n' and their mzimum length 'm'
+  ' Count number of entries 'n' and their maximum length 'm'
   f$ = Dir$(fspec$)
   Do While f$ <> ""
     n = n + 1
     If Len(f$) > m Then m = Len(f$)
     f$ = Dir$()
   Loop
+  If n > 20 Then n = 21
 
-  ' Create sorted array of entries 'all$'
-  Dim all$(n - 1) LENGTH m
+  ' Create sorted array of entries 'all$'.
+  ' Element 0 is always empty, even after the sort.
+  Local all$(n) LENGTH m
   f$ = Dir$(fspec$)
-  For i = 0 To n - 1 : all$(i) = f$ : f$ = Dir$() : Next i
+  For i = 1 To n : all$(i) = f$ : f$ = Dir$() : Next i
   Sort all$()
 
   ' Display entries
   If i < 6 Then
-    For i = 0 To n - 1
-      Print "  [" + Format$(i + 1, "%2g") + "] "; all$(i)
+    For i = 1 To n
+      Print "  [" + Format$(i, "%2g") + "] "; all$(i)
     Next i
   Else
-    For i = 0 To (n - 1) \ 2
-      Print "  [" + Format$(i + 1, "%2g") + "] "; rpad$(all$(i), m + 2);
-      Print "  [" + Format$(i + n \ 2 + 1, "%2g") + "] "; all$(i + n \ 2)
+    For i = 1 To n \ 2
+      Print "  [" + Format$(i, "%2g") + "] "; rpad$(all$(i), m + 2);
+      Print "  [" + Format$(i + n \ 2, "%2g") + "] "; all$(i + n \ 2)
     Next i
   EndIf
 
-  Line Input "> ", f$
-  file_choose$ = d$ + "/" + all$(Val(f$) - 1)
+  If n = 21 Then
+    Print "  There are more than 20 files, only the first 20 are shown."
+  EndIf
 
-  ' TODO: Error handling for non-numeric selection
+  Line Input "File number? ", f$
+  If Val(f$) <> 0 Then file_choose$ = d$ + "/" + all$(Val(f$))
 
   Chdir c$ ' Restore working directory
 End Function

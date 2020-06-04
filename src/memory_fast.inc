@@ -48,7 +48,7 @@ End Sub
 Sub mem_init(f$)
   Local ad, s$, sz
 
-  Print "Loading "; f$
+  Print "Loading '"; f$; "'"
 
 ' This doesn't seem to work given an absolute path
 '  sz = mm.info(filesize f$)
