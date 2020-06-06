@@ -130,8 +130,8 @@ Function debug()
       EndIf
 
     ElseIf cmd$(0) = "V" Then
-      ' Lookup word in vocabulary
-      a = lookup(LCase$(cmd$(1)))
+      ' Lookup word in dictionary
+      a = di_lookup(LCase$(cmd$(1)))
       Print fmt_hex$(a)
 
     ElseIf cmd$(0) = "x" Then

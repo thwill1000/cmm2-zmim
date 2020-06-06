@@ -459,41 +459,6 @@ Sub _call(st)
   If ztrace Then dmp_routine(2 * oa(0)) : dmp_stack()
 End Sub
 
-' Lookup w$ in the vocabulary. w$ should already be in lower-case
-Function lookup(w$)
-  Local a, i, n, sz, z(3)
-
-  ' Convert w$ into 4-byte Z-string
-  sz = Len(w$) : If sz > 6 Then sz = 6
-  For i = 1 To 6
-    If i > sz Then a = a + 5 Else a = a + Instr(ALPHABET$(0), Mid$(w$, i, 1)) - 1
-    If i = 3 Then
-      z(0) = a \ 256 : z(1) = a And &hFF : a = 0
-    ElseIf i = 6 Then ' End of word
-      a = a Or &h8000 : z(2) = a \ 256 : z(3) = a And &hFF
-    Else
-      a = a * 32
-    EndIf
-  Next i
-
-  ' Lookup Z-string in dictionary
-  ' TODO: binary search instead of linear search
-  a = rw(&h08)  ' dictionary address
-  n = rb(a)     ' number of word separators
-  a = a + n + 1 ' skip word separators
-  sz = rb(a)    ' entry length
-  n = rw(a + 1) ' number of entries
-  a = a + 3
-
-  For i = 1 To n
-    If z(0)=rb(a) And z(1)=rb(a+1) And z(2)=rb(a+2) And z(3)=rb(a+3) Then
-      lookup = a : Exit For
-    EndIf
-    a = a + sz
-  Next i
-
-End Function
-
 Function _read(text_buf, parse_buf)
   Local ad, c, i, n, word$, s$, sep$, wc
 
@@ -520,7 +485,7 @@ Function _read(text_buf, parse_buf)
     c = Peek(Var s$, i)
     If Instr(sep$, Chr$(c)) > 0 Then
       If Len(word$) > 0 Then
-        ad = lookup(word$)
+        ad = di_lookup(word$)
         ww(parse_buf + 2 + wc * 4, ad)
         wb(parse_buf + 4 + wc * 4, Len(word$))
         wb(parse_buf + 5 + wc * 4, i - Len(word$)) ' position in 'text_buf'

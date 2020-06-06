@@ -72,7 +72,7 @@ Sub mem_init(f$)
 
   Close #1
 
-  Print "Read"; ad + 1; " bytes"
+  Print "Read"; ad; " bytes"
 
   ' Read header data.
   Dim pc = m(&h06) * 256 + m(&h07)
@@ -80,9 +80,5 @@ Sub mem_init(f$)
   Dim BASE_STATIC = m(&h0E) * 256 + m(&h0F)
   Dim FILE_LEN = (m(&h1A) * 256 + m(&h1B)) * 2
 
-  If FILE_LEN <> ad + 1 Then
-    Print "WARNING! File size from header" ; FILE_LEN;
-    Print " is not equal to size on SD card"; ad + 1; "."
-  EndIf
-
+  If FILE_LEN > ad Then Error "Story file is truncated"
 End Sub

@@ -12,6 +12,7 @@ Option Explicit On
 #Include "zstring.inc"
 #Include "objects.inc"
 #Include "util.inc"
+#Include "dict.inc"
 #Include "file.inc"
 #Include "random.inc"
 #Include "debug.inc"
@@ -105,6 +106,7 @@ Sub main()
   Print
 
   decode_init()
+  di_init()
 
   For i = 0 To NUM_BP - 1 : bp(i) = -1 : Next i
 
