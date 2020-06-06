@@ -554,8 +554,8 @@ Function ex_special(cmd$)
     ex_special = E_BREAK
 
   ElseIf cmd$ = "*replay" Then
-    Print "Select a script file from 'A:/zmim/scripts/"; story$(0); "':"
-    f$ = file_choose$("A:/zmim/scripts/" + story$(0), "*.scr")
+    Print "Select a script file from '"; ss$(SCRIPT_DIR); "/"; ss$(STORY); "':"
+    f$ = file_choose$(ss$(SCRIPT_DIR) + "/" + ss$(STORY), "*.scr")
     If f$ <> "" Then
       Open f$ For Input As #3
       script = script Or S_READ

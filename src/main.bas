@@ -39,10 +39,16 @@ Dim ztrace = 0     ' Is instruction tracing enabled?
 Dim bp(NUM_BP - 1) ' The addresses of up to 10 breakpoints, -1 for unset.
 Dim rtime = 0      ' Time (ms) spent waiting for user input.
 Dim script = 0     ' Bit 1 is set for writing (via #2), bit 2 is set for reading (via #3)
-Dim story$(1) Length 20 ' Name of current story
 
 Const S_WRITE = &b01
 Const S_READ = &b10
+
+' String "constants" that I don't want to take up 256 bytes
+Dim ss$(3) Length 20
+Const INSTALL_DIR = 0
+Const STORY_DIR = 1
+Const SCRIPT_DIR = 2
+Const STORY = 3
 
 Sub main()
   Local f$, i, old_pc, state, s$, x
@@ -60,26 +66,36 @@ Sub main()
   Print "Version 0.1 for Colour Maximite 2, MMBasic 5.05"
   Print
 
-  Print "Select a story file from 'A:/zmim/stories':"
+  ss$(INSTALL_DIR) = "A:/zmim"
+  ss$(STORY_DIR) = ss$(INSTALL_DIR) + "/stories"
+  ss$(SCRIPT_DIR) = ss$(INSTALL_DIR) + "/scripts"
+
+  Print "Select a story file from '"; ss$(STORY_DIR); "':"
   Do While f$ = ""
-    f$ = file_choose$("A:/zmim/stories", "*.z3")
+    f$ = file_choose$(ss$(STORY_DIR), "*.z3")
   Loop
+  ss$(STORY) = Mid$(f$, Len(ss$(STORY_DIR)) + 2)
+  ss$(STORY) = Left$(ss$(STORY), Len(ss$(STORY)) - 3)
   Print
 
   mem_init(f$)
   Print
 
-  story$(0) = Mid$(f$, 17, Len(f$) - 19)
-  f$ = "A:/zmim/scripts/" + story$(0) + "/" + story$(0) + ".scr"
+  ' Jump through hoops to create the name of the script file
+  f$ = ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "/"
+  f$ = f$ + ss$(STORY) + "-" + Date$ + "-" + Time$ + ".scr"
+  For i = Len(ss$(SCRIPT_DIR)) To Len(f$)
+    If Peek(Var f$, i) = Asc(":") Then Poke Var f$, i, Asc("-")
+  Next i
   Print "Write transcript to '"; f$; "' [Y|n]";
   Input s$
   If LCase$(s$) <> "n" Then
-    ChDir("A:/zmim/scripts")
-    s$ = Dir$(story$(0), File)
+    ChDir(ss$(SCRIPT_DIR)))
+    s$ = Dir$(ss$(STORY), File)
     If s$ <> "" Then Error
-    s$ = Dir$(story$(0), Dir)
-    If s$ = "" Then MkDir(story$(0))
-    ChDir("A:/zmim")
+    s$ = Dir$(ss$(STORY), Dir)
+    If s$ = "" Then MkDir(ss$(STORY))
+    ChDir(ss$(INSTALL_DIR))
     Open f$ For Output As #2
     script = S_WRITE
   EndIf
