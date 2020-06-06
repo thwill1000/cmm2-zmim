@@ -54,6 +54,9 @@ execute.inc: (15)
 file.inc: (1)
   file_choose$
 
+main.bas: (1)
+  main
+
 memory.inc: (6)
   rp
   rb
@@ -98,9 +101,6 @@ util.inc: (4)
 variable.inc: (2)
   vget
   vset
-
-zmim.bas: (1)
-  main
 
 zstring.inc: (2)
   print_zstring
