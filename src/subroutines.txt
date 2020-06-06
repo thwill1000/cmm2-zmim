@@ -1,73 +1,105 @@
-zmim.bas: (34 subs)
-  get_next_prop
-  get_op
-  get_prop
-  get_prop_addr
-  get_prop_base
-  get_prop_len
-  init
-  long_decode
-  mem_load
-  oattr
-  orel
-  pop
-  print_abrv
-  print_obj
-  print_zstring
-  push
-  rb
-  rp
-  rw
-  read_branch
-  short_decode
-  var_decode
-  vget
-  vset
-  wb
-  ww
-  _0op
-  _1op
-  _2op
-  _branch
-  _call
-  _return
-  _step
-  _varop
-
-util.lib: (3 subs)
-  lpad$
-  rpad$
-  rshift
-
-{no}debug.lib: (11 subs)
+debug.inc: (13)
+  debug
   dmp_mem
   dmp_obj
+  fmt_operand
+  fmt_call_operands
+  fmt_jump_operands
+  fmt_store_value
+  fmt_store_operands
+  fmt_normal_operands
   dmp_op
   dmp_routine
   dmp_stack
-  fmt_call_operands$
-  fmt_operand$
-  fmt_jump_operands$
-  fmt_normal_operands$
-  fmt_store_operands$
-  fmt_store_values$
+  dmp_global
 
-dmp_abrv.lib:
+decode.inc: (7)
+  decode_init
+  decode
+  decode_long
+  decode_short
+  decode_var
+  decode_branch
+  decode_format
+
+dmp_abrv.inc: (1)
   dmp_abrv
 
-dmp_dict.lib:
+dmp_dict.inc: (1)
   dmp_dict
 
-dmp_hdr.lib:
+dmp_hdr.inc: (1)
   dmp_hdr
 
-dmp_mmap.lib:
+dmp_mmap.inc: (1)
   dmp_mmap
 
-tst_mem.lib:
+execute.inc: (11)
+  exec
+  ex_2op
+  ex_1op
+  ex_0op
+  ex_varop
+  _branch
+  _return
+  _call
+  _read
+  readline$
+  ex_special
+
+file.inc: (1)
+  file_choose$
+
+memory.inc: (6)
+  rp
+  rb
+  rw
+  wb
+  wb
+  mem_init
+
+memory_fast.inc
+  see "memory.inc"
+
+objects.inc: (9)
+  oattr
+  orel
+  get_next_prop
+  get_prop_len
+  get_prop_base
+  get_prop_addr
+  get_prop
+  put_prop
+  print_obj
+
+random.inc: (1)
+  cmm2rnd
+
+stack.inc: (2)
+  pop
+  push
+
+tst_mem.inc: (1)
   tst_mem
 
-tst_obj.lib:
-  tst_obj
+tst_obj.inc: (1)
+  tets_obj
 
-TOTAL = 54 functions & subroutines
+util.inc: (4)
+  rshift
+  lpad$
+  rpad$
+  fmt_hex$
+
+variable.inc: (2)
+  vget
+  vset
+
+zmim.bas: (1)
+  main
+
+zstring.inc: (2)
+  print_zstring
+  print_abrv
+
+TOTAL = 65 functions & subroutines
