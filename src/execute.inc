@@ -37,27 +37,27 @@ Function ex_2op()
   a = oa(0)
   b = oa(1)
 
-  ' JE
   If oc = &h1 Then
+    ' JE
     x = (a = b)
     If (Not x) And (onum > 2) Then x = (a = oa(2))
     If (Not x) And (onum > 3) Then x = (a = oa(3))
     _branch(x, br)
 
-  ' JL
   ElseIf oc = &h2 Then
+    ' JL
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
     _branch(a < b, br)
 
-  ' JG
   ElseIf oc = &h3 Then
+    ' JG
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
     _branch(a > b, br)
 
-  ' DEC_CHK
   ElseIf oc = &h4 Then
+    ' DEC_CHK
     x = vget(a)
     If x > 32767 Then x = x - 65536
     If b > 32767 Then b = b - 65536
@@ -67,8 +67,8 @@ Function ex_2op()
     vset(a, x)
     _branch(y, br)
 
-  ' INC_CHK
   ElseIf oc = &h5 Then
+    ' INC_CHK
     x = vget(a)
     If x > 32767 Then x = x - 65536
     If b > 32767 Then b = b - 65536
@@ -78,43 +78,43 @@ Function ex_2op()
     vset(a, x)
     _branch(y, br)
 
-  ' JIN
   ElseIf oc = &h6 Then
+    ' JIN
     x = orel(a, PARENT)
     _branch(x = b, br)
 
-  ' TEST
   ElseIf oc = &h7 Then
+    ' TEST
     _branch((a And b) = b, br)
 
-  ' OR
   ElseIf oc = &h8 Then
+    ' OR
     vset(st, a Or b)
 
-  ' AND
   ElseIf oc = &h9 Then
+    ' AND
     vset(st, a And b)
 
-  ' TEST_ATTR: a = object, b = attribute
   ElseIf oc = &hA Then
+    ' TEST_ATTR: a = object, b = attribute
     x = oattr(a, b)
     _branch(x = 1, br)
 
-  ' SET_ATTR
   ElseIf oc = &hB Then
+    ' SET_ATTR
     _ = oattr(a, b, 1, 1)
 
-  ' CLEAR_ATTR
   ElseIf oc = &hC Then
+    ' CLEAR_ATTR
     _ = oattr(a, b, 1, 0)
 
-  ' STORE
   ElseIf oc = &hD Then
+    ' STORE
     ' Note special handing for op with indirect reference to the stack pointer
     If a = 0 Then stack(sp) = b Else vset(a, b)
 
-  ' INSERT_OBJ: a = object, b = destination
   ElseIf oc = &hE Then
+    ' INSERT_OBJ: a = object, b = destination
     x = orel(b, CHILD)         ' original child of destination
     y = orel(a, SIBLING)       ' original sibling of object
     z = orel(a, PARENT)        ' original parent of object
@@ -123,28 +123,28 @@ Function ex_2op()
     _ = orel(a, SIBLING, 1, x) ' original child of destination is new sibling of object
     _ = orel(z, CHILD, 1, y)   ' original sibling of object is new child of original parent
 
-  ' LOADW
   ElseIf oc = &hF Then
+    ' LOADW
     x = rw(a + 2 * b)
     vset(st, x)
 
-  ' LOADB
   ElseIf oc = &h10 Then
+    ' LOADB
     x = rb(a + b)
     vset(st, x)
 
-  ' GET_PROP
   ElseIf oc = &h11 Then
+    ' GET_PROP
     x = get_prop(a, b)
     vset(st, x)
 
-  ' GET_PROP_ADDR
   ElseIf oc = &h12 Then
+    ' GET_PROP_ADDR
     x = get_prop_addr(a, b)
     vset(st, x)
 
-  ' GET_NEXT_PROP
   ElseIf oc = &h13 Then
+    ' GET_NEXT_PROP
     x = get_next_prop(a, b)
     vset(st, x)
 
@@ -182,54 +182,54 @@ Function ex_1op()
 
   a = oa(0)
 
-  ' JZ
   If oc = &h0 Then
+    ' JZ
     _branch(a = 0, br)
 
-  ' GET_SIBLING
   ElseIf oc = &h1 Then
+    ' GET_SIBLING
     x = orel(a, SIBLING)
     vset(st, x)
     _branch(x <> 0, br)
 
-  ' GET_CHILD
   ElseIf oc = &h2 Then
+    ' GET_CHILD
     x = orel(a, CHILD)
     vset(st, x)
     _branch(x <> 0, br)
 
-  ' GET_PARENT
   ElseIf oc = &h3 Then
+    ' GET_PARENT
     x = orel(a, PARENT)
     vset(st, x)
 
-  ' GET_PROP_LEN
   ElseIf oc = &h4 Then
+    ' GET_PROP_LEN
     x = get_prop_len(a)
     vset(st, x)
 
-  ' INC
   ElseIf oc = &h5 Then
+    ' INC
     x = vget(a)
     If x > 32767 Then x = x - 65536
     x = x + 1
     If x < 0 Then x = 65536 + x
     vset(a, x)
 
-  ' DEC
   ElseIf oc = &h6 Then
+    ' DEC
     x = vget(a)
     If x > 32767 Then x = x - 65536
     x = x - 1
     If x < 0 Then x = 65536 + x
     vset(a, x)
 
-  ' PRINT_ADDR
   ElseIf oc = &h7 Then
+    ' PRINT_ADDR
     print_zstring(a)
 
-  ' REMOVE_OBJ
   ElseIf oc = &h9 Then
+    ' REMOVE_OBJ
     x = orel(a, PARENT)       ' parent of object
     y = orel(a, SIBLING)      ' sibling of object
     z = orel(x, CHILD)        ' first child of parent
@@ -243,31 +243,31 @@ Function ex_1op()
       Loop Until z = 0
     EndIf
 
-  ' PRINT_OBJECT
   ElseIf oc = &hA Then
+    ' PRINT_OBJECT
     print_obj(a)
 
-  ' RET
   ElseIf oc = &hB Then
+    ' RET
     _return(a)
 
-  ' JUMP
   ElseIf oc = &hC Then
+    ' JUMP
     If a And &h8000 Then a = a - 65536
     pc = pc + a - 2
 
-  ' PRINT_PADDR
   ElseIf oc = &hD Then
+    ' PRINT_PADDR
     print_zstring(a * 2)
 
-  ' LOAD
   ElseIf oc = &hE Then
+    ' LOAD
     ' Note special handing for op with indirect reference to the stack pointer
     If a = 0 Then x = stack(sp) Else x = vget(a)
     vset(st, x)
 
-  ' NOT
   ElseIf oc = &hF Then
+    ' NOT
     x = a Xor &b1111111111111111
     vset(st, x)
 
@@ -279,47 +279,66 @@ End Function
 Function ex_0op()
   Local x
 
-  ' RTRUE
   If oc = &h0 Then
+    ' RTRUE
     _return(1)
 
-  ' RFALSE
   ElseIf oc = &h1 Then
+    ' RFALSE
     _return(0)
 
-  ' PRINT
   ElseIf oc = &h2 Then
+    ' PRINT
     print_zstring(pc)
 
-  ' PRINT_RET
   ElseIf oc = &h3 Then
+    ' PRINT_RET
     print_zstring(pc)
     Print
     _return(1)
 
-  ' RET_POPPED
+  ElseIf oc = &h4 Then
+    ' NOP
+
+  ElseIf oc = &h5 Then
+    ' SAVE
+    ex_save()
+    ex_0op = E_UNIMPLEMENTED
+
+  ElseIf oc = &h6 Then
+    ' RESTORE
+    ex_restore()
+    ex_0op = E_UNIMPLEMENTED
+
+  ElseIf oc = &h7 Then
+    ' RESTART
+    ex_restart()
+    ex_0op = E_UNIMPLEMENTED
+
   ElseIf oc = &h8 Then
+    ' RET_POPPED
     x = pop()
     _return(x)
 
-  ' POP - discards top item in stack
   ElseIf oc = &h9 Then
+    ' POP - discards top item in stack
     x = pop()
 
-  ' QUIT
   ElseIf oc = &hA Then
+    ' QUIT
     ex_0op = E_QUIT
 
-  ' NEW_LINE
   ElseIf oc = &hB Then
+    ' NEW_LINE
     Print
 
-  ' SHOW_STATUS
   ElseIf oc = &hC Then
+    ' SHOW_STATUS
+    ex_show_status()
     ex_0op = E_UNIMPLEMENTED
 
-  ' VERIFY
   ElseIf oc = &hD Then
+    ' VERIFY
     ' Actually verifying the story checksum is pointless, always branch.
     _branch(1, br)
 
@@ -331,39 +350,39 @@ End Function
 Function ex_varop()
   Local x
 
-  ' CALL
   If oc = &h0 Then
+    ' CALL
     _call(st)
 
-  ' STOREW
   ElseIf oc = &h1 Then
+    ' STOREW
     ww(oa(0) + 2 * oa(1), oa(2))
 
-  ' STOREB
   ElseIf oc = &h2 Then
+  ' STOREB
     wb(oa(0) + oa(1), oa(2))
 
-  ' PUT_PROP
   ElseIf oc = &h3 Then
+    ' PUT_PROP
     put_prop(oa(0), oa(1), oa(2))
 
-  ' READ
   ElseIf oc = &h4 Then
+    ' READ
     Print " ";
     ex_varop = _read(oa(0), oa(1))
 
-  ' PRINT_CHAR
   ElseIf oc = &h5 Then
+    ' PRINT_CHAR
     Print Chr$(oa(0));
 
-  ' PRINT_NUM
   ElseIf oc = &h6 Then
+    ' PRINT_NUM
     x = oa(0)
     If x > 32767 Then x = x - 65536
     Print Str$(x);
 
-  ' RANDOM
   ElseIf oc = &h7 Then
+    ' RANDOM
     x = oa(0)
     If x > 32767 Then x = x - 65536
     If x = 0 Then
@@ -377,15 +396,23 @@ Function ex_varop()
     EndIf
     vset(st, x)
 
-  ' PUSH
   ElseIf oc = &h8 Then
+    ' PUSH
     push(oa(0))
 
-  ' PULL
   ElseIf oc = &h9 Then
+    ' PULL
     x = pop()
     ' Note special handing for op with indirect reference to the stack pointer
     If oa(0) = 0 Then stack(sp) = x Else vset(oa(0), x)
+
+  ElseIf oc = &h13 Then
+    ' INPUT_STREAM
+    ex_varop = E_UNIMPLEMENTED
+
+  ElseIf oc = &h14 Then
+    ' OUTPUT_STREAM
+    ex_varop = E_UNIMPLEMENTED
 
   Else
     ex_varop = E_UNKNOWN
@@ -538,3 +565,15 @@ Function ex_special(cmd$)
 
   EndIf
 End Function
+
+Sub ex_show_status()
+End Sub
+
+Sub ex_save()
+End Sub
+
+Sub ex_restore()
+End Sub
+
+Sub ex_restart()
+End Sub

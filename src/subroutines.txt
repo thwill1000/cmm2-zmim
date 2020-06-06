@@ -34,7 +34,7 @@ dmp_hdr.inc: (1)
 dmp_mmap.inc: (1)
   dmp_mmap
 
-execute.inc: (11)
+execute.inc: (15)
   exec
   ex_2op
   ex_1op
@@ -46,6 +46,10 @@ execute.inc: (11)
   _read
   readline$
   ex_special
+  ex_show_status
+  ex_save
+  ex_restore
+  ex_restart
 
 file.inc: (1)
   file_choose$
@@ -102,4 +106,4 @@ zstring.inc: (2)
   print_zstring
   print_abrv
 
-TOTAL = 65 functions & subroutines
+TOTAL = 69 functions & subroutines
