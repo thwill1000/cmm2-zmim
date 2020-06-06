@@ -21,17 +21,8 @@ Option Explicit On
 #Include "dmp_mmap.inc"
 #Include "tst_obj.inc"
 
-Dim BUSY$(1) LENGTH 16
-BUSY$(0) = "\\\\||||////----"
-
-Dim i = 0
-Dim BIT(7)
-For i = 0 To 7 : BIT(i) = 2 ^ i : Next i
-
-Const BTM_2_BITS  = &b00000011
-Const BTM_4_BITS  = &b00001111
-Const BTM_5_BITS  = &b00011111
-Const BTM_6_BITS  = &b00111111
+'Dim BUSY$(1) LENGTH 16
+'BUSY$(0) = "\\\\||||////----"
 
 Const E_OK = 0
 Const E_UNKNOWN = 1

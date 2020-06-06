@@ -79,7 +79,7 @@ Function decode(tr)
 End Function
 
 Sub decode_long(op)
-  oc = op And BTM_5_BITS
+  oc = op And &b11111 ' bottom 5 bits
   onum = 2
   ov(0) = rp()
   ov(1) = rp()
@@ -99,7 +99,7 @@ Sub decode_long(op)
 End Sub
 
 Sub decode_short(op)
-  oc = op And BTM_4_BITS
+  oc = op And &b1111 ' bottom 4 bits
   onum = 1
   If op <= &h8F Then
     ot(0) = LARGE : ov(0) = rp() * 256 + rp() : oa(0) = ov(0)
@@ -114,7 +114,7 @@ End Sub
 
 Sub decode_var(op)
   Local i, x
-  oc = op And &b11111
+  oc = op And &b11111 ' bottom 5 bits
   onum = 4
   x = rp()
   For i = 3 To 0 Step -1
@@ -137,15 +137,15 @@ End Sub
 Function decode_branch()
   Local a, of
   a = rp()
-  of = a And BTM_6_BITS
+  of = a And &b111111 ' bottom 6 bits
 
-  If (a And BIT(6)) = 0 Then
+  If (a And &b1000000) = 0 Then ' check bit 6
     of = 256 * of + rp()
-    If a And BIT(5) Then of = of - 16384
+    If a And &b100000 Then of = of - 16384 ' check bit 5
   EndIf
 
   decode_branch = pc + of - 2
-  If a And BIT(7) Then decode_branch = decode_branch Or &h10000
+  If a And &b10000000 Then decode_branch = decode_branch Or &h10000 ' check bit 7
 End Function
 
 Function decode_format$(a$)

@@ -9,7 +9,7 @@ Function oattr(o, a, s, x)
   Local ad, m, y
   ad = rw(&h0A) + 62 + (o - 1) * 9 + a \ 8
   y = rb(ad)
-  m = BIT(7 - a Mod 8)
+  m = 2^(7 - a Mod 8) ' mask
   If s = 0 Then oattr = (y And m) > 0 : Exit Function
   If x = 0 Then y = (y And (m Xor &hFF)) Else y = (y Or m)
   wb(ad, y)
@@ -39,7 +39,7 @@ Function get_next_prop(o, p)
   EndIf
 
   x = rb(ad)
-  get_next_prop = x And BTM_5_BITS
+  get_next_prop = x And &b11111 ' bottom 5 bits
 End Function
 
 Function get_prop_len(ad)
@@ -61,8 +61,9 @@ Function get_prop_addr(o, p)
   ad = ad + 1 + 2 * rb(ad) ' Skip length & description
   Do
     x = rb(ad)
-    If (x And BTM_5_BITS) = p Then get_prop_addr = ad + 1 : Exit Function
-    If (x And BTM_5_BITS) < p Then get_prop_addr = 0 : Exit Function
+    ' Mask with bottom 5 bits
+    If (x And &b11111) = p Then get_prop_addr = ad + 1 : Exit Function
+    If (x And &b11111) < p Then get_prop_addr = 0 : Exit Function
     ad = ad + 2 + x\32
   Loop
 End Function
@@ -72,7 +73,7 @@ Function get_prop(o, p)
   ad = get_prop_addr(o, p)
   If ad > 0 Then
     x = rb(ad - 1)
-    If (x And BTM_5_BITS) <> p Then Error
+    If (x And &b11111) <> p Then Error ' Mask with bottom 5 bits
     sz = x\32 + 1
     If sz = 1 Then get_prop = rb(ad) : Exit Function
     If sz = 2 Then get_prop = rw(ad) : Exit Function

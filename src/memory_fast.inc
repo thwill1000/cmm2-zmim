@@ -46,7 +46,7 @@ Sub ww(a, x)
 End Sub
 
 Sub mem_init(f$)
-  Local ad, s$, sz
+  Local ad, i, s$, sz
 
   Print "Loading '"; f$; "'"
 
