@@ -3,12 +3,6 @@
 
 Const MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
 
-' Instruction encoding
-Const LARGE    = &b00
-Const SMALL    = &b01
-Const VARIABLE = &b10
-Const OMITTED  = &b11
-
 ' The currently decoded instruction
 Dim oc = 0               ' operand code
 Dim onum = 0             ' number of operands
@@ -84,17 +78,17 @@ Sub decode_long(op)
   ov(0) = rp()
   ov(1) = rp()
   If op <= &h1F Then
-    ot(0) = SMALL : oa(0) = ov(0)
-    ot(1) = SMALL : oa(1) = ov(1)
+    ot(0) = &b01 : oa(0) = ov(0) ' SMALL
+    ot(1) = &b01 : oa(1) = ov(1) ' SMALL
   ElseIf op <= &h3F Then
-    ot(0) = SMALL : oa(0) = ov(0)
-    ot(1) = VARIABLE : oa(1) = vget(ov(1))
+    ot(0) = &b01 : oa(0) = ov(0) ' SMALL
+    ot(1) = &b10 : oa(1) = vget(ov(1)) ' VARIABLE
   ElseIf op <= &h5F Then
-    ot(0) = VARIABLE : oa(0) = vget(ov(0))
-    ot(1) = SMALL : oa(1) = ov(1)
+    ot(0) = &b10 : oa(0) = vget(ov(0)) ' VARIABLE
+    ot(1) = &b01 : oa(1) = ov(1) ' SMALL
   Else
-    ot(0) = VARIABLE : oa(0) = vget(ov(0))
-    ot(1) = VARIABLE : oa(1) = vget(ov(1))
+    ot(0) = &b10 : oa(0) = vget(ov(0)) ' VARIABLE
+    ot(1) = &b10 : oa(1) = vget(ov(1)) ' VARIABLE
   EndIf
 End Sub
 
@@ -102,11 +96,11 @@ Sub decode_short(op)
   oc = op And &b1111 ' bottom 4 bits
   onum = 1
   If op <= &h8F Then
-    ot(0) = LARGE : ov(0) = rp() * 256 + rp() : oa(0) = ov(0)
+    ot(0) = &b00 : ov(0) = rp() * 256 + rp() : oa(0) = ov(0)
   ElseIf op <= &h9F Then
-    ot(0) = SMALL : ov(0) = rp() : oa(0) = ov(0)
+    ot(0) = &b01 : ov(0) = rp() : oa(0) = ov(0)
   ElseIf op <= &hAF Then
-    ot(0) = VARIABLE : ov(0) = rp() : oa(0) = vget(ov(0))
+    ot(0) = &b10 : ov(0) = rp() : oa(0) = vget(ov(0))
   Else
     onum = 0
   EndIf
@@ -117,15 +111,22 @@ Sub decode_var(op)
   oc = op And &b11111 ' bottom 5 bits
   onum = 4
   x = rp()
-  For i = 3 To 0 Step -1
-    ot(i) = x And &b11
-    If ot(i) = OMITTED Then onum = onum - 1
-    x = x \ 4
-  Next i
-  For i = 0 To onum - 1
-    If ot(i) = LARGE Then ov(i) = rp() * 256 + rp() : oa(i) = ov(i)
-    If ot(i) = SMALL Then ov(i) = rp() : oa(i) = ov(i)
-    If ot(i) = VARIABLE Then ov(i) = rp() : oa(i) = vget(ov(i))
+  For i = 0 To 3
+    ot(i) = (x And &b11000000) / 64
+    If ot(i) = &b00 Then
+      ' LARGE
+      ov(i) = rp() * 256 + rp() : oa(i) = ov(i)
+    ElseIf ot(i) = &b01 Then
+      ' SMALL
+      ov(i) = rp() : oa(i) = ov(i)
+    ElseIf ot(i) = &b10 Then
+      ' VARIABLE
+      ov(i) = rp() : oa(i) = vget(ov(i))
+    Else ' ot(i) = &11
+      ' OMITTED
+      onum = onum - 1
+    EndIf
+    x = x * 4
   Next i
 End Sub
 

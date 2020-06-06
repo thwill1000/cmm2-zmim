@@ -231,7 +231,7 @@ End Sub
 Function fmt_operand$(i)
   Local a$, x
   x = ov(i)
-  If ot(i) <> VARIABLE Then
+  If ot(i) <> &b10 Then ' &b10 = VARIABLE
     fmt_operand$ = "#" + lpad$(Hex$(x), 2, "0")
     Exit Function
   EndIf
@@ -248,7 +248,7 @@ End Function
 
 Function fmt_call_operands$()
   Local a$, i
-  If ot(0) = VARIABLE Then
+  If ot(0) = &b10 Then ' &b10 = VARIABLE
     a$ = fmt_operand$(i)
   Else
     a$ = Hex$(2 * ov(0))
@@ -282,7 +282,7 @@ End Function
 
 Function fmt_store_operands$()
   Local a$, i
-  If ot(0) = VARIABLE Then Error "Unexpected VARIABLE operand"
+  If ot(0) = &b10 Then Error "Unexpected VARIABLE operand"
   a$ = a$ + fmt_store_value$(ov(0))
   For i = 1 To onum - 1
     a$ = a$ + ", " + fmt_operand$(i)
