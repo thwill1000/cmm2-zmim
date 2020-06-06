@@ -2,7 +2,7 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 Function file_choose$(d$, fspec$)
-  Local c$, f$, n, m
+  Local c$, f$, i, n, m
 
   c$ = Cwd$
   Chdir d$
