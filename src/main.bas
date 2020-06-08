@@ -13,6 +13,7 @@ Option Explicit On
 #Include "objects.inc"
 #Include "util.inc"
 #Include "dict.inc"
+#Include "zsave.inc"
 #Include "file.inc"
 #Include "random.inc"
 #Include "debug.inc"
@@ -47,8 +48,9 @@ Const S_READ = &b10
 ' String "constants" that I don't want to take up 256 bytes
 Dim ss$(3) Length 20
 Const INSTALL_DIR = 0
-Const STORY_DIR = 1
+Const SAVE_DIR = 1
 Const SCRIPT_DIR = 2
+Const STORY_DIR = 3
 Const STORY = 3
 
 Sub main()
@@ -68,8 +70,9 @@ Sub main()
   Print
 
   ss$(INSTALL_DIR) = "A:/zmim"
-  ss$(STORY_DIR) = ss$(INSTALL_DIR) + "/stories"
+  ss$(SAVE_DIR) = ss$(INSTALL_DIR) + "/saves"
   ss$(SCRIPT_DIR) = ss$(INSTALL_DIR) + "/scripts"
+  ss$(STORY_DIR) = ss$(INSTALL_DIR) + "/stories"
 
   Print "Select a story file from '"; ss$(STORY_DIR); "':"
   Do While f$ = ""

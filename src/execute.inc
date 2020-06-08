@@ -302,13 +302,11 @@ Function ex_0op()
 
   ElseIf oc = &h5 Then
     ' SAVE
-    ex_save()
-    ex_0op = E_UNIMPLEMENTED
+    x = zsave()
 
   ElseIf oc = &h6 Then
     ' RESTORE
-    ex_restore()
-    ex_0op = E_UNIMPLEMENTED
+    x = zsave(1)
 
   ElseIf oc = &h7 Then
     ' RESTART
@@ -538,12 +536,6 @@ Function ex_special(cmd$)
 End Function
 
 Sub ex_show_status()
-End Sub
-
-Sub ex_save()
-End Sub
-
-Sub ex_restore()
 End Sub
 
 Sub ex_restart()
