@@ -492,6 +492,13 @@ Function _read(text_buf, parse_buf)
         wc = wc + 1
         word$ = ""
       EndIf
+      If c <> &h20 Then ' ASCII code for space
+        ad = di_lookup(Chr$(c))
+        ww(parse_buf + 2 + wc * 4, ad)
+        wb(parse_buf + 4 + wc * 4, 1)
+        wb(parse_buf + 5 + wc * 4, i - 1) ' position in 'text_buf'
+        wc = wc + 1
+      EndIf
     Else
       word$ = word$ + Chr$(c)
     EndIf
