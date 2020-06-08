@@ -15,7 +15,8 @@ Function di_lookup(w$)
   ' Convert first 6 characters of w$ into an array of Z-char 'z'
   Local c, i, j, nz, sz, z(9)
   sz = Len(w$) : If sz > 6 Then sz = 6
-  For i = 1 To 6
+  i = 1 ' the index into w$ that is being processed
+  Do While i < 7 And nz < 7
     If i > sz Then
       z(nz) = 5 : nz = nz + 1 ' pad with Z-char 5
     Else
@@ -41,7 +42,8 @@ Function di_lookup(w$)
         EndIf
       EndIf
     EndIf
-  Next i
+    i = i + 1
+  Loop
 
   ' Copy the first 6 Z-chars into 2 x 16-bit words x(0) and x(1)
   Local x(1)
