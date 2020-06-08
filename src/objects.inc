@@ -7,6 +7,9 @@ Const PARENT = 4 : Const SIBLING = 5 : Const CHILD = 6
 ' Gets/sets object attribute.
 Function oattr(o, a, s, x)
   Local ad, m, y
+
+  If o = 0 Then Exit Function ' return 0
+
   ad = rw(&h0A) + 62 + (o - 1) * 9 + a \ 8
   y = rb(ad)
   m = 2^(7 - a Mod 8) ' mask
@@ -28,9 +31,11 @@ End Function
 Function get_next_prop(o, p)
   Local ad, x
 
-  If p = 0 Then
+  If o = 0 Then
+    Exit Function ' return 0
+  ElseIf p = 0 Then
     ad = get_prop_base(o)
-    ad = ad + 1 + 2 * rb(ad) ' Skip length & description
+    ad = ad + 1 + 2 * rb(ad) ' skip length & description
   Else
     ad = get_prop_addr(o, p)
     If ad = 0 Then Error "Property does not exist"
@@ -44,7 +49,7 @@ End Function
 
 Function get_prop_len(ad)
   Local x
-  If ad = 0 Then Error "Property does not exist"
+  If ad = 0 Then Exit Function ' return 0
   x = rb(ad - 1)
   get_prop_len = x\32 + 1
 End Function
