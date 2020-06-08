@@ -460,7 +460,7 @@ Sub _call(st)
 End Sub
 
 Function _read(text_buf, parse_buf)
-  Local ad, c, i, n, word$, s$, sep$, wc
+  Local ad, c, i, n, word$, s$, wc
 
   rtime = rtime - Timer
 
@@ -479,11 +479,10 @@ Function _read(text_buf, parse_buf)
   For i = 1 To n : wb(text_buf + i, Peek(Var s$, i)) : Next i
   wb(text_buf + n + 1, 0)
   s$ = s$ + " "
-  sep$ = " .," + Chr$(34)
 
   For i = 1 To n + 1
     c = Peek(Var s$, i)
-    If Instr(sep$, Chr$(c)) > 0 Then
+    If c = &h20 Or Instr(DICT_SEP$(0), Chr$(c)) > 0 Then
       If Len(word$) > 0 Then
         ad = di_lookup(word$)
         ww(parse_buf + 2 + wc * 4, ad)

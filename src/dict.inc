@@ -2,8 +2,13 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 Sub di_init()
+  Local i
+
   Dim DICT_AD = rw(&h08)                      ' base address of dictionary
   Local ns = rb(DICT_AD)                      ' number of word separators
+  Dim DICT_SEP$(1) Length 5                   ' word separators, use an array
+                                              ' so as not to have 256 byte string
+  For i = 1 To ns : DICT_SEP$(0) = DICT_SEP$(0) + Chr$(rb(DICT_AD + i)) : Next i
   Dim DICT_ENTRY_LEN = rb(DICT_AD + ns + 1)   ' entry length
   Dim DICT_ENTRY_COUNT = rw(DICT_AD + ns + 2) ' number of entries
   Dim DICT_ENTRY_AD = DICT_AD + ns + 4        ' base address for the entries
