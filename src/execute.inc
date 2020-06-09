@@ -445,7 +445,7 @@ End Sub
 
 Sub _return(x)
   Local st, _
-  Do While sp > fp + 2 : _ = pop() : Loop
+  Do While sp > fp + 3 : _ = pop() : Loop
   pc = pop()
   st = pop()
   fp = pop()
@@ -460,7 +460,7 @@ Sub _call(st)
   If oa(0) = 0 Then vset(st, 0) : Exit Sub
 
   push(fp)
-  fp = sp
+  fp = sp - 1
   push(st)
   push(pc)
   pc = 2 * oa(0)

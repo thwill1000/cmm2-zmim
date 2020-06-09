@@ -340,29 +340,25 @@ End Sub
 '  stack - the stack (an array of 32-bit floats)
 Sub dmp_stack(a)
   Local i, tmp_fp, x
+
   Print "TOP: ";
-  If sp = -1 Then Print "*empty*"
+  If sp = 0 Then Print "*empty*"
   tmp_fp = fp
-  For i = sp To 0 Step -1
+
+  For i = sp To 1 Step -1
     If i < sp Then Print "     ";
-    x = stack(i)
+    x = stack(i - 1)
 
-    Print fmt_hex$(x) + "  ";
-
-    If x = -1 Then
-      ' Nothing
-    ElseIf x And &h8000 Then
-      Print lpad$(Str$(x - &h10000), 6, " ") + "  ";
+    If x And &h8000 Then
+      Print fmt_hex$(x); "  "; lpad$(Str$(x - &h10000), 6, " ") + "  ";
     Else
-      Print lpad$(Str$(x), 6, " ") + "  ";
+      Print fmt_hex$(x); "  "; lpad$(Str$(x), 6, " ") + "  ";
     EndIf
 
-    If tmp_fp = -1 Then
+    If tmp_fp = &hFFFF Then
       ' Nothing
-    ElseIf i > tmp_fp + 3 Then
-      Print "L" + lpad$(Str$(i - tmp_fp - 4), 2, "0");
     ElseIf i = tmp_fp Then
-      If x = -1 Then Print "" Else Print "previous fp";
+      Print "previous fp";
       If a <> 0 Then Print : Print String$(35, "-");
       tmp_fp = x
     ElseIf i = tmp_fp + 1 Then
@@ -371,6 +367,9 @@ Sub dmp_stack(a)
       Print "return address";
     ElseIf i = tmp_fp + 3 Then
       Print "num locals";
+    Else
+      Print "L" + lpad$(Str$(i - tmp_fp - 4), 2, "0");
+      ' TODO: Not everything on top of the stack is a local variable
     EndIf
     Print
     If a = 0 And i = fp Then Exit For
