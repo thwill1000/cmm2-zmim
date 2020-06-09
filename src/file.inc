@@ -24,7 +24,7 @@ Function file_choose$(d$, fspec$)
   Sort all$()
 
   ' Display entries
-  If i < 6 Then
+  If n < 6 Then
     For i = 1 To n
       Print "  [" + Format$(i, "%2g") + "] "; all$(i)
     Next i
@@ -32,6 +32,7 @@ Function file_choose$(d$, fspec$)
     For i = 1 To n \ 2
       Print "  [" + Format$(i, "%2g") + "] "; rpad$(all$(i), m + 2);
       Print "  [" + Format$(i + n \ 2, "%2g") + "] "; all$(i + n \ 2)
+      ' TODO: Fix for 'n' odd
     Next i
   EndIf
 

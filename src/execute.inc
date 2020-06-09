@@ -111,7 +111,14 @@ Function ex_2op()
   ElseIf oc = &hD Then
     ' STORE
     ' Note special handing for op with indirect reference to the stack pointer
-    If a = 0 Then stack(sp) = b Else vset(a, b)
+    ' BUG: The one liner doesn't work
+    '      If a = 0 Then _ = pop() : push(b) Else vset(a, b)
+    If a = 0 Then
+      _ = pop()
+      push(b)
+    Else
+      vset(a, b)
+    EndIf
 
   ElseIf oc = &hE Then
     ' INSERT_OBJ: a = object, b = destination
@@ -263,7 +270,12 @@ Function ex_1op()
   ElseIf oc = &hE Then
     ' LOAD
     ' Note special handing for op with indirect reference to the stack pointer
-    If a = 0 Then x = stack(sp) Else x = vget(a)
+    If a = 0 Then
+      x = pop()
+      push(x)
+    Else
+      x = vget(a)
+    EndIf
     vset(st, x)
 
   ElseIf oc = &hF Then
@@ -346,7 +358,7 @@ Function ex_0op()
 End Function
 
 Function ex_varop()
-  Local x
+  Local x, _
 
   If oc = &h0 Then
     ' CALL
@@ -366,7 +378,7 @@ Function ex_varop()
 
   ElseIf oc = &h4 Then
     ' READ
-    Print " ";
+    Print "> ";
     ex_varop = _read(oa(0), oa(1))
 
   ElseIf oc = &h5 Then
@@ -402,7 +414,12 @@ Function ex_varop()
     ' PULL
     x = pop()
     ' Note special handing for op with indirect reference to the stack pointer
-    If oa(0) = 0 Then stack(sp) = x Else vset(oa(0), x)
+    If oa(0) = 0 Then
+      _ = pop()
+      push(x)
+    Else
+      vset(oa(0), x)
+    EndIf
 
   ElseIf oc = &h13 Then
     ' INPUT_STREAM
@@ -427,11 +444,11 @@ Sub _branch(z, br)
 End Sub
 
 Sub _return(x)
-  Local st
-  sp = fp - 1
-  pc = stack(fp + 2)
-  st = stack(fp + 1)
-  fp = stack(fp)
+  Local st, _
+  Do While sp > fp + 2 : _ = pop() : Loop
+  pc = pop()
+  st = pop()
+  fp = pop()
   vset(st, x)
   If ztrace Then dmp_stack()
 End Sub

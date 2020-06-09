@@ -21,7 +21,6 @@ Option Explicit On
 #Include "dmp_dict.inc"
 #Include "dmp_hdr.inc"
 #Include "dmp_mmap.inc"
-#Include "tst_obj.inc"
 
 'Dim BUSY$(1) LENGTH 16
 'BUSY$(0) = "\\\\||||////----"
