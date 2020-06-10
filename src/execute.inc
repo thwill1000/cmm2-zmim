@@ -32,7 +32,7 @@ Function exec(tr)
 End Function
 
 Function ex_2op()
-  Local a, b, x, y, z, _
+  Local a, b, x, y, _
 
   a = oa(0)
   b = oa(1)
@@ -115,13 +115,7 @@ Function ex_2op()
 
   ElseIf oc = &hE Then
     ' INSERT_OBJ: a = object, b = destination
-    x = orel(b, CHILD)         ' original child of destination
-    y = orel(a, SIBLING)       ' original sibling of object
-    z = orel(a, PARENT)        ' original parent of object
-    _ = orel(b, CHILD, 1, a)   ' object is new child of destination
-    _ = orel(a, PARENT, 1, b)  ' destination is new parent of object
-    _ = orel(a, SIBLING, 1, x) ' original child of destination is new sibling of object
-    _ = orel(z, CHILD, 1, y)   ' original sibling of object is new child of original parent
+    ob_insert(a, b)
 
   ElseIf oc = &hF Then
     ' LOADW
@@ -178,7 +172,7 @@ Function ex_2op()
 End Function
 
 Function ex_1op()
-  Local a, x, y, z, _
+  Local a, x
 
   a = oa(0)
 
@@ -230,18 +224,7 @@ Function ex_1op()
 
   ElseIf oc = &h9 Then
     ' REMOVE_OBJ
-    x = orel(a, PARENT)       ' parent of object
-    y = orel(a, SIBLING)      ' sibling of object
-    z = orel(x, CHILD)        ' first child of parent
-    _ = orel(a, PARENT, 1, 0) ' object no longer has parent
-    If z = a Then
-      _ = orel(x, CHILD, 1, y) ' if object was first child then now its sibling is
-    Else
-      Do
-        If orel(z, SIBLING) = a Then _ = orel(z, SIBLING, 1, y) : Exit Do
-        z = orel(z, SIBLING)
-      Loop Until z = 0
-    EndIf
+    ob_remove(a)
 
   ElseIf oc = &hA Then
     ' PRINT_OBJECT

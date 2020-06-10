@@ -103,3 +103,31 @@ Sub print_obj(o)
   ad = get_prop_base(o) + 1
   print_zstring(ad)
 End Sub
+
+Sub ob_insert(o, d)
+  Local c, _
+
+  ob_remove(o)               ' remove object from its original parent
+  c = orel(d, CHILD)         ' original child of destination
+  _ = orel(d, CHILD, 1, o)   ' object is new child of destination
+  _ = orel(o, PARENT, 1, d)  ' destination is new parent of object
+  _ = orel(o, SIBLING, 1, c) ' original child of dest is new sibling of object
+End Sub
+
+Sub ob_remove(o)
+  Local c, p, s, _
+
+  p = orel(o, PARENT)        ' parent of object
+  s = orel(o, SIBLING)       ' sibling of object
+  c = orel(p, CHILD)         ' first child of parent
+  _ = orel(o, PARENT, 1, 0)  ' object no longer has parent
+  _ = orel(o, SIBLING, 1, 0) ' object no longer has sibling
+  If o = c Then
+    _ = orel(p, CHILD, 1, s) ' if object was first child then now its sibling is
+  Else
+    Do
+      If orel(c, SIBLING) = o Then _ = orel(c, SIBLING, 1, s) : Exit Do
+      c = orel(c, SIBLING)
+    Loop Until c = 0
+  EndIf
+End Sub
