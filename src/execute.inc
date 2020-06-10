@@ -311,8 +311,7 @@ Function ex_0op()
 
   ElseIf oc = &h7 Then
     ' RESTART
-    ex_restart()
-    ex_0op = E_UNIMPLEMENTED
+    Run
 
   ElseIf oc = &h8 Then
     ' RET_POPPED
@@ -334,7 +333,6 @@ Function ex_0op()
   ElseIf oc = &hC Then
     ' SHOW_STATUS
     ex_show_status()
-    ex_0op = E_UNIMPLEMENTED
 
   ElseIf oc = &hD Then
     ' VERIFY
@@ -531,6 +529,11 @@ Function ex_special(cmd$)
       Open f$ For Input As #3
       script = script Or S_READ
     EndIf
+    Print ">>";
+    ex_special = E_REPEAT
+
+  ElseIf cmd$ = "*status" Then
+    ex_show_status()
     Print ">";
     ex_special = E_REPEAT
 
@@ -538,7 +541,10 @@ Function ex_special(cmd$)
 End Function
 
 Sub ex_show_status()
+  Local x
+  x = vget(&h10) : print_obj(x) : Print ", ";
+  x = vget(&h11) : Print "Score:"; x; ", ";
+  x = vget(&h12) : Print "Moves:"; x
+  Print
 End Sub
 
-Sub ex_restart()
-End Sub
