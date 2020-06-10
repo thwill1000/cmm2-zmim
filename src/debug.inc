@@ -316,10 +316,10 @@ Sub dmp_op(m$, st, br)
   If st > -1 Then Print " -> "; fmt_store_value$(st);
 
   If br = 0 Then Print : Exit Sub
-  If br And &h10000 Then Print " [TRUE] "; Else Print " [FALSE] ";
-  If (br And &hFFFF) = pc - 2 Then Print "RFALSE" : Exit Sub
-  If (br And &hFFFF) = pc - 1 Then Print "RTRUE" : Exit Sub
-  Print Hex$(br And &hFFFF)
+  If br And &h80000 Then Print " [TRUE] "; Else Print " [FALSE] ";
+  If (br And &h7FFFF) = pc - 2 Then Print "RFALSE" : Exit Sub
+  If (br And &h7FFFF) = pc - 1 Then Print "RTRUE" : Exit Sub
+  Print Hex$(br And &h7FFFF)
 End Sub
 
 Sub dmp_routine(new_pc)
@@ -364,11 +364,13 @@ Sub dmp_stack(a)
     ElseIf i = tmp_fp + 1 Then
       Print "store result";
     ElseIf i = tmp_fp + 2 Then
-      Print "return address";
+      Print "return address (lo)";
     ElseIf i = tmp_fp + 3 Then
+      Print "return address (hi)";
+    ElseIf i = tmp_fp + 4 Then
       Print "num locals";
     Else
-      Print "L" + lpad$(Str$(i - tmp_fp - 4), 2, "0");
+      Print "L" + lpad$(Str$(i - tmp_fp - 5), 2, "0");
       ' TODO: Not everything on top of the stack is a local variable
     EndIf
     Print

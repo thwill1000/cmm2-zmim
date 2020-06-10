@@ -7,7 +7,7 @@ Function vget(i)
   If i = 0 Then
     vget = pop()
   ElseIf i < &h10 Then
-    vget = stack(fp + i + 3)
+    vget = stack(fp + i + 4)
   ElseIf i <= &hFF Then
     vget = rw(GLOBAL_VAR + 2 * (i - &h10))
   Else
@@ -21,7 +21,7 @@ Sub vset(i, x)
   If i = 0 Then
     push(x)
   ElseIf i < &h10 Then
-    stack(fp + i + 3) = x
+    stack(fp + i + 4) = x
   ElseIf i <= &hFF Then
     ww(GLOBAL_VAR + 2 * (i - &h10), x)
   Else

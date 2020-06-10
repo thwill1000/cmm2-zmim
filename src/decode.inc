@@ -131,12 +131,12 @@ Sub decode_var(op)
 End Sub
 
 ' Reads branch offset.
-' @return bits 0-15 - new value for the program counter.
+' @return bits 0-19 - new value for the program counter.
 '                   - if = pc - 2 then -> return false.
 '                   - if = pc - 1 then -> return true.
-'         bit 16    - set = branch on True, unset = branch on False.
+'         bit 20    - set = branch on True, unset = branch on False.
 Function decode_branch()
-  Local a, of
+  Local a, of, x
   a = rp()
   of = a And &b111111 ' bottom 6 bits
 
@@ -145,8 +145,12 @@ Function decode_branch()
     If a And &b100000 Then of = of - 16384 ' check bit 5
   EndIf
 
-  decode_branch = pc + of - 2
-  If a And &b10000000 Then decode_branch = decode_branch Or &h10000 ' check bit 7
+  x = pc + of - 2
+
+  ' If bit 7 of 'a' is set then set bit 20 in the return value
+  If a And &h80 Then x = x Or &h80000
+
+  decode_branch = x
 End Function
 
 Function decode_format$(a$)

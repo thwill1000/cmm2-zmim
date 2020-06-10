@@ -420,8 +420,8 @@ End Function
 
 Sub _branch(z, br)
   Local x
-  If Not (z = (br And &h10000) > 0) Then Exit Sub
-  x = br And &hFFFF ' Bottom 16-bits
+  If Not (z = (br And &h80000) > 0) Then Exit Sub
+  x = br And &h7FFFF ' Bottom 19-bits
   If x = pc - 1 Then _return(1) : Exit Sub
   If x = pc - 2 Then _return(0) : Exit Sub
   pc = x
@@ -429,9 +429,8 @@ End Sub
 
 Sub _return(x)
   Local st, _
-'  Do While sp > fp + 3 : _ = pop() : Loop
-  sp = fp + 3
-  pc = pop()
+  sp = fp + 4
+  pc = pop() * &h10000 + pop()
   st = pop()
   fp = pop()
   vset(st, x)
@@ -447,7 +446,8 @@ Sub _call(st)
   push(fp)
   fp = sp - 1
   push(st)
-  push(pc)
+  push(pc Mod &h10000)
+  push(pc \ &h10000)
   pc = 2 * oa(0)
   nl = rp() ' number of local variables
   push(nl)
