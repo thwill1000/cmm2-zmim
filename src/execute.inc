@@ -111,14 +111,7 @@ Function ex_2op()
   ElseIf oc = &hD Then
     ' STORE
     ' Note special handing for op with indirect reference to the stack pointer
-    ' BUG: The one liner doesn't work
-    '      If a = 0 Then _ = pop() : push(b) Else vset(a, b)
-    If a = 0 Then
-      _ = pop()
-      push(b)
-    Else
-      vset(a, b)
-    EndIf
+    If a = 0 Then st_poke(sp - 1, b) Else vset(a, b)
 
   ElseIf oc = &hE Then
     ' INSERT_OBJ: a = object, b = destination
@@ -270,12 +263,7 @@ Function ex_1op()
   ElseIf oc = &hE Then
     ' LOAD
     ' Note special handing for op with indirect reference to the stack pointer
-    If a = 0 Then
-      x = pop()
-      push(x)
-    Else
-      x = vget(a)
-    EndIf
+    If a = 0 Then x = st_peek(sp - 1) Else x = vget(a)
     vset(st, x)
 
   ElseIf oc = &hF Then
@@ -333,7 +321,7 @@ Function ex_0op()
 
   ElseIf oc = &h9 Then
     ' POP - discards top item in stack
-    x = pop()
+    sp = sp - 1
 
   ElseIf oc = &hA Then
     ' QUIT
@@ -415,12 +403,7 @@ Function ex_varop()
     ' PULL
     x = pop()
     ' Note special handing for op with indirect reference to the stack pointer
-    If oa(0) = 0 Then
-      _ = pop()
-      push(x)
-    Else
-      vset(oa(0), x)
-    EndIf
+    If oa(0) = 0 Then st_poke(sp - 1, x) Else vset(oa(0), x)
 
   ElseIf oc = &h13 Then
     ' INPUT_STREAM
@@ -446,7 +429,8 @@ End Sub
 
 Sub _return(x)
   Local st, _
-  Do While sp > fp + 3 : _ = pop() : Loop
+'  Do While sp > fp + 3 : _ = pop() : Loop
+  sp = fp + 3
   pc = pop()
   st = pop()
   fp = pop()

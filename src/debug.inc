@@ -345,9 +345,9 @@ Sub dmp_stack(a)
   If sp = 0 Then Print "*empty*"
   tmp_fp = fp
 
-  For i = sp To 1 Step -1
-    If i < sp Then Print "     ";
-    x = stack(i - 1)
+  For i = sp - 1 To 0 Step -1
+    If i < sp - 1 Then Print "     ";
+    x = st_peek(i)
 
     If x And &h8000 Then
       Print fmt_hex$(x); "  "; lpad$(Str$(x - &h10000), 6, " ") + "  ";

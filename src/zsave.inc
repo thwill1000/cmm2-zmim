@@ -144,7 +144,7 @@ Function zsave(res)
 
     ' Write stack (2 bytes / entry)
     For i = 0 To sp - 1
-      Print #1, Chr$(stack(i) \ 256); Chr$(stack(i) Mod 256);
+      Print #1, Chr$(st_peek(i) \ 256); Chr$(st_peek(i) Mod 256);
     Next i
 
     ' Write dynamic memory
