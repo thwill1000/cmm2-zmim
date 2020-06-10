@@ -411,6 +411,10 @@ Function ex_varop()
     ' OUTPUT_STREAM
     ex_varop = E_UNIMPLEMENTED
 
+  ElseIf oc = &h15 Then
+    ' SOUND_EFFECT
+    ' TODO
+
   Else
     ex_varop = E_UNKNOWN
   EndIf
@@ -529,7 +533,7 @@ Function ex_special(cmd$)
       Open f$ For Input As #3
       script = script Or S_READ
     EndIf
-    Print ">>";
+    Print ">";
     ex_special = E_REPEAT
 
   ElseIf cmd$ = "*status" Then
