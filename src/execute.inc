@@ -315,6 +315,7 @@ Function ex_0op()
   ElseIf oc = &h5 Then
     ' SAVE
     x = zsave()
+    _branch(x, br)
 
   ElseIf oc = &h6 Then
     ' RESTORE
