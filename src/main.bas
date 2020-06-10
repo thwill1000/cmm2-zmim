@@ -107,6 +107,12 @@ Sub main()
   If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
   Print
 
+  ' Hack header bits
+  x = rb(&h01)
+  x = x Or  &b00010000 ' set bit 4 - status line not available
+  x = x And &b10011111 ' clear bits 5 & 6 - no screen-splitting, fixed-pitch font
+  wb(&h01, x)
+
   decode_init()
   di_init()
 
