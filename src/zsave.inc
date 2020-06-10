@@ -68,6 +68,50 @@ Function zsave(res)
     Line Input #1, line$(2)
     Line Input #1, f$
     Print "Restoring '" + f$ + "' ..."
+
+    Local err, new_pc, new_fp, new_sp, new_sz
+
+    ' Read program counter (3 bytes)
+    ' Read frame pointer (2 bytes)
+    ' Read stack size (2 bytes)
+    ' Read dynamic memory size, (2 bytes)
+    f$ = Input$(9, #1)
+    new_pc = Peek(Var f$, 1) * 65536 + Peek(Var f$, 2) * 256 + Peek(Var f$, 3)
+    new_fp = Peek(Var f$, 4) * 256 + Peek(Var f$, 5)
+    new_sp = Peek(Var f$, 6) * 256 + Peek(Var f$, 7)
+    new_sz = Peek(Var f$, 8) * 256 + Peek(Var f$, 9)
+    If new_pc < 0 Or new_pc >= FILE_LEN Then err = 1
+    If new_fp < 0 Or new_fp > new_sp Then err = 2
+    If new_sp < 0 Or new_sp > 511 Then err = 3
+    If new_sz <> BASE_STATIC Then err = 4
+
+    If err = 0 Then
+      pc = new_pc
+      fp = new_fp
+      sp = new_sp
+
+      ' Read stack (2 bytes / entry)
+      Local j
+      For j = 0 To sp - 1
+        f$ = Input$(2, #1)
+        stack(j) = Peek(Var f$, 1) * 256 + Peek(Var f$, 2)
+      Next j
+
+      ' Read dynamic memory
+      Local ad = 0
+      Do
+        f$ = Input$(254, #1)
+        For j = 1 To Len(f$)
+          wb(ad) = Peek(Var f$, j)
+          ad = ad + 1
+        Next j
+      Loop Until Len(f$) = 0
+
+      If ad <> BASE_STATIC Then Error "Unrecoverable restore error!"
+    Else
+      Print "Save file is invalid (error"; err; ")"
+    EndIf
+
   Else
     Print "Saving '" + f$ + "' ..."
     Open "game" + Str$(i) + ".sav" For Output As #1
@@ -75,6 +119,23 @@ Function zsave(res)
     Print #1, "1"
     Print #1, Date$ + " " + Time$
     Print #1, f$
+
+    ' Write program counter (3 bytes)
+    Print #1, Chr$(pc \ 65536); Chr$(pc \ 256); Chr$(pc Mod 256);
+    ' Write frame pointer (2 bytes)
+    Print #1, Chr$(fp \ 256); Chr$(fp Mod 256);
+    ' Write stack size (2 bytes)
+    Print #1, Chr$(sp \ 256); Chr$(sp Mod 256);
+    ' Write dynamic memory size (2 bytes)
+    Print #1, Chr$(BASE_STATIC \ 256); Chr$(BASE_STATIC Mod 256);
+    ' Write stack (2 bytes / entry)
+    For i = 0 To sp - 1
+      Print #1, Chr$(stack(i) \ 256); Chr$(stack(i) Mod 256);
+    Next i
+    ' Write dynamic memory
+    For i = 0 To BASE_STATIC - 1
+       Print #1, Chr$(rb(i));
+    Next i
   EndIf
 
   If i > 0 Then Close #1 : zsave = 1
