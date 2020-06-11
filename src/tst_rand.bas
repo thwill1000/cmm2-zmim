@@ -1,9 +1,6 @@
 Option Explicit On
+Option Default Integer
 
-'#Include "memory_fast.inc"
-'#Include "dict.inc"
-'#Include "zstring.inc"
-'#Include "util.inc"
 #Include "execute.inc"
 
 Dim i, buckets(40), x, y

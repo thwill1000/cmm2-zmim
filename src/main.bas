@@ -4,8 +4,7 @@
 Option Explicit On
 Option Default Integer
 
-'#Include "memory.inc"
-#Include "memory_fast.inc"
+#Include "mem_cmm2.inc"
 #Include "stack.inc"
 #Include "variable.inc"
 #Include "decode.inc"

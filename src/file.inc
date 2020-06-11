@@ -31,6 +31,7 @@ Function file_choose$(d$, fspec$)
     col = 0
     For i = 1 To n
       x = 1 + (i \ 2) + col * (n \ 2)
+      If x > n Then Exit For
       Print "  [" + Format$(x, "%2g") + "] "; rpad$(all$(x), m + 2);
       If col = 1 Then Print
       col = (col + 1) Mod 2

@@ -1,6 +1,7 @@
 Option Explicit On
+Option Default Integer
 
-#Include "memory_fast.inc"
+#Include "mem_cmm2.inc"
 #Include "dict.inc"
 #Include "zstring.inc"
 #Include "util.inc"
