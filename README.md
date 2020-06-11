@@ -1,7 +1,7 @@
 # Z-MIM
-Z-MIM is a Z-Machine Interpreter that allows the classic 1980's Infocom interactive fiction titles to be played on the Colour Maximite 2.
+A Z-machine interpreter for the Colour Maximite 2.
 
-It is written in MMBasic 5.05
+Written in MMBasic 5.05 by Thomas Hugo Williams in 2019-2020
 
 ## How do I run it?
 
@@ -109,4 +109,6 @@ The Z-machine standard documents can be found at https://www.inform-fiction.org/
 
 **8. How do I contact the author ?**
 
-The author can be contacted as user "thwill1000" on via https://github.com or as user "thwill" on https://www.thebackshed.com/forum/index.php
+The author can be contacted via:
+ - https://github.com as user "thwill1000"
+ - https://www.thebackshed.com/forum/index.php as user "thwill"
