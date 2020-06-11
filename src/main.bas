@@ -45,12 +45,16 @@ Const S_WRITE = &b01
 Const S_READ = &b10
 
 ' String "constants" that I don't want to take up 256 bytes
-Dim ss$(3) Length 20
+Dim ss$(4) Length 20
 Const INSTALL_DIR = 0
 Const SAVE_DIR = 1
 Const SCRIPT_DIR = 2
 Const STORY_DIR = 3
-Const STORY = 3
+Const STORY = 4
+
+Const DESCRIPTION$ = "ZMIM: a Z-Machine Interpreter for the Maximite"
+Const VERSION$ = "Release 1 for Colour Maximite 2, MMBasic 5.05"
+Const COPYRIGHT$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 
 Sub main()
   Local f$, i, old_pc, state, s$, x
@@ -58,14 +62,17 @@ Sub main()
   Mode 1
   Cls
 
-  Print "             Sockpuppet Studios"
-  Print "                  presents"
-  Print "       A Toy Plastic Trumpet Production"
+  Print "        ______     __  __ _____ __  __ "
+  Print "       |___  /    |  \/  |_   _|  \/  |"
+  Print "          / /_____| \  / | | | | \  / |"
+  Print "         / /______| |\/| | | | | |\/| |"
+  Print "        / /__     | |  | |_| |_| |  | |"
+  Print "       /_____|    |_|  |_|_____|_|  |_|"
   Print
-  Print "ZMIM: a Z-Machine Interpreter for the Maximite"
+  Print DESCRIPTION$
   Print
-  Print "Copyright (c) 2019-20 Thomas Hugo Williams"
-  Print "Version 0.1 for Colour Maximite 2, MMBasic 5.05"
+  Print COPYRIGHT$
+  Print VERSION$
   Print
 
   ss$(INSTALL_DIR) = "A:/zmim"

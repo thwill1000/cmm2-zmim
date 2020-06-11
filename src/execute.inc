@@ -506,8 +506,22 @@ End Function
 Function ex_special(cmd$)
   Local f$, _
 
+  ex_special = E_REPEAT
+
   If cmd$ = "*break" Then
     ex_special = E_BREAK
+
+  ElseIf cmd$ = "*credits" Then
+    Print
+    Print DESCRIPTION$
+    Print "A Toy Plastic Trumpet Production for Sockpuppet Studios"
+    Print COPYRIGHT$
+    Print VERSION$
+    Print
+    Print "Programmer:           Thomas Hugo Williams"
+    Print "Z-Machine Technical:  Fredrik Ramsberg"
+    Print "Consultant"
+    Print
 
   ElseIf cmd$ = "*replay" Then
     Print "Select a script file from '"; ss$(SCRIPT_DIR); "/"; ss$(STORY); "':"
@@ -516,15 +530,18 @@ Function ex_special(cmd$)
       Open f$ For Input As #3
       script = script Or S_READ
     EndIf
-    Print ">";
-    ex_special = E_REPEAT
 
   ElseIf cmd$ = "*status" Then
     ex_show_status()
-    Print ">";
-    ex_special = E_REPEAT
+
+  Else
+    ' Let the game's parser deal with the command
+    ex_special = E_OK
 
   EndIf
+
+  If ex_special = E_REPEAT Then Print ">";
+
 End Function
 
 Sub ex_show_status()
