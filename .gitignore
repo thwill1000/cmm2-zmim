@@ -1,5 +1,5 @@
 zmim.code-workspace
-dat/
+zmim-r*
 stories/*
 !stories/minizork.z3
 !stories/sampler1.z3
