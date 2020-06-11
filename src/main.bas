@@ -15,7 +15,6 @@ Option Explicit On
 #Include "dict.inc"
 #Include "zsave.inc"
 #Include "file.inc"
-#Include "random.inc"
 #Include "debug.inc"
 #Include "dmp_abrv.inc"
 #Include "dmp_dict.inc"

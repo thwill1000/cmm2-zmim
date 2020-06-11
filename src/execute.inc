@@ -365,15 +365,7 @@ Function ex_varop()
     ' RANDOM
     x = oa(0)
     If x > 32767 Then x = x - 65536
-    If x = 0 Then
-      x = cmm2rnd(-1) ' Reseed from Timer
-      x = 0
-    ElseIf x < 0 Then
-      x = cmm2rnd(Abs(x))
-      x = 0
-    Else
-      x = 1 + Cint(cmm2rnd() * x)
-    EndIf
+    x = ex_random(x)
     vset(st, x)
 
   ElseIf oc = &h8 Then
@@ -542,6 +534,25 @@ Function ex_special(cmd$)
 
   If ex_special = E_REPEAT Then Print ">";
 
+End Function
+
+Function ex_random(range)
+  Static x% = 7
+  Static a% = 1103515245 ' a%, c% and m% are same values as used by glibc
+  Static c% = 12345
+  Static m% = 2^31
+
+  If range = 0 Then
+    x% = Timer
+    Exit Function
+  ElseIf range < 0 Then
+    x% = Abs(range)
+    Exit Function
+  EndIf
+
+  x% = (a% * x% + c%) mod m%
+
+  ex_random = 1 + CInt((range - 1) * (x% / m%))
 End Function
 
 Sub ex_show_status()
