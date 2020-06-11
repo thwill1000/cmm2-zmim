@@ -46,12 +46,11 @@ Sub ww(a, x)
 End Sub
 
 Sub mem_init(f$)
-  Local ad, i, s$, sz
+  Local ad, i, j, s$, sz
 
   Print "Loading '"; f$; "'"
 
-' This doesn't seem to work given an absolute path
-'  sz = mm.info(filesize f$)
+  sz = mm.info(filesize f$)
 
   ' Storage for z-machine memory.
   ' Each z-machine byte is stored as a MMBasic float (4 bytes).
@@ -60,19 +59,21 @@ Sub mem_init(f$)
 
   Open f$ For Input As #1
 
+  Print "0% ... ";
+  j = 1
   Do
     s$ = Input$(255, #1)
     If Len(s$) = 0 Then Exit Do
     For i = 1 To Len(s$)
       m(ad) = Peek(Var s$, i)
       ad = ad + 1
-      If ad Mod 10000 = 0 Then Print "Read"; ad; " bytes"
     Next i
+    If ad > j * sz / 10 Then Print Str$(j * 10) + "% ... "; : j = j + 1
   Loop
+  Print "100%"
+  Print "Read"; ad; " bytes"
 
   Close #1
-
-  Print "Read"; ad; " bytes"
 
   ' Read header data.
   Dim pc = m(&h06) * 256 + m(&h07)
