@@ -522,6 +522,7 @@ Function ex_special(cmd$)
       Open f$ For Input As #3
       script = script Or S_READ
     EndIf
+    Print
 
   ElseIf cmd$ = "*status" Then
     ex_show_status()

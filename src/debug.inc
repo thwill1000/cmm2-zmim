@@ -69,6 +69,7 @@ Function debug()
 
     ElseIf cmd$(0) = "c" Then
       ' Continue
+      Print
       If oc = &h4 And op >= &hE0 Then Print ">"; ' Display READ prompt
       debug = E_OK
 

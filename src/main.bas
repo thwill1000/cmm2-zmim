@@ -51,7 +51,7 @@ Const SCRIPT_DIR = 2
 Const STORY_DIR = 3
 Const STORY = 4
 
-Const DESCRIPTION$ = "ZMIM: a Z-Machine Interpreter for the Maximite"
+Const DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
 Const VERSION$ = "Release 1 for Colour Maximite 2, MMBasic 5.05"
 Const COPYRIGHT$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 
@@ -105,16 +105,16 @@ Sub main()
   For i = Len(ss$(SCRIPT_DIR)) To Len(f$)
     If Peek(Var f$, i) = Asc(":") Then Poke Var f$, i, Asc("-")
   Next i
-  Print "Write transcript to '"; f$; "' [Y|n]";
+  Print "Write script to '"; f$; "' [Y|n]";
   Input s$
   If LCase$(s$) <> "n" Then
     Open f$ For Output As #2
     script = S_WRITE
   EndIf
 
-  Input "Start in debugger [Y|n]"; s$
-  If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
-  Print
+'  Input "Start in debugger [Y|n]"; s$
+'  If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
+   Print
 
   ' Hack header bits
   x = rb(&h01)
