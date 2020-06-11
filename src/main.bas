@@ -90,6 +90,15 @@ Sub main()
   mem_init(f$)
   Print
 
+  ' Ensure subdirectories for the current story exist in "saves/" and "scripts/"
+  ChDir(ss$(SAVE_DIR))
+  s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error
+  s$ = Dir$(ss$(STORY), Dir) : If s$ = "" Then MkDir(ss$(STORY))
+  ChDir(ss$(SCRIPT_DIR))
+  s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error
+  s$ = Dir$(ss$(STORY), Dir) : If s$ = "" Then MkDir(ss$(STORY))
+  ChDir(ss$(INSTALL_DIR))
+
   ' Jump through hoops to create the name of the script file
   f$ = ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "/"
   f$ = f$ + ss$(STORY) + "-" + Date$ + "-" + Time$ + ".scr"
@@ -99,12 +108,6 @@ Sub main()
   Print "Write transcript to '"; f$; "' [Y|n]";
   Input s$
   If LCase$(s$) <> "n" Then
-    ChDir(ss$(SCRIPT_DIR)))
-    s$ = Dir$(ss$(STORY), File)
-    If s$ <> "" Then Error
-    s$ = Dir$(ss$(STORY), Dir)
-    If s$ = "" Then MkDir(ss$(STORY))
-    ChDir(ss$(INSTALL_DIR))
     Open f$ For Output As #2
     script = S_WRITE
   EndIf

@@ -9,7 +9,7 @@
 ' @param  res  set 0 to save and 1 to restore
 ' @return      1 on success, 0 on failure or if cancelled
 Function zsave(res)
-  Local exists(10), i, old$, s$, s2$(2) Length 40
+  Local exists(10), i, s$, s2$(2) Length 40
 
   If res Then
     Print "Select game to restore:"
@@ -17,14 +17,7 @@ Function zsave(res)
     Print "Select save game slot:"
   EndIf
 
-  old$ = Cwd$
-
-  Chdir ss$(SAVE_DIR)
-  s$ = Dir$(ss$(STORY), File)
-  If s$ <> "" Then Error "Unexpected file"
-  s$ = Dir$(ss$(STORY), Dir)
-  If s$ = "" Then MkDir(ss$(STORY))
-  Chdir ss$(STORY)
+  ChDir ss$(SAVE_DIR) + "/" + ss$(STORY)
   For i = 1 To 10
     s$ = Dir$("game" + Str$(i) + ".sav")
     Print "  [" + Format$(i, "%2g") + "] ";
@@ -42,7 +35,7 @@ Function zsave(res)
       Close #1
     EndIf
   Next i
-  Chdir old$
+  ChDir ss$(INSTALL_DIR)
 
   Line Input "Game number? ", s$
   i = Val(s$)

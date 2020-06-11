@@ -2,10 +2,10 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 Function file_choose$(d$, fspec$)
-  Local c$, col, f$, i, n, m, x
+  Local col, f$, i, m, n, old$, x
 
-  c$ = Cwd$
-  Chdir d$
+  old$ = Cwd$
+  ChDir d$
 
   ' Count number of entries 'n' and their maximum length 'm'
   f$ = Dir$(fspec$)
@@ -42,6 +42,6 @@ Function file_choose$(d$, fspec$)
   Line Input "File number? ", f$
   If Val(f$) <> 0 Then file_choose$ = d$ + "/" + all$(Val(f$))
 
-  Chdir c$ ' Restore working directory
+  ChDir old$ ' Restore working directory
 End Function
 
