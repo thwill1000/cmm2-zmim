@@ -11,6 +11,7 @@ mkdir -p $base/src
 mkdir -p $base/stories
 
 cp LICENSE $base
+cp README.md $base
 cp zmim.bas $base
 cp -R src/* $base/src
 cp stories/minizork.z3 $base/stories
