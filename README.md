@@ -78,7 +78,7 @@ Perhaps.
 
 I started this before the Colour Maximite 2 was announced and have tried to ensure I have only used backward compatible features and have kept the memory footprint low.
 
-However a good Z-machine implementations needs to run a Z-machine instruction in ~1 ms. Currently Z-MIM takes ~2 ms per instruction and early tests on the original Colour Maximite suggests ~50 ms per instruction, so it may work, but most likely will be unplayable ... or at least comparable to like playing it over a very slow dial-up modem.
+However a good Z-machine implementations needs to run a Z-machine instruction in ~1 ms. Currently Z-MIM takes ~2 ms per instruction and early tests on the original Colour Maximite suggests ~50 ms per instruction, so it may work, but most likely will be unplayable ... or at least comparable to playing it over a very slow dial-up modem.
 
 **3. Will you be supporting .z4, .z5, etc. story formats ?**
 
