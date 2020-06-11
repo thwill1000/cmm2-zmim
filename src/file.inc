@@ -2,7 +2,7 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 Function file_choose$(d$, fspec$)
-  Local c$, f$, i, n, m
+  Local c$, col, f$, i, n, m, x
 
   c$ = Cwd$
   Chdir d$
@@ -14,7 +14,6 @@ Function file_choose$(d$, fspec$)
     If Len(f$) > m Then m = Len(f$)
     f$ = Dir$()
   Loop
-  If n > 20 Then n = 21
 
   ' Create sorted array of entries 'all$'.
   ' Element 0 is always empty, even after the sort.
@@ -29,15 +28,14 @@ Function file_choose$(d$, fspec$)
       Print "  [" + Format$(i, "%2g") + "] "; all$(i)
     Next i
   Else
-    For i = 1 To n \ 2
-      Print "  [" + Format$(i, "%2g") + "] "; rpad$(all$(i), m + 2);
-      Print "  [" + Format$(i + n \ 2, "%2g") + "] "; all$(i + n \ 2)
-      ' TODO: Fix for 'n' odd
+    col = 0
+    For i = 1 To n
+      x = 1 + (i \ 2) + col * (n \ 2)
+      Print "  [" + Format$(x, "%2g") + "] "; rpad$(all$(x), m + 2);
+      If col = 1 Then Print
+      col = (col + 1) Mod 2
     Next i
-  EndIf
-
-  If n = 21 Then
-    Print "  There are more than 20 files, only the first 20 are shown."
+    If col = 1 Then Print
   EndIf
 
   Line Input "File number? ", f$
