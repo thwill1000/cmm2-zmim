@@ -1,5 +1,5 @@
 # Z-MIM
-A Z-machine interpreter for the Colour Maximite 2.
+A Z-machine interpreter to allow the classic Infocom works of interactive fiction to be played on the Colour Maximite 2.
 
 Written in MMBasic 5.05 by Thomas Hugo Williams in 2019-2020
 
@@ -11,7 +11,7 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2019-2020
 
 ## Story Files
 
-The games/adventures for Z-Machines are called "story files" and come in several versions z1, z2 z3, .. z8
+The games/adventures for Z-machines are called "story files" and come in several versions z1, z2 z3, .. z8
 
 Z-MIM currently only supports z3 format as used by the classic 1980's Infocom games.
 
