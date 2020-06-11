@@ -11,7 +11,7 @@ It is written in MMBasic 5.05
 
 ## Story Files
 
-The games/adventures for Z-Machines are called "story files" and come in several versions z1, z2 .. z8
+The games/adventures for Z-Machines are called "story files" and come in several versions z1, z2 z3, .. z8
 
 Z-MIM currently only supports z3 format as used by the classic 1980's Infocom games.
 
@@ -22,17 +22,24 @@ Z-MIM is distributed with four free story files that Infocom created:
  - sampler2.z3 - Samples of Zork I, Leather Goddesses of Phobos, and Trinity
 
 Other story files can be found legitimately on the internet:
- - [hhgg.z3](http://www.douglasadams.com/creations/hhgg.z3) - The Hitchikers Guide To The Galaxy
+ - hhgg.z3 - The Hitchikers Guide To The Galaxy
+    - http://www.douglasadams.com/creations/hhgg.z3
     - link is to a file on the official Douglas Adams website. 
- - [advent.z3](https://ifarchive.org/if-archive/games/zcode/advent.z3) - Adventure aka Colossal Cave, the original 350 points version ported to ZIL by Jesse McGrew, based on earlier work by Graham Nelson and Dave Baggett, with some elements of the original Fortran version restored.
- - [catseye.z3](https://ifarchive.org/if-archive/games/zcode/catseye.z3) - Cat's Eye, Miniventure #2 by Dave Bernazzani, release 3. "When your uncle Xevion asks you for a favor, you simply can't refuse. But what mysteries lie in his strange house?"
- - [curses-r10.z3](https://ifarchive.org/if-archive/games/zcode/old/curses-r10.z3) - Curses, An Interactive Diversion by Graham Nelson.
- - [dejavu.z3](https://ifarchive.org/if-archive/games/zcode/dejavu.z3) - Deja Vu, An Interactive Demonstration by Graham Nelson.
- - [gussdeath.z3](https://ifarchive.org/if-archive/games/zcode/gussdeath.z3) - Guss's Death, an Exercise in Interactive Fiction, by Kyle Frownfelter.
- - [moonglow.z3](https://ifarchive.org/if-archive/games/zcode/moonglow.z3) - Moonglow, Miniventure #1 by Dave Bernazzani, release 3. "What do you do when a mysterious orb crash-lands in your field? It's not your typical day at the farm!"
- - and others ?
+ - curses-r10.z3 - Curses, An Interactive Diversion by Graham Nelson.
+    - https://ifarchive.org/if-archive/games/zcode/old/curses-r10.z3
+    - this is highly regarded.
+ - advent.z3 - Adventure aka Colossal Cave, the original 350 points version ported to ZIL by Jesse McGrew, based on earlier work by Graham Nelson and Dave Baggett, with some elements of the original Fortran version restored.
+    - https://ifarchive.org/if-archive/games/zcode/advent.z3
+ - catseye.z3 - Cat's Eye, Miniventure #2 by Dave Bernazzani, release 3. "When your uncle Xevion asks you for a favor, you simply can't refuse. But what mysteries lie in his strange house?"
+    - https://ifarchive.org/if-archive/games/zcode/catseye.z3
+ - dejavu.z3 - Deja Vu, An Interactive Demonstration by Graham Nelson.
+    - https://ifarchive.org/if-archive/games/zcode/dejavu.z3
+ - gussdeath.z3 - Guss's Death, an Exercise in Interactive Fiction, by Kyle Frownfelter.
+    - https://ifarchive.org/if-archive/games/zcode/gussdeath.z3
+ - moonglow.z3 - Moonglow, Miniventure #1 by Dave Bernazzani, release 3. "What do you do when a mysterious orb crash-lands in your field? It's not your typical day at the farm!"
+    - https://ifarchive.org/if-archive/games/zcode/moonglow.z3
 
-The names of the story files for the 1980's Infocom classics are:
+The z3 compatible Infocom classic stories are:
  - ballyhoo.z3 - Ballyhoo
  - cutthroat.z3 - Cuthroats
  - enchanter.z3 - Enchanter
