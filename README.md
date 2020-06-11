@@ -85,7 +85,7 @@ Perhaps.
 
 I started developing this on the original Colour Maximite and when I switched to the CMM2 I tried to ensure I kept the memory footprint small and used only backward compatible features (or those that could be easily translated).
 
-However a good Z-machine implementations needs to run at more than 1000 Z-machine instructions per second. Currently Z-MIM runs at about 550 instructions per second and early tests on the original Colour Maximite suggest it can manage about 20 instructions per second, so it may be possible to port back, but most likely will be unplayable ... or at least comparable to playing it over a very slow dial-up modem.
+However a good Z-machine implementation needs to run at more than 1000 Z-machine instructions per second. Currently Z-MIM runs at about 550 instructions per second and early tests on the original Colour Maximite suggest it can manage about 20 instructions per second, so it may be possible to port back, but most likely will be unplayable ... or at least comparable to playing it over a very slow dial-up modem.
 
 **3. Will you be supporting .z4, .z5, etc. story formats ?**
 
