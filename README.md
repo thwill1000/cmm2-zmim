@@ -6,7 +6,7 @@ It is written in MMBasic 5.05
 ## How do I run it?
 
  - Copy all the files to ```A:/ZMIM/```
-    - it needs to be this directory.
+    - to run from a different directory you need to edit the ```INSTALL_DIR``` string in ```src/main.bas```.
  - `run "zmim.bas"`
 
 ## Story Files
@@ -70,6 +70,8 @@ Release 1 has the following limitations:
 
 **1. What is a Colour Maximite 2 ?**
 
+The Colour Maximite 2 is an as yet not publicly announced homage to 1980's and early 1990's micro-computers.
+
 **2. Will you be supporting the original Colour Maximite / Mono Maximite ?**
 
 **3. Will you be supporting .z4, .z5, etc. story formats ?**
@@ -83,9 +85,3 @@ Release 1 has the following limitations:
 **7. How do I find out more about the Z-machine ?**
 
 **8. How do I contact the author ?**
-
-##### Footnotes
-
-<sup>1</sup> Currently only for version 3 files.
-
-<sup>2</sup> The Colour Maximite is limited to Maximite BASIC v4.5, but its close cousin the Micromite micro-controller runs MMBasic v5 which does allow embedded C and MIPS assembler routines.
