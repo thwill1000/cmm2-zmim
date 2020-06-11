@@ -70,18 +70,36 @@ Release 1 has the following limitations:
 
 **1. What is a Colour Maximite 2 ?**
 
-The Colour Maximite 2 is an as yet not publicly announced homage to 1980's and early 1990's micro-computers.
+The Colour Maximite 2 is an as yet not widely publicised homage to 1980's and early 1990's micro-computers - see https://www.thebackshed.com/forum/ViewTopic.php?FID=16&TID=12105
 
 **2. Will you be supporting the original Colour Maximite / Mono Maximite ?**
 
+Perhaps.
+
+I started this before the Colour Maximite 2 was announced and have tried to ensure I have only used backward compatible features and have kept the memory footprint low.
+
+However a good Z-machine implementations needs to run a Z-machine instruction in ~1 ms. Currently Z-MIM takes ~2 ms per instruction and early tests on the original Colour Maximite suggests ~50 ms per instruction, so it may work, but most likely will be unplayable ... or at least comparable to like playing it over a very slow dial-up modem.
+
 **3. Will you be supporting .z4, .z5, etc. story formats ?**
+
+Perhaps. It depends on whether anyone finds this useful, or how bored I get.
 
 **4. What possessed you to write this in BASIC ?**
 
+This is currently the only option on the Colour Maximite 2 unless you want to rewrite/replace the firmware to include an ARM Z-machine implementation.
+
 **5. How do I play these games ?**
+
+Try running ```tutorial.z3``` or read something like https://www.z-machine-matter.com/playing.html 
 
 **6. How do I find out more about Interactive Fiction ?**
 
+Try visiting https://intfiction.org/
+
 **7. How do I find out more about the Z-machine ?**
 
+The Z-machine standard documents can be found at https://www.inform-fiction.org/zmachine/standards/
+
 **8. How do I contact the author ?**
+
+The author can be contacted via github or as user "thwill" on https://www.thebackshed.com/forum/index.php
