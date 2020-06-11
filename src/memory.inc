@@ -3,7 +3,7 @@
 
 Const PAGE_SIZE = 512
 Const NUM_PHYSICAL_PAGES = 80
-Const NUM_VIRTUAL_PAGES = 128 * 1024 / PAGE_SIZE
+Const NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
 
 ' Memory addresses below this are read on startup and not swapped in/out
 ' - not properly set until the z-machine header is read

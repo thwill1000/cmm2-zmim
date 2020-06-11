@@ -2,6 +2,7 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 Option Explicit On
+Option Default Integer
 
 '#Include "memory.inc"
 #Include "memory_fast.inc"

@@ -112,7 +112,7 @@ Sub decode_var(op)
   onum = 4
   x = rp()
   For i = 0 To 3
-    ot(i) = (x And &b11000000) / 64
+    ot(i) = (x And &b11000000) \ 64
     If ot(i) = &b00 Then
       ' LARGE
       ov(i) = rp() * 256 + rp() : oa(i) = ov(i)

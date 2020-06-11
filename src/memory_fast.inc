@@ -68,7 +68,7 @@ Sub mem_init(f$)
       m(ad) = Peek(Var s$, i)
       ad = ad + 1
     Next i
-    If ad > j * sz / 10 Then Print Str$(j * 10) + "% ... "; : j = j + 1
+    If ad > j * sz \ 10 Then Print Str$(j * 10) + "% ... "; : j = j + 1
   Loop
   Print "100%"
   Print "Read"; ad; " bytes"

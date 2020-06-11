@@ -537,22 +537,22 @@ Function ex_special(cmd$)
 End Function
 
 Function ex_random(range)
-  Static x% = 7
-  Static a% = 1103515245 ' a%, c% and m% are same values as used by glibc
-  Static c% = 12345
-  Static m% = 2^31
+  Static x = 7
+  Static a = 1103515245 ' a, c and m are same values as used by glibc
+  Static c = 12345
+  Static m = 2^31
 
   If range = 0 Then
-    x% = Timer
+    x = Timer
     Exit Function
   ElseIf range < 0 Then
-    x% = Abs(range)
+    x = Abs(range)
     Exit Function
   EndIf
 
-  x% = (a% * x% + c%) mod m%
+  x = (a * x + c) Mod m
 
-  ex_random = 1 + CInt((range - 1) * (x% / m%))
+  ex_random = 1 + CInt((range - 1) * (x / m))
 End Function
 
 Sub ex_show_status()
