@@ -1,17 +1,13 @@
 # Z-MIM
-A Z-Machine Interpreter for the Colour Maximite
+Z-MIM is a Z-Machine Interpreter that allows the classic 1980's Infocom interactive fiction titles to be played on the Colour Maximite 2.
 
-ZMIM is an attempt to write a Z-Machine Interpreter<sup>1</sup> that runs on the
-[Colour Maximite](https://geoffg.net/maximite.html) computer.
+It is written in MMBasic 5.05
 
-**It is in its very early stages and completely unusable at the moment.**
+## How do I run it?
 
-The Colour Maximite is an unusual computer in that it is a 32-bit PIC
-microcontroller (+ support components) that has been persuaded to
-behave like an 8-bit Retro computer.
-
-Without changing its firmware the only<sup>2</sup> development language available
-for the Colour Maximite is an implementation of BASIC; MMBasic with ~80K of RAM.
+ - Copy all the files to ```A:/ZMIM/```
+    - it needs to be this directory.
+ - `run "zmim.bas"`
 
 ## Story Files
 
