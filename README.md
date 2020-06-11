@@ -57,11 +57,11 @@ The z3 compatible Infocom classic stories are:
  - zork2.z3 - Zork II: The Wizard of Frobozz
  - zork3.z3 - Zork III: The Dungeon Master
  
-*The files for these can be extracted from the several anthologies that have been published over the years, e.g. "The Lost Treasures of Infocom"*
+*These files can be extracted from the several anthologies that have been published over the years, e.g. "The Lost Treasures of Infocom"*
 
 ## Limitations
 
-Release 1 has the following limitations:
+Z-MIM currently has the following limitations:
 
 1. Only works with .z3 format stories.
 2. No status bar:
@@ -83,9 +83,9 @@ The Colour Maximite 2 is an as yet not widely publicised homage to 1980's and ea
 
 Perhaps.
 
-I started this before the Colour Maximite 2 was announced and have tried to ensure I have only used backward compatible features and have kept the memory footprint low.
+I started developing this on the original Colour Maximite and when I switched to the CMM2 I tried to ensure I kept the memory footprint small and used only backward compatible features (or those that could be easily translated).
 
-However a good Z-machine implementations needs to run a Z-machine instruction in ~1 ms. Currently Z-MIM takes ~2 ms per instruction and early tests on the original Colour Maximite suggests ~50 ms per instruction, so it may work, but most likely will be unplayable ... or at least comparable to playing it over a very slow dial-up modem.
+However a good Z-machine implementations needs to run at more than 1000 Z-machine instructions per second. Currently Z-MIM runs at about 550 instructions per second and early tests on the original Colour Maximite suggest it can manage about 20 instructions per second, so it may be possible to port back, but most likely will be unplayable ... or at least comparable to playing it over a very slow dial-up modem.
 
 **3. Will you be supporting .z4, .z5, etc. story formats ?**
 
@@ -97,11 +97,11 @@ This is currently the only option on the Colour Maximite 2 unless you want to re
 
 **5. How do I play these games ?**
 
-Try running ```tutorial.z3``` or read something like https://www.z-machine-matter.com/playing.html 
+Run ```tutorial.z3``` or read something like https://www.z-machine-matter.com/playing.html 
 
 **6. How do I find out more about Interactive Fiction ?**
 
-Try visiting https://intfiction.org/
+Visit https://intfiction.org/
 
 **7. How do I find out more about the Z-machine ?**
 
@@ -109,4 +109,4 @@ The Z-machine standard documents can be found at https://www.inform-fiction.org/
 
 **8. How do I contact the author ?**
 
-The author can be contacted via github or as user "thwill" on https://www.thebackshed.com/forum/index.php
+The author can be contacted as user "thwill1000" on via https://github.com or as user "thwill" on https://www.thebackshed.com/forum/index.php
