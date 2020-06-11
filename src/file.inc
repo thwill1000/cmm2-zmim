@@ -15,6 +15,8 @@ Function file_choose$(d$, fspec$)
     f$ = Dir$()
   Loop
 
+  If n = 0 Then Print "No files found" : ChDir old$ : Exit Function
+
   ' Create sorted array of entries 'all$'.
   ' Element 0 is always empty, even after the sort.
   Local all$(n) LENGTH m
