@@ -69,7 +69,7 @@ Z-MIM currently has the following limitations:
 3. No word wrapping or paging, i.e. "More..."
 4. Non standard support for scripts:
     - user is prompted to write a script when the story starts.
-    - type `*replay` to read-back a script.
+    - type `*replay` to play-back a script.
 5. No split screen, as used (optionally?) by Seastalker.
 6. No sound support, as used (optionally?) by The Lurking Horror.
 
