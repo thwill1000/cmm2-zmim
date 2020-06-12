@@ -1,3 +1,8 @@
+console.inc: (3)
+  cin
+  cout
+  endl
+
 debug.inc: (17)
   debug
   dmp_abrv
@@ -40,7 +45,6 @@ execute.inc: (13)
   _return        -> ex_return
   _call          -> ex_call
   _read          -> ex_read
-  read_line$     -> ex_read_line
   ex_special
   ex_random
   ex_show_status

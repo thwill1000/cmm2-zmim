@@ -4,8 +4,8 @@ Option Default Integer
 #Include "mem_cmm2.inc"
 #Include "dict.inc"
 #Include "zstring.inc"
+#Include "console.inc"
 #Include "util.inc"
-#Include "io.inc"
 
 Dim a, s$, x
 

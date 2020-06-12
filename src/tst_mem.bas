@@ -5,7 +5,7 @@ Option Explicit On
 Option Default Integer
 
 #Include "mem_cmm2.inc"
-#Include "io.inc"
+#Include "console.inc"
 
 Dim ad, buf$, buf_sz, file$, i, x
 

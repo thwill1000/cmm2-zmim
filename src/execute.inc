@@ -441,7 +441,7 @@ Function _read(text_buf, parse_buf)
 
   rtime = rtime - Timer
 
-  s$ = LCase$(read_line$())
+  s$ = LCase$(cin$())
   If Left$(s$, 1) = "*" Then _read = ex_special(s$)
 
   rtime = rtime + Timer
@@ -482,21 +482,6 @@ Function _read(text_buf, parse_buf)
 
   wb(parse_buf + 1, wc)
 
-End Function
-
-Function read_line$()
-  ' Read input from a script
-  If script And S_READ Then
-    Line Input #3, read_line$
-    If read_line$ = "" Then
-      script = script And S_WRITE
-    Else
-      cout(read_line$) : endl()
-    EndIf
-  EndIf
-
-  ' Otherwise read input from the console
-  If Not(script And S_READ) Then Line Input read_line$
 End Function
 
 Function ex_special(cmd$)

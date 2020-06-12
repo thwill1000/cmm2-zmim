@@ -2,7 +2,7 @@ Option Explicit On
 Option Default Integer
 
 #Include "execute.inc"
-#Include "io.inc"
+#Include "console.inc"
 
 Dim i, buckets(40), x, y
 

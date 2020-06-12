@@ -9,7 +9,7 @@ Option Default Integer
 #Include "debug.inc"
 #Include "util.inc"
 #Include "zstring.inc"
-#Include "io.inc"
+#Include "console.inc"
 
 Dim ad, f$, i, o, x, _
 

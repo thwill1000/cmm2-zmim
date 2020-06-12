@@ -14,7 +14,7 @@ Option Default Integer
 #Include "util.inc"
 #Include "dict.inc"
 #Include "zsave.inc"
-#Include "io.inc"
+#Include "console.inc"
 #Include "file.inc"
 #Include "debug.inc"
 
