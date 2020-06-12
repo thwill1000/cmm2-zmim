@@ -14,6 +14,7 @@ Option Default Integer
 #Include "util.inc"
 #Include "dict.inc"
 #Include "zsave.inc"
+#Include "io.inc"
 #Include "file.inc"
 #Include "debug.inc"
 
@@ -57,34 +58,34 @@ Sub main()
   Mode 1
   Cls
 
-  Print "        ______     __  __ _____ __  __ "
-  Print "       |___  /    |  \/  |_   _|  \/  |"
-  Print "          / /_____| \  / | | | | \  / |"
-  Print "         / /______| |\/| | | | | |\/| |"
-  Print "        / /__     | |  | |_| |_| |  | |"
-  Print "       /_____|    |_|  |_|_____|_|  |_|"
-  Print
-  Print DESCRIPTION$
-  Print
-  Print COPYRIGHT$
-  Print VERSION$
-  Print
+  cout("        ______     __  __ _____ __  __ ") : endl()
+  cout("       |___  /    |  \/  |_   _|  \/  |") : endl()
+  cout("          / /_____| \  / | | | | \  / |") : endl()
+  cout("         / /______| |\/| | | | | |\/| |") : endl()
+  cout("        / /__     | |  | |_| |_| |  | |") : endl()
+  cout("       /_____|    |_|  |_|_____|_|  |_|") : endl()
+  endl()
+  cout(DESCRIPTION$) : endl()
+  endl()
+  cout(COPYRIGHT$) : endl()
+  cout(VERSION$) : endl()
+  endl()
 
   ss$(INSTALL_DIR) = "A:/zmim"
   ss$(SAVE_DIR) = ss$(INSTALL_DIR) + "/saves"
   ss$(SCRIPT_DIR) = ss$(INSTALL_DIR) + "/scripts"
   ss$(STORY_DIR) = ss$(INSTALL_DIR) + "/stories"
 
-  Print "Select a story file from '"; ss$(STORY_DIR); "':"
+  cout("Select a story file from '" + ss$(STORY_DIR) + "':") : endl()
   Do While f$ = ""
     f$ = file_choose$(ss$(STORY_DIR), "*.z3")
   Loop
   ss$(STORY) = Mid$(f$, Len(ss$(STORY_DIR)) + 2)
   ss$(STORY) = Left$(ss$(STORY), Len(ss$(STORY)) - 3)
-  Print
+  endl()
 
   mem_init(f$)
-  Print
+  endl()
 
   ' Ensure subdirectories for the current story exist in "saves/" and "scripts/"
   ChDir(ss$(SAVE_DIR))
@@ -101,7 +102,7 @@ Sub main()
   For i = Len(ss$(SCRIPT_DIR)) To Len(f$)
     If Peek(Var f$, i) = Asc(":") Then Poke Var f$, i, Asc("-")
   Next i
-  Print "Write script to '"; f$; "' [Y|n]";
+  cout("Write script to '" + f$ + "' [Y|n]")
   Input s$
   If LCase$(s$) <> "n" Then
     Open f$ For Output As #2
@@ -129,7 +130,7 @@ Sub main()
     If pc <> old_pc Then ' Prevents repeatedly hitting breakpoint when continuing
       For i = 0 To NUM_BP - 1
         If pc = bp(i) Then
-          Print "[Breakpoint " + Str$(i) + " reached]"
+          cout("[Breakpoint " + Str$(i) + " reached]") : endl()
           state = E_BREAK
         EndIf
       Next i
@@ -143,10 +144,14 @@ Sub main()
     EndIf
   Loop
 
-  Print
-  Print "Num instructions processed ="; num_ops
-  Print "Instructions / second      = "; Format$(num_ops / ((Timer - rtime) / 1000), "%.1f")
-  If MM.DEVICE$ <> "Colour Maximite 2" Then Print "Num page faults            ="; pf
+  endl()
+  cout("Num instructions processed = " + Str$(num_ops)) : endl()
+  cout("Instructions / second      = ")
+  cout(Format$(num_ops / ((Timer - rtime) / 1000), "%.1f"))
+  endl()
+  If MM.DEVICE$ <> "Colour Maximite 2" Then
+    cout("Num page faults            = " + Str$(pf)) : endl()
+  EndIf
 
   If script And S_WRITE Then Close #2
   If script And S_READ Then Close #3

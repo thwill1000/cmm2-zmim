@@ -22,9 +22,9 @@ Function exec(tr)
   EndIf
 
   If exec = E_UNKNOWN Then
-    Print "Unsupported instruction "; fmt_hex$(op, 2)
+    cout("Unsupported instruction " + fmt_hex$(op, 2)) : endl()
   ElseIf exec = E_UNIMPLEMENTED Then
-    Print "Unimplemented instruction "; fmt_hex$(op, 2)
+    cout("Unimplemented instruction " + fmt_hex$(op, 2)) : endl()
   EndIf
 
   If exec <> E_OK Then pc = pc_old : sp = sp_old
@@ -277,7 +277,7 @@ Function ex_0op()
   ElseIf oc = &h3 Then
     ' PRINT_RET
     print_zstring(pc)
-    Print
+    endl()
     _return(1)
 
   ElseIf oc = &h4 Then
@@ -311,7 +311,7 @@ Function ex_0op()
 
   ElseIf oc = &hB Then
     ' NEW_LINE
-    Print
+    endl()
 
   ElseIf oc = &hC Then
     ' SHOW_STATUS
@@ -348,18 +348,18 @@ Function ex_varop()
 
   ElseIf oc = &h4 Then
     ' READ
-    Print "> ";
+    cout("> ")
     ex_varop = _read(oa(0), oa(1))
 
   ElseIf oc = &h5 Then
     ' PRINT_CHAR
-    Print Chr$(oa(0));
+    cout(Chr$(oa(0)))
 
   ElseIf oc = &h6 Then
     ' PRINT_NUM
     x = oa(0)
     If x > 32767 Then x = x - 65536
-    Print Str$(x);
+    cout(Str$(x))
 
   ElseIf oc = &h7 Then
     ' RANDOM
@@ -488,7 +488,11 @@ Function read_line$()
   ' Read input from a script
   If script And S_READ Then
     Line Input #3, read_line$
-    If read_line$ = "" Then script = script And S_WRITE Else Print read_line$
+    If read_line$ = "" Then
+      script = script And S_WRITE
+    Else
+      cout(read_line$) : endl()
+    EndIf
   EndIf
 
   ' Otherwise read input from the console
@@ -504,25 +508,27 @@ Function ex_special(cmd$)
     ex_special = E_BREAK
 
   ElseIf cmd$ = "*credits" Then
-    Print
-    Print DESCRIPTION$
-    Print "A Toy Plastic Trumpet Production for Sockpuppet Studios"
-    Print COPYRIGHT$
-    Print VERSION$
-    Print
-    Print "Programmer:           Thomas Hugo Williams"
-    Print "Z-Machine Technical:  Fredrik Ramsberg"
-    Print "Consultant"
-    Print
+    endl()
+    cout(DESCRIPTION$) : endl()
+    cout("A Toy Plastic Trumpet Production for Sockpuppet Studios") : endl()
+    cout(COPYRIGHT$) : endl()
+    cout(VERSION$) : endl()
+    endl()
+    cout("Programmer:           Thomas Hugo Williams") : endl()
+    cout("Z-Machine Technical:  Fredrik Ramsberg") : endl()
+    cout("Consultant") : endl()
+    endl()
 
   ElseIf cmd$ = "*replay" Then
-    Print "Select a script file from '"; ss$(SCRIPT_DIR); "/"; ss$(STORY); "':"
+    cout("Select a script file from '")
+    cout(ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "':")
+    endl()
     f$ = file_choose$(ss$(SCRIPT_DIR) + "/" + ss$(STORY), "*.scr")
     If f$ <> "" Then
       Open f$ For Input As #3
       script = script Or S_READ
     EndIf
-    Print
+    endl()
 
   ElseIf cmd$ = "*status" Then
     ex_show_status()
@@ -533,7 +539,7 @@ Function ex_special(cmd$)
 
   EndIf
 
-  If ex_special = E_REPEAT Then Print ">";
+  If ex_special = E_REPEAT Then cout(">")
 
 End Function
 
@@ -558,9 +564,9 @@ End Function
 
 Sub ex_show_status()
   Local x
-  x = vget(&h10) : print_obj(x) : Print ", ";
-  x = vget(&h11) : Print "Score:"; x; ", ";
-  x = vget(&h12) : Print "Moves:"; x
-  Print
+  x = vget(&h10) : print_obj(x) : cout(", ")
+  x = vget(&h11) : cout("Score: " + Str$(x) + ", ")
+  x = vget(&h12) : cout("Moves: " + Str$(x))
+  endl()
 End Sub
 
