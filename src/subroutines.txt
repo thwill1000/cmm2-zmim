@@ -1,17 +1,21 @@
-debug.inc: (13)
+debug.inc: (17)
   debug
+  dmp_abrv
+  dmp_dict
+  dmp_hdr
   dmp_mem
+  dmp_mmap
   dmp_obj
+  dmp_op
+  dmp_routine
+  dmp_stack
+  dmp_global
   fmt_operand
   fmt_call_operands
   fmt_jump_operands
   fmt_store_value
   fmt_store_operands
   fmt_normal_operands
-  dmp_op
-  dmp_routine
-  dmp_stack
-  dmp_global
 
 decode.inc: (7)
   decode_init    -> de_init
@@ -25,18 +29,6 @@ decode.inc: (7)
 dict.inc: (2)
   di_init
   di_lookup
-
-dmp_abrv.inc: (1)
-  dmp_abrv
-
-dmp_dict.inc: (1)
-  dmp_dict
-
-dmp_hdr.inc: (1)
-  dmp_hdr
-
-dmp_mmap.inc: (1)
-  dmp_mmap
 
 execute.inc: (13)
   exec

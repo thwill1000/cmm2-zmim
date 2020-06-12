@@ -1,7 +1,7 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-' Interactive debugger
+' Interactive debugger.
 Function debug()
   Local a, b, c, cmd$(9) Length 20, cn, i, op, pc_old, s$, sp_old
 
@@ -393,5 +393,94 @@ Sub dmp_global(a, n)
     Else
       Print "  " + Str$(x)
     EndIf
+  Next i
+End Sub
+
+' Dump abbreviations.
+Sub dmp_abrv
+  Local i
+  For i = 0 To 95
+    Print Str$(i); ": {";
+    print_abrv(i)
+    Print "}"
+  Next i
+End Sub
+
+' Dump dictionary.
+Sub dmp_dict
+  Local a, col, i, n, sep$, sz, x
+
+  Print "    **** Dictionary ****"
+  Print
+
+  a = rw(&h8) ' Dictionary address
+
+  n = rb(a) : a = a + 1
+  sep$ = Space$(n)
+  For i = 1 To n : Poke Var sep$, i, rb(a) : a = a + 1 : Next i
+  Print "  Word separators = "; Chr$(34); sep$; Chr$(34)
+
+  sz = rb(a) : a = a + 1
+  n = rw(a) : a = a + 2
+  Print "  Word count ="; n; ", word size ="; sz
+  Print
+
+  For i = 1 To n
+    Print "["; lpad$(Str$(i), 4, " "); "] ";
+
+    x = 256 * rb(a) + rb(a + 1) : Print lpad$(Hex$(x), 4, "0");
+    x = 256 * rb(a + 2) + rb(a + 3) : Print lpad$(Hex$(x), 4, "0"); " ";
+
+    ' Read 4 bytes of text
+    print_zstring(a)
+
+    ' Skip (sz - 4) bytes of data
+    a = a + sz - 4
+
+    col = col + 1
+    Print Chr$(13); Chr$(27); "[" ; Str$(col * 24); "C";
+    If col = 3 Then col = 0 : Print
+  Next i
+End Sub
+
+' Dump Z-machine header.
+Sub dmp_hdr
+  Local x
+  Print "Version      =";  rb(&h00)
+  Print "Flags1       = &b"; lpad$(Bin$(rb(&h01)), 8, "0")
+  Print "Release      =";  rw(&h02)
+  Print "Base high    = &h"; lpad$(Hex$(rw(&h04)), 4, "0")
+  Print "Initial PC   = &h"; lpad$(Hex$(rw(&h06)), 4, "0")
+  Print "Dictionary   = &h"; lpad$(Hex$(rw(&h08)), 4, "0")
+  Print "Object tbl   = &h"; lpad$(Hex$(rw(&h0A)), 4, "0")
+  Print "Glob var tbl = &h"; lpad$(Hex$(rw(&h0C)), 4, "0")
+  Print "Base static  = &h"; lpad$(Hex$(rw(&h0E)), 4, "0")
+  Print "Flags2       = &b"; lpad$(Bin$(rb(&h10)), 8, "0")
+  Print "Serial num   = ";
+  Print Chr$(rb(&h12));
+  Print Chr$(rb(&h13));
+  Print Chr$(rb(&h14));
+  Print Chr$(rb(&h15));
+  Print Chr$(rb(&h16));
+  Print Chr$(rb(&h17))
+  Print "Abbrv tbl    = &h"; lpad$(Hex$(rw(&h18)), 4, "0")
+  x = 2 * rw(&h1A)
+  Print "File length  ="; x; " &h" + lpad$(Hex$(x), 4, "0")
+  Print "File chksum  ="; rw(&h1C)
+  Print "Std revision ="; rw(&h32)
+End Sub
+
+' Dump CMM1 virtual memory map.
+Sub dmp_mmap
+  Local i
+
+  Print "Physical page -> Virtual page"
+  For i = 0 To NUM_PHYSICAL_PAGES - 1
+    Print Str$(i); " -> "; Str$(pp_to_vp(i))
+  Next i
+
+  Print "Virtual page -> Physical page"
+  For i = 0 To NUM_VIRTUAL_PAGES - 1
+    Print Str$(i); " -> "; Str$(vp_to_pp(i))
   Next i
 End Sub
