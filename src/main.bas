@@ -16,10 +16,6 @@ Option Default Integer
 #Include "zsave.inc"
 #Include "file.inc"
 #Include "debug.inc"
-#Include "dmp_abrv.inc"
-#Include "dmp_dict.inc"
-#Include "dmp_hdr.inc"
-#Include "dmp_mmap.inc"
 
 'Dim BUSY$(1) LENGTH 16
 'BUSY$(0) = "\\\\||||////----"

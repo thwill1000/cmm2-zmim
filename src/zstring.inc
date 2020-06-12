@@ -22,12 +22,12 @@ Sub print_zstring(a)
   ' Should be 'Do While x = 0' but there is an MMBasic bug using that
   ' in recursive functions.
   For x = 0 To 0 Step 0
-    x = rb(a) * 256 + rb(a + 1)
 
-    For i = 2 To 0 Step -1
-      zc(i) = x And 31 ' &b00011111
-      x = x \ 32 ' rshift 5
-    Next i
+    x = rw(a)
+    zc(0) = (x And &h7C00) \ &h400
+    zc(1) = (x And &h3E0) \ &h20
+    zc(2) = (x And &h1F)
+    x = x \ &h8000
 
     ' x is now the top-bit of the word. If x = 1 then we have reached the end
     ' of the string and will exit the loop after this iteration.
