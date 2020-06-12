@@ -97,7 +97,7 @@ This is currently the only option on the Colour Maximite 2 unless you want to re
 
 **5. How do I play these games ?**
 
-Run ```tutorial.z3``` or read something like https://www.z-machine-matter.com/playing.html 
+Run "tutorial.z3" or read something like https://www.z-machine-matter.com/playing.html 
 
 **6. How do I find out more about Interactive Fiction ?**
 
