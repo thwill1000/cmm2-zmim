@@ -156,7 +156,98 @@ Function debug()
 
 End Function
 
-' Prints 'n' bytes from 'mem' starting at 'a'
+' Prints abbreviations.
+Sub dmp_abrv()
+  Local i
+  For i = 0 To 95
+    Print Str$(i); ": {";
+    print_abrv(i)
+    Print "}"
+  Next i
+End Sub
+
+' Prints dictionary.
+Sub dmp_dict()
+  Local a, col, i, n, sep$, sz, x
+
+  Print "    **** Dictionary ****"
+  Print
+
+  a = rw(&h8) ' Dictionary address
+
+  n = rb(a) : a = a + 1
+  sep$ = Space$(n)
+  For i = 1 To n : Poke Var sep$, i, rb(a) : a = a + 1 : Next i
+  Print "  Word separators = "; Chr$(34); sep$; Chr$(34)
+
+  sz = rb(a) : a = a + 1
+  n = rw(a) : a = a + 2
+  Print "  Word count ="; n; ", word size ="; sz
+  Print
+
+  For i = 1 To n
+    Print "["; lpad$(Str$(i), 4, " "); "] ";
+
+    x = 256 * rb(a) + rb(a + 1) : Print lpad$(Hex$(x), 4, "0");
+    x = 256 * rb(a + 2) + rb(a + 3) : Print lpad$(Hex$(x), 4, "0"); " ";
+
+    ' Read 4 bytes of text
+    print_zstring(a)
+
+    ' Skip (sz - 4) bytes of data
+    a = a + sz - 4
+
+    col = col + 1
+    Print Chr$(13); Chr$(27); "[" ; Str$(col * 24); "C";
+    If col = 3 Then col = 0 : Print
+  Next i
+End Sub
+
+' Prints 'n' global variables starting from 'a'.
+Sub dmp_global(a, n)
+  Local i, x
+  If n < 1 Then n = 1
+  If a > 239 Then a = 239
+  For i = a To a + n - 1
+    If i > 239 Then Exit For
+    x = vget(i + 16)
+    Print "G" + lpad$(Str$(i), 2, "0") + " = &h" + lpad$(Hex$(x), 4, "0");
+    If x And &h8000 Then
+      Print "  " + Str$(x - &h10000)
+    Else
+      Print "  " + Str$(x)
+    EndIf
+  Next i
+End Sub
+
+' Prints Z-machine header.
+Sub dmp_hdr()
+  Local x
+  Print "Version      =";  rb(&h00)
+  Print "Flags1       = &b"; lpad$(Bin$(rb(&h01)), 8, "0")
+  Print "Release      =";  rw(&h02)
+  Print "Base high    = &h"; lpad$(Hex$(rw(&h04)), 4, "0")
+  Print "Initial PC   = &h"; lpad$(Hex$(rw(&h06)), 4, "0")
+  Print "Dictionary   = &h"; lpad$(Hex$(rw(&h08)), 4, "0")
+  Print "Object tbl   = &h"; lpad$(Hex$(rw(&h0A)), 4, "0")
+  Print "Glob var tbl = &h"; lpad$(Hex$(rw(&h0C)), 4, "0")
+  Print "Base static  = &h"; lpad$(Hex$(rw(&h0E)), 4, "0")
+  Print "Flags2       = &b"; lpad$(Bin$(rb(&h10)), 8, "0")
+  Print "Serial num   = ";
+  Print Chr$(rb(&h12));
+  Print Chr$(rb(&h13));
+  Print Chr$(rb(&h14));
+  Print Chr$(rb(&h15));
+  Print Chr$(rb(&h16));
+  Print Chr$(rb(&h17))
+  Print "Abbrv tbl    = &h"; lpad$(Hex$(rw(&h18)), 4, "0")
+  x = 2 * rw(&h1A)
+  Print "File length  ="; x; " &h" + lpad$(Hex$(x), 4, "0")
+  Print "File chksum  ="; rw(&h1C)
+  Print "Std revision ="; rw(&h32)
+End Sub
+
+' Prints 'n' bytes from 'mem' starting from 'a'
 Sub dmp_mem(a, n)
   Local i, x
   If n = 0 Then n = 128
@@ -173,6 +264,22 @@ Sub dmp_mem(a, n)
   Print
 End Sub
 
+' Dump CMM1 virtual memory map.
+Sub dmp_mmap
+  Local i
+
+  Print "Physical page -> Virtual page"
+  For i = 0 To NUM_PHYSICAL_PAGES - 1
+    Print Str$(i); " -> "; Str$(pp_to_vp(i))
+  Next i
+
+  Print "Virtual page -> Physical page"
+  For i = 0 To NUM_VIRTUAL_PAGES - 1
+    Print Str$(i); " -> "; Str$(vp_to_pp(i))
+  Next i
+End Sub
+
+' Prints object 'o'.
 Sub dmp_obj(o)
   Local ad, i, p, sz, x
 
@@ -227,6 +334,86 @@ Sub dmp_obj(o)
       Print
     EndIf
   Loop Until p = 0
+End Sub
+
+' Prints dissasembly for an instruction.
+Sub dmp_op(m$, st, br)
+  Print rpad$(m$, 14);
+  If m$ = "CALL" Then
+    Print fmt_call_operands$();
+  ElseIf m$ = "JUMP" Then
+    Print fmt_jump_operands$();
+  ElseIf m$ = "STORE" Or m$ = "DEC_CHK" Or m$ = "INC_CHK" Then
+    Print fmt_store_operands$();
+  ElseIf m$ = "DEC" Or m$ = "INC" Or m$ = "PULL" Or m$= "LOAD" Then
+    Print fmt_store_operands$();
+  Else
+    Print fmt_normal_operands$();
+  EndIf
+
+  If st > -1 Then Print " -> "; fmt_store_value$(st);
+
+  If br = 0 Then Print : Exit Sub
+  If br And &h80000 Then Print " [TRUE] "; Else Print " [FALSE] ";
+  If (br And &h7FFFF) = pc - 2 Then Print "RFALSE" : Exit Sub
+  If (br And &h7FFFF) = pc - 1 Then Print "RTRUE" : Exit Sub
+  Print Hex$(br And &h7FFFF)
+End Sub
+
+' Print information about the routine starting at 'new_pc'.
+Sub dmp_routine(new_pc)
+  Local i, locals_sz, x
+  locals_sz = rb(new_pc)
+  Print "Routine "; Hex$(new_pc); ", "; Str$(locals_sz); " locals (";
+  For i = 0 To locals_sz - 1
+    If i > 0 Then Print ", ";
+    x = rw(new_pc + 1 + i * 2)
+    Print lpad$(Hex$(x), 4, "0");
+  Next i
+  Print ")"
+End Sub
+
+' Prints the contents of the stack.
+' If 'a' = 0 then prints only the current stack frame,
+' otherwise prints them all.
+Sub dmp_stack(a)
+  Local i, tmp_fp, x
+
+  Print "TOP: ";
+  If sp = 0 Then Print "*empty*"
+  tmp_fp = fp
+
+  For i = sp - 1 To 0 Step -1
+    If i < sp - 1 Then Print "     ";
+    x = st_peek(i)
+
+    If x And &h8000 Then
+      Print fmt_hex$(x); "  "; lpad$(Str$(x - &h10000), 6, " ") + "  ";
+    Else
+      Print fmt_hex$(x); "  "; lpad$(Str$(x), 6, " ") + "  ";
+    EndIf
+
+    If tmp_fp = &hFFFF Then
+      ' Nothing
+    ElseIf i = tmp_fp Then
+      Print "previous fp";
+      If a <> 0 Then Print : Print String$(35, "-");
+      tmp_fp = x
+    ElseIf i = tmp_fp + 1 Then
+      Print "store result";
+    ElseIf i = tmp_fp + 2 Then
+      Print "return address (lo)";
+    ElseIf i = tmp_fp + 3 Then
+      Print "return address (hi)";
+    ElseIf i = tmp_fp + 4 Then
+      Print "num locals";
+    Else
+      Print "L" + lpad$(Str$(i - tmp_fp - 5), 2, "0");
+      ' TODO: Not everything on top of the stack is a local variable
+    EndIf
+    Print
+    If a = 0 And i = fp Then Exit For
+  Next i
 End Sub
 
 Function fmt_operand$(i)
@@ -299,188 +486,3 @@ Function fmt_normal_operands$()
   Next i
   fmt_normal_operands$ = a$
 End Function
-
-Sub dmp_op(m$, st, br)
-  Print rpad$(m$, 14);
-  If m$ = "CALL" Then
-    Print fmt_call_operands$();
-  ElseIf m$ = "JUMP" Then
-    Print fmt_jump_operands$();
-  ElseIf m$ = "STORE" Or m$ = "DEC_CHK" Or m$ = "INC_CHK" Then
-    Print fmt_store_operands$();
-  ElseIf m$ = "DEC" Or m$ = "INC" Or m$ = "PULL" Or m$= "LOAD" Then
-    Print fmt_store_operands$();
-  Else
-    Print fmt_normal_operands$();
-  EndIf
-
-  If st > -1 Then Print " -> "; fmt_store_value$(st);
-
-  If br = 0 Then Print : Exit Sub
-  If br And &h80000 Then Print " [TRUE] "; Else Print " [FALSE] ";
-  If (br And &h7FFFF) = pc - 2 Then Print "RFALSE" : Exit Sub
-  If (br And &h7FFFF) = pc - 1 Then Print "RTRUE" : Exit Sub
-  Print Hex$(br And &h7FFFF)
-End Sub
-
-Sub dmp_routine(new_pc)
-  Local i, locals_sz, x
-  locals_sz = rb(new_pc)
-  Print "Routine "; Hex$(new_pc); ", "; Str$(locals_sz); " locals (";
-  For i = 0 To locals_sz - 1
-    If i > 0 Then Print ", ";
-    x = rw(new_pc + 1 + i * 2)
-    Print lpad$(Hex$(x), 4, "0");
-  Next i
-  Print ")"
-End Sub
-
-' Expects global variables:
-'  fp    - current frame index/pointer
-'  sp    - current stack index/pointer
-'  stack - the stack (an array of 32-bit floats)
-Sub dmp_stack(a)
-  Local i, tmp_fp, x
-
-  Print "TOP: ";
-  If sp = 0 Then Print "*empty*"
-  tmp_fp = fp
-
-  For i = sp - 1 To 0 Step -1
-    If i < sp - 1 Then Print "     ";
-    x = st_peek(i)
-
-    If x And &h8000 Then
-      Print fmt_hex$(x); "  "; lpad$(Str$(x - &h10000), 6, " ") + "  ";
-    Else
-      Print fmt_hex$(x); "  "; lpad$(Str$(x), 6, " ") + "  ";
-    EndIf
-
-    If tmp_fp = &hFFFF Then
-      ' Nothing
-    ElseIf i = tmp_fp Then
-      Print "previous fp";
-      If a <> 0 Then Print : Print String$(35, "-");
-      tmp_fp = x
-    ElseIf i = tmp_fp + 1 Then
-      Print "store result";
-    ElseIf i = tmp_fp + 2 Then
-      Print "return address (lo)";
-    ElseIf i = tmp_fp + 3 Then
-      Print "return address (hi)";
-    ElseIf i = tmp_fp + 4 Then
-      Print "num locals";
-    Else
-      Print "L" + lpad$(Str$(i - tmp_fp - 5), 2, "0");
-      ' TODO: Not everything on top of the stack is a local variable
-    EndIf
-    Print
-    If a = 0 And i = fp Then Exit For
-  Next i
-End Sub
-
-' Dump global variable.
-Sub dmp_global(a, n)
-  Local i, x
-  If n < 1 Then n = 1
-  If a > 239 Then a = 239
-  For i = a To a + n - 1
-    If i > 239 Then Exit For
-    x = vget(i + 16)
-    Print "G" + lpad$(Str$(i), 2, "0") + " = &h" + lpad$(Hex$(x), 4, "0");
-    If x And &h8000 Then
-      Print "  " + Str$(x - &h10000)
-    Else
-      Print "  " + Str$(x)
-    EndIf
-  Next i
-End Sub
-
-' Dump abbreviations.
-Sub dmp_abrv
-  Local i
-  For i = 0 To 95
-    Print Str$(i); ": {";
-    print_abrv(i)
-    Print "}"
-  Next i
-End Sub
-
-' Dump dictionary.
-Sub dmp_dict
-  Local a, col, i, n, sep$, sz, x
-
-  Print "    **** Dictionary ****"
-  Print
-
-  a = rw(&h8) ' Dictionary address
-
-  n = rb(a) : a = a + 1
-  sep$ = Space$(n)
-  For i = 1 To n : Poke Var sep$, i, rb(a) : a = a + 1 : Next i
-  Print "  Word separators = "; Chr$(34); sep$; Chr$(34)
-
-  sz = rb(a) : a = a + 1
-  n = rw(a) : a = a + 2
-  Print "  Word count ="; n; ", word size ="; sz
-  Print
-
-  For i = 1 To n
-    Print "["; lpad$(Str$(i), 4, " "); "] ";
-
-    x = 256 * rb(a) + rb(a + 1) : Print lpad$(Hex$(x), 4, "0");
-    x = 256 * rb(a + 2) + rb(a + 3) : Print lpad$(Hex$(x), 4, "0"); " ";
-
-    ' Read 4 bytes of text
-    print_zstring(a)
-
-    ' Skip (sz - 4) bytes of data
-    a = a + sz - 4
-
-    col = col + 1
-    Print Chr$(13); Chr$(27); "[" ; Str$(col * 24); "C";
-    If col = 3 Then col = 0 : Print
-  Next i
-End Sub
-
-' Dump Z-machine header.
-Sub dmp_hdr
-  Local x
-  Print "Version      =";  rb(&h00)
-  Print "Flags1       = &b"; lpad$(Bin$(rb(&h01)), 8, "0")
-  Print "Release      =";  rw(&h02)
-  Print "Base high    = &h"; lpad$(Hex$(rw(&h04)), 4, "0")
-  Print "Initial PC   = &h"; lpad$(Hex$(rw(&h06)), 4, "0")
-  Print "Dictionary   = &h"; lpad$(Hex$(rw(&h08)), 4, "0")
-  Print "Object tbl   = &h"; lpad$(Hex$(rw(&h0A)), 4, "0")
-  Print "Glob var tbl = &h"; lpad$(Hex$(rw(&h0C)), 4, "0")
-  Print "Base static  = &h"; lpad$(Hex$(rw(&h0E)), 4, "0")
-  Print "Flags2       = &b"; lpad$(Bin$(rb(&h10)), 8, "0")
-  Print "Serial num   = ";
-  Print Chr$(rb(&h12));
-  Print Chr$(rb(&h13));
-  Print Chr$(rb(&h14));
-  Print Chr$(rb(&h15));
-  Print Chr$(rb(&h16));
-  Print Chr$(rb(&h17))
-  Print "Abbrv tbl    = &h"; lpad$(Hex$(rw(&h18)), 4, "0")
-  x = 2 * rw(&h1A)
-  Print "File length  ="; x; " &h" + lpad$(Hex$(x), 4, "0")
-  Print "File chksum  ="; rw(&h1C)
-  Print "Std revision ="; rw(&h32)
-End Sub
-
-' Dump CMM1 virtual memory map.
-Sub dmp_mmap
-  Local i
-
-  Print "Physical page -> Virtual page"
-  For i = 0 To NUM_PHYSICAL_PAGES - 1
-    Print Str$(i); " -> "; Str$(pp_to_vp(i))
-  Next i
-
-  Print "Virtual page -> Physical page"
-  For i = 0 To NUM_VIRTUAL_PAGES - 1
-    Print Str$(i); " -> "; Str$(vp_to_pp(i))
-  Next i
-End Sub
