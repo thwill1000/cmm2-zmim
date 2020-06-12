@@ -2,8 +2,10 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 Option Explicit On
+Option Default Integer
 
-#Include "memory_fast.inc"
+#Include "mem_cmm2.inc"
+#Include "io.inc"
 
 Dim ad, buf$, buf_sz, file$, i, x
 
@@ -12,52 +14,52 @@ Cls
 file$ = "A:/zmim/stories/minizork.z3"
 mem_init(file$)
 
-Print
-Print "Executing memory tests"
+endl()
+cout("Executing memory tests") : endl()
 
 Open file$ For Random As #1
 
-Print
-Print "Testing sequential access:"
+endl()
+cout("Testing sequential access:") : endl()
 Timer = 0
 Do While ad < FILE_LEN
-  Print ".";
+  cout(".")
   Seek #1, ad + 1
   buf$ = Input$(255, #1)
   buf_sz = Len(buf$)
   For i = 1 To buf_sz
-    If ad = FILE_LEN Then Print "What the hell!"
+    If ad = FILE_LEN Then cout("What the hell!") : endl()
     If Peek(Var buf$, i) <> rb(ad) Then Error
     ad = ad + 1
   Next i
 Loop
-Print
-Print "Time taken ="; Timer; " ms"
+endl()
+cout("Time taken = " + Str$(Timer) + " ms") : endl()
 
-Print
-Print "Testing random access:"
+endl()
+cout("Testing random access:") : endl()
 Timer = 0
 For i = 1 To 5000
-  If i Mod 50 = 0 Then Print ".";
+  If i Mod 50 = 0 Then cout(".")
   ad = Fix(Rnd * FILE_LEN)
   Seek #1, ad + 1
   buf$ = Input$(1, #1)
   If Peek(Var buf$, 1) <> rb(ad) Then Error
 Next i
-Print
-Print "Time taken ="; Timer; " ms"
+endl()
+cout("Time taken = " + Str$(Timer) + " ms") : endl()
 
-Print
-Print "Test read/write:"
+endl()
+cout("Test read/write:") : endl()
 Timer = 0
 For i = 1 To 5000
-  If i Mod 50 = 0 Then Print ".";
+  If i Mod 50 = 0 Then cout(".")
   ad = Fix(Rnd * BASE_STATIC)
   x = Fix(Rnd * 255)
   wb(ad, x)
   If x <> rb(ad) Then Error
 Next i
-Print
-Print "Time taken ="; Timer; " ms"
+endl()
+cout("Time taken = " + Str$(Timer) + " ms") : endl()
 
 Close #1

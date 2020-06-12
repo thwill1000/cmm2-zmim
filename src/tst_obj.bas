@@ -9,6 +9,7 @@ Option Default Integer
 #Include "debug.inc"
 #Include "util.inc"
 #Include "zstring.inc"
+#Include "io.inc"
 
 Dim ad, f$, i, o, x, _
 
@@ -17,8 +18,8 @@ Cls
 f$ = "A:/zmim/stories/minizork.z3"
 mem_init(f$)
 
-Print
-Print "Executing object tests"
+endl()
+cout("Executing object tests") : endl()
 
 ' Get attributes and properties from object 1
 o = 1
@@ -100,4 +101,4 @@ If oattr(o, 27) <> 0 Then Error
 _ = oattr(o, 27, 1, 0)
 If oattr(o, 27) <> 0 Then Error
 
-Print "PASSED"
+cout("PASSED") : endl()

@@ -52,8 +52,8 @@ End Sub
 Sub mem_init(f$)
   Local ad, i, j, s$, sz
 
-  Print "Loading '"; f$; "'"
-  Print "0% ... ";
+  cout("Loading '" + f$ + "'") : endl()
+  cout("0% ... ")
 
   sz = mm.info(filesize f$)
   Open f$ For Input As #1
@@ -63,10 +63,10 @@ Sub mem_init(f$)
     If Len(s$) = 0 Then Exit Do
     LongString Append m(), s$
     ad = ad + Len(s$)
-    If ad > j * sz \ 10 Then Print Str$(j * 10) + "% ... "; : j = j + 1
+    If ad > j * sz \ 10 Then cout(Str$(j * 10) + "% ... ") : j = j + 1
   Loop
-  Print " 100%"
-  Print "Read"; ad; " bytes"
+  cout(" 100%") : endl()
+  cout("Read " + Str$(ad) + " bytes") : endl()
 
   Close #1
 

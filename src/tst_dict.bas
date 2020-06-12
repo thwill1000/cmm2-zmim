@@ -5,6 +5,7 @@ Option Default Integer
 #Include "dict.inc"
 #Include "zstring.inc"
 #Include "util.inc"
+#Include "io.inc"
 
 Dim a, s$, x
 
@@ -21,9 +22,9 @@ Do While Not Eof(#1)
   s$ = Mid$(s$, 8)
   x = di_lookup(s$)
   If x = a Then
-    Print rpad$(s$, 8); "=>"; x; " - OK"
+    cout(rpad$(s$, 8) + "=> " + Str$(x) + " - OK") : endl()
   Else
-    Print rpad$(s$, 8); "=>"; x; " - ERROR"
+    cout(rpad$(s$, 8) + "=> " + Str$(x) + " - ERROR") : endl()
   EndIf
 Loop
-Print "Dictionary test took"; Timer; " ms"
+cout("Dictionary test took " + Str$(Timer) + " ms") : endl()

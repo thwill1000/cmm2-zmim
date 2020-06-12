@@ -10,8 +10,6 @@ ALPHABET$(2) = " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
 Sub print_zstring(a)
   Local b, c, i, s, x, zc(2)
 
-'  If Not debug Then Print Chr$(8);
-
   ' The state of Z-string processing is recorded in 's':
   '   0, 1, 2 - Expecting a character from alphabet 's'
   '   3, 4, 5 - Expecting an abbreviation from table 's - 3'
@@ -36,7 +34,7 @@ Sub print_zstring(a)
       c = zc(i)
       If s < 3 Then
         If c = 0 Then
-          Print " ";
+          cout(" ")
         ElseIf c < 4 Then
           s = c + 2
         ElseIf c < 6 Then
@@ -45,10 +43,10 @@ Sub print_zstring(a)
           If c = 6 And s = 2 Then
             s = 6
           ElseIf c = 7 And s = 2 Then
-            Print
+            endl()
             s = 0
           Else
-            Print Mid$(ALPHABET$(s), c + 1, 1);
+            cout(Mid$(ALPHABET$(s), c + 1, 1))
             s = 0
           EndIf
         EndIf
@@ -60,15 +58,13 @@ Sub print_zstring(a)
       ElseIf s = 6 Then
         s = c + 7
       Else
-        Print Chr$((s - 7) * 32 + c);
+        cout(Chr$((s - 7) * 32 + c))
         s = 0
       EndIf
     Next i
 
     a = a + 2
   Next x
-
-'  If Not debug Then Print " ";
 
 End Sub
 
@@ -77,7 +73,5 @@ Sub print_abrv(x)
   Local a, b
   a = rw(&h18)
   b = rw(a + x * 2)
-'  If Not debug Then Print " ";
   print_zstring(b * 2)
-'  If Not debug Then Print Chr$(8);
 End Sub

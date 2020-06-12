@@ -12,17 +12,17 @@ Function zsave(res)
   Local exists(10), i, s$, s2$(2) Length 40
 
   If res Then
-    Print "Select game to restore:"
+    cout("Select game to restore:") : endl()
   Else
-    Print "Select save game slot:"
+    cout("Select save game slot:") : endl()
   EndIf
 
   ChDir ss$(SAVE_DIR) + "/" + ss$(STORY)
   For i = 1 To 10
     s$ = Dir$("game" + Str$(i) + ".sav")
-    Print "  [" + Format$(i, "%2g") + "] ";
+    cout("  [" + Format$(i, "%2g") + "] ")
     If s$ = "" Then
-      Print "Empty"
+      cout("Empty") : endl()
     Else
       exists(i) = 1
       Open "game" + Str$(i) + ".sav" For Input As #1
@@ -31,7 +31,7 @@ Function zsave(res)
       Line Input #1, s2$(2) ' date/time
       Line Input #1, s$     ' game name
       ' TODO: verify header / version
-      Print s2$(2); " - "; s$
+      cout(s2$(2) + " - " + s$) : endl()
       Close #1
     EndIf
   Next i
@@ -53,11 +53,8 @@ Function zsave(res)
     If s$ = "" Then i = 0
   EndIf
 
-  If i = 0 Then
-    Print "Cancelled."
-    Exit Function
-  Else
-
+  If i = 0 Then cout("Cancelled") : endl() : Exit Function
+  
   s2$(0) = ss$(SAVE_DIR) + "/" + ss$(STORY) + "/game" + Str$(i) + ".sav"
 
   If res Then
@@ -68,7 +65,7 @@ Function zsave(res)
     Line Input #1, s2$(1)
     Line Input #1, s2$(2)
     Line Input #1, s$
-    Print "Restoring '" + s$ + "' ..."
+    cout("Restoring '" + s$ + "' ...")
 
     Local ad, err, new_pc, new_fp, stack_sz, mem_sz
 
@@ -89,7 +86,7 @@ Function zsave(res)
     If stack_sz < 0 Or stack_sz > 511 Then err = 3
     If mem_sz <> BASE_STATIC Then err = 4
     If err <> 0 Then
-      Print "Save file is invalid (error"; err; ")"
+      cout("Save file is invalid (error " + Str$(err) + ")")
       Close #1
       Exit Function
     EndIf
@@ -116,7 +113,7 @@ Function zsave(res)
     If ad <> BASE_STATIC Then Error "Unrecoverable restore error!"
 
   Else
-    Print "Saving '" + s$ + "' ..."
+    cout("Saving '" + s$ + "' ...") : endl()
     Open s2$(0) For Output As #1
 
     ' Write text header

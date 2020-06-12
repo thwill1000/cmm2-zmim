@@ -38,7 +38,7 @@ End Sub
 Function decode(tr)
   Local op, s$
 
-  If tr Then Print Hex$(pc); ": ";
+  If tr Then cout(Hex$(pc) + ": ")
 
   op = rp()
 
