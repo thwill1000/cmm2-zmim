@@ -14,13 +14,17 @@ debug.inc: (13)
   dmp_global
 
 decode.inc: (7)
-  decode_init
+  decode_init    -> de_init
   decode
-  decode_long
-  decode_short
-  decode_var
-  decode_branch
-  decode_format
+  decode_long    -> de_long
+  decode_short   -> de_short
+  decode_var     -> de_var
+  decode_branch  -> de_branch
+  decode_format  -> de_format
+
+dict.inc: (2)
+  di_init
+  di_lookup
 
 dmp_abrv.inc: (1)
   dmp_abrv
@@ -34,30 +38,28 @@ dmp_hdr.inc: (1)
 dmp_mmap.inc: (1)
   dmp_mmap
 
-execute.inc: (15)
+execute.inc: (13)
   exec
   ex_2op
   ex_1op
   ex_0op
   ex_varop
-  _branch
-  _return
-  _call
-  _read
-  readline$
+  _branch        -> ex_branch
+  _return        -> ex_return
+  _call          -> ex_call
+  _read          -> ex_read
+  read_line$     -> ex_read_line
   ex_special
+  ex_random
   ex_show_status
-  ex_save
-  ex_restore
-  ex_restart
 
 file.inc: (1)
-  file_choose$
+  file_choose$   -> fi_choose
 
 main.bas: (1)
   main
 
-memory.inc: (6)
+mem_cmm{1|2}.inc: (6)
   rp
   rb
   rw
@@ -65,32 +67,30 @@ memory.inc: (6)
   wb
   mem_init
 
-memory_fast.inc
-  see "memory.inc"
+objects.inc: (11)
+  oattr          -> ob_attr
+  orel           -> ob_rel
+  get_next_prop  -> ob_next_prop
+  get_prop_len   -> ob_prop_len
+  get_prop_base  -> ob_prop_base
+  get_prop_addr  -> ob_prop_addr
+  get_prop       -> ob_prop_get
+  put_prop       -> ob_prop_put
+  print_obj      -> ob_print
+  ob_insert
+  ob_remove
 
-objects.inc: (9)
-  oattr
-  orel
-  get_next_prop
-  get_prop_len
-  get_prop_base
-  get_prop_addr
-  get_prop
-  put_prop
-  print_obj
+stack.inc: (4)
+  pop            -> st_pop
+  push           -> st_push
+  st_peek
+  st_poke
 
-random.inc: (1)
-  cmm2rnd
+tst_mem.inc: (0)
 
-stack.inc: (2)
-  pop
-  push
+tst_obj.inc: (0)
 
-tst_mem.inc: (1)
-  tst_mem
-
-tst_obj.inc: (1)
-  tets_obj
+tst_rand.inc: (0)
 
 util.inc: (4)
   rshift
@@ -102,8 +102,12 @@ variable.inc: (2)
   vget
   vset
 
+zsave.inc: (1)
+  zsave
+
 zstring.inc: (2)
   print_zstring
   print_abrv
 
-TOTAL = 69 functions & subroutines
+TOTAL = 71 functions & subroutines
+        17 of these are "debug"
