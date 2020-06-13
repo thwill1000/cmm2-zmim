@@ -1,7 +1,8 @@
 Option Explicit On
 Option Default Integer
 
-#Include "mem_cmm2.inc"
+'#Include "mem_cmm2_fast.inc"
+#Include "mem_cmm2_safe.inc"
 #Include "dict.inc"
 #Include "zstring.inc"
 #Include "console.inc"

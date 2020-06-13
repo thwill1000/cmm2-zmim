@@ -4,7 +4,8 @@
 Option Explicit On
 Option Default Integer
 
-#Include "mem_cmm2.inc"
+'#Include "mem_cmm2_fast.inc"
+#Include "mem_cmm2_safe.inc"
 #Include "console.inc"
 
 Dim ad, buf$, buf_sz, file$, i, x
