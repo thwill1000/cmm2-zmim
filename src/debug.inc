@@ -36,7 +36,7 @@ Function debug()
       If a >= 0 And a < FILE_LEN Then
         For i = 0 To NUM_BP - 1
           If bp(i) = a Then
-            Print "Duplicate breakpoint [" + Str$(i) + "]"
+            cout("Duplicate breakpoint [" + Str$(i) + "]") : endl()
             a = -1
             Exit For
           EndIf
@@ -47,13 +47,14 @@ Function debug()
             Exit For
           ElseIf bp(i) = -1 Then
             bp(i) = a
-            Print "Set breakpoint [" + Str$(i) + "] at " + fmt_hex$(bp(i))
+            cout("Set breakpoint [" + Str$(i) + "] at " + fmt_hex$(bp(i)))
+            endl()
             Exit For
           EndIf
-          If i = 9 Then Print "No free address breakpoints"
+          If i = 9 Then cout("No free address breakpoints") : endl()
         Next i
       Else
-        Print "Invalid breakpoint address"
+        cout("Invalid breakpoint address") : endl()
       EndIf
 
     ElseIf cmd$(0) = "B" Then
@@ -61,16 +62,16 @@ Function debug()
       a = 0
       For i = 0 To NUM_BP - 1
         If bp(i) <> -1 Then
-          Print "[" + Str$(i) + "] " + fmt_hex$(bp(i))
+          cout("[" + Str$(i) + "] " + fmt_hex$(bp(i))) : endl()
           a = a + 1
         EndIf
       Next i
-      If a = 0 Then Print "No address breakpoints set"
+      If a = 0 Then cout("No address breakpoints set") : endl()
 
     ElseIf cmd$(0) = "c" Then
       ' Continue
-      Print
-      If oc = &h4 And op >= &hE0 Then Print ">"; ' Display READ prompt
+      endl()
+      If oc = &h4 And op >= &hE0 Then cout(">") ' Display READ prompt
       debug = E_OK
 
     ElseIf cmd$(0) = "C" Then
@@ -104,51 +105,52 @@ Function debug()
 
     ElseIf cmd$(0) = "s" Then
       ' Step
-      If oc = &h4 And op >= &hE0 Then Print ">"; ' Display READ prompt
+      If oc = &h4 And op >= &hE0 Then cout(">") ' Display READ prompt
       debug = exec(0)
       If debug = E_OK Then debug = E_BREAK
 
     ElseIf cmd$(0) = "troff" Then
       ' Disable trace
-      Print "Trace OFF"
+      cout("Trace OFF") : endl()
       ztrace = 0
 
     ElseIf cmd$(0) = "tron" Then
       ' Enable trace
-      Print "Trace ON"
+      cout("Trace ON") : endl()
       ztrace = 1
 
     ElseIf cmd$(0) = "v" Then
       ' Clear address breakpoint
       a = Val(cmd$(1))
       If a < 0 Or a >= NUM_BP Then
-        Print "Invalid address breakpoint"
+        cout("Invalid address breakpoint") : endl()
       ElseIf bp(a) = -1 Then
-        Print "Address breakpoint [" + Str$(a) + "] already cleared"
+        cout("Address breakpoint [" + Str$(a) + "] already cleared") :endl()
       Else
         bp(a) = -1
-        Print "Address breakpoint [" + Str$(a) + "] cleared"
+        cout("Address breakpoint [" + Str$(a) + "] cleared") : endl()
       EndIf
 
     ElseIf cmd$(0) = "V" Then
       ' Lookup word in dictionary
       a = di_lookup(LCase$(cmd$(1)))
-      Print fmt_hex$(a)
+      cout(fmt_hex$(a)) : endl()
 
     ElseIf cmd$(0) = "x" Then
       ' Parse and print value
       a = Val(cmd$(1))
-      Print Str$(a);
-      Print "  " + fmt_hex$(a)
-      Print "  &b" + LPad$(Bin$(a), 16, "0")
+      cout(Str$(a))
+      cout("  " + fmt_hex$(a))
+      cout("  &b" + LPad$(Bin$(a), 16, "0"))
+      endl()
 
     ElseIf cmd$(0) = "z" Then
       ' Clear all breakpoints
       For i = 0 To NUM_BP - 1 : bp(i) = -1 : Next i
-      Print "All breakpoints cleared"
+      cout("All breakpoints cleared") : endl()
 
     Else
-      Print "Unknown debug command"
+      cout("Unknown debug command") : endl()
 
     EndIf
 
@@ -159,10 +161,10 @@ End Function
 ' Prints abbreviations.
 Sub dmp_abrv()
   Local i
-  For i = 0 To 95
-    Print Str$(i); ": {";
+  For i = 0 To 95 ' TODO: this shouldn't be hardcoded
+    cout(Str$(i) + ": {")
     print_abrv(i)
-    Print "}"
+    cout("}") : endl()
   Next i
 End Sub
 
@@ -170,26 +172,26 @@ End Sub
 Sub dmp_dict()
   Local a, col, i, n, sep$, sz, x
 
-  Print "    **** Dictionary ****"
-  Print
+  cout("    **** Dictionary ****") : endl()
+  endl()
 
   a = rw(&h8) ' Dictionary address
 
   n = rb(a) : a = a + 1
   sep$ = Space$(n)
   For i = 1 To n : Poke Var sep$, i, rb(a) : a = a + 1 : Next i
-  Print "  Word separators = "; Chr$(34); sep$; Chr$(34)
+  cout("  Word separators = " + Chr$(34) + sep$ + Chr$(34)) : endl()
 
   sz = rb(a) : a = a + 1
   n = rw(a) : a = a + 2
-  Print "  Word count ="; n; ", word size ="; sz
-  Print
+  cout("  Word count = " + Str$(n) + ", word size = " + Str$(sz)) : endl()
+  endl()
 
   For i = 1 To n
-    Print "["; lpad$(Str$(i), 4, " "); "] ";
+    cout("[" + lpad$(Str$(i), 4, " ") + "] ")
 
-    x = 256 * rb(a) + rb(a + 1) : Print lpad$(Hex$(x), 4, "0");
-    x = 256 * rb(a + 2) + rb(a + 3) : Print lpad$(Hex$(x), 4, "0"); " ";
+    x = 256 * rb(a) + rb(a + 1) : cout(lpad$(Hex$(x), 4, "0"))
+    x = 256 * rb(a + 2) + rb(a + 3) : cout(lpad$(Hex$(x), 4, "0") + " ")
 
     ' Read 4 bytes of text
     print_zstring(a)
@@ -198,8 +200,8 @@ Sub dmp_dict()
     a = a + sz - 4
 
     col = col + 1
-    Print Chr$(13); Chr$(27); "[" ; Str$(col * 24); "C";
-    If col = 3 Then col = 0 : Print
+    cout(Chr$(13) + Chr$(27) + "[" + Str$(col * 24) + "C")
+    If col = 3 Then col = 0 : endl()
   Next i
 End Sub
 
@@ -211,40 +213,41 @@ Sub dmp_global(a, n)
   For i = a To a + n - 1
     If i > 239 Then Exit For
     x = vget(i + 16)
-    Print "G" + lpad$(Str$(i), 2, "0") + " = &h" + lpad$(Hex$(x), 4, "0");
+    cout("G" + lpad$(Str$(i), 2, "0") + " = " + fmt_hex$(x))
     If x And &h8000 Then
-      Print "  " + Str$(x - &h10000)
+      cout("  " + Str$(x - &h10000))
     Else
-      Print "  " + Str$(x)
+      cout("  " + Str$(x))
     EndIf
+    endl()
   Next i
 End Sub
 
 ' Prints Z-machine header.
 Sub dmp_hdr()
   Local x
-  Print "Version      =";  rb(&h00)
-  Print "Flags1       = &b"; lpad$(Bin$(rb(&h01)), 8, "0")
-  Print "Release      =";  rw(&h02)
-  Print "Base high    = &h"; lpad$(Hex$(rw(&h04)), 4, "0")
-  Print "Initial PC   = &h"; lpad$(Hex$(rw(&h06)), 4, "0")
-  Print "Dictionary   = &h"; lpad$(Hex$(rw(&h08)), 4, "0")
-  Print "Object tbl   = &h"; lpad$(Hex$(rw(&h0A)), 4, "0")
-  Print "Glob var tbl = &h"; lpad$(Hex$(rw(&h0C)), 4, "0")
-  Print "Base static  = &h"; lpad$(Hex$(rw(&h0E)), 4, "0")
-  Print "Flags2       = &b"; lpad$(Bin$(rb(&h10)), 8, "0")
-  Print "Serial num   = ";
-  Print Chr$(rb(&h12));
-  Print Chr$(rb(&h13));
-  Print Chr$(rb(&h14));
-  Print Chr$(rb(&h15));
-  Print Chr$(rb(&h16));
-  Print Chr$(rb(&h17))
-  Print "Abbrv tbl    = &h"; lpad$(Hex$(rw(&h18)), 4, "0")
+  cout("Version      = " + Str$(rb(&h00))) : endl()
+  cout("Flags1       = &b" + lpad$(Bin$(rb(&h01)), 8, "0")) : endl()
+  cout("Release      = " + Str$(rw(&h02))) : endl()
+  cout("Base high    = " + fmt_hex$(rw(&h04))) : endl()
+  cout("Initial PC   = " + fmt_hex$(rw(&h06))) : endl()
+  cout("Dictionary   = " + fmt_hex$(rw(&h08))) : endl()
+  cout("Object tbl   = " + fmt_hex$(rw(&h0A))) : endl()
+  cout("Glob var tbl = " + fmt_hex$(rw(&h0C))) : endl()
+  cout("Base static  = " + fmt_hex$(rw(&h0E))) : endl()
+  cout("Flags2       = &b" + lpad$(Bin$(rb(&h10)), 8, "0")) : endl()
+  cout("Serial num   = ")
+  cout(Chr$(rb(&h12)))
+  cout(Chr$(rb(&h13)))
+  cout(Chr$(rb(&h14)))
+  cout(Chr$(rb(&h15)))
+  cout(Chr$(rb(&h16)))
+  cout(Chr$(rb(&h17))) : endl()
+  cout("Abbrv tbl    = " + fmt_hex$(rw(&h18))) : endl()
   x = 2 * rw(&h1A)
-  Print "File length  ="; x; " &h" + lpad$(Hex$(x), 4, "0")
-  Print "File chksum  ="; rw(&h1C)
-  Print "Std revision ="; rw(&h32)
+  cout("File length  = " + Str$(x) + " bytes") : endl()
+  cout("File chksum  = " + Str$(rw(&h1C))) : endl()
+  cout("Std revision = " + Str$(rw(&h32))) : endl()
 End Sub
 
 ' Prints 'n' bytes from 'mem' starting from 'a'
@@ -252,30 +255,30 @@ Sub dmp_mem(a, n)
   Local i, x
   If n = 0 Then n = 128
   For i = 0 To n - 1
-    If i Mod 16 = 0 Then Print "[" + fmt_hex$(a + i) + "] ";
+    If i Mod 16 = 0 Then cout("[" + fmt_hex$(a + i) + "] ")
     If a + i < FILE_LEN Then
       x = rb(a + i)
-      Print lpad$(Hex$(x), 2, "0"); " ";
+      cout(lpad$(Hex$(x), 2, "0") + " ")
     Else
-      Print "XX ";
+      cout("XX ")
     EndIf
-    If ((i + 1) Mod 16 = 0) And (i <> n - 1) Then Print
+    If ((i + 1) Mod 16 = 0) And (i <> n - 1) Then endl()
   Next i
-  Print
+  endl()
 End Sub
 
 ' Dump CMM1 virtual memory map.
 Sub dmp_mmap
   Local i
 
-  Print "Physical page -> Virtual page"
+  cout("Physical page -> Virtual page") : endl()
   For i = 0 To NUM_PHYSICAL_PAGES - 1
-    Print Str$(i); " -> "; Str$(pp_to_vp(i))
+    cout(Str$(i) + " -> " + Str$(pp_to_vp(i))) : endl()
   Next i
 
-  Print "Virtual page -> Physical page"
+  cout("Virtual page -> Physical page") : endl()
   For i = 0 To NUM_VIRTUAL_PAGES - 1
-    Print Str$(i); " -> "; Str$(vp_to_pp(i))
+    cout(Str$(i) + " -> " + Str$(vp_to_pp(i))) : endl()
   Next i
 End Sub
 
@@ -284,39 +287,39 @@ Sub dmp_obj(o)
   Local ad, i, p, sz, x
 
   If o <= 0 Then
-    Print "Property defaults:"
+    cout("Property defaults:") : endl()
     ad = rw(&h0A)
     For i = 0 To 30
       x = rw(ad)
-      Print lpad$(Hex$(x), 4, "0"); " ";
-      If (i + 1) Mod 10 = 0 Then Print
+      cout(lpad$(Hex$(x), 4, "0") + " ")
+      If (i + 1) Mod 10 = 0 Then endl()
       ad = ad + 2
     Next i
-    Print
+    endl()
     Exit Sub
   EndIf
 
-  Print Str$(o); ". ";
-  Print "Attributes: ";
+  cout(Str$(o) + ". ")
+  cout("Attributes: ")
   For i = 0 To 31
     x = oattr(o, i)
-    If x <> 0 Then Print i;
+    If x <> 0 Then cout(Str$(i))
   Next i
-  Print
+  endl()
 
   x = orel(o, PARENT)
-  Print "   Parent object:"; x; "  ";
+  cout("   Parent object: " + Str$(x) + "  ")
   x = orel(o, SIBLING)
-  Print "Sibling object:"; x; "  ";
+  cout("Sibling object: " + Str$(x) + "  ")
   x = orel(o, CHILD)
-  Print "Child object:"; x
+  cout("Child object:" + Str$(x)) : endl()
 
   ad = get_prop_base(o)
-  Print "   Property address: "; lpad$(Hex$(ad), 4, "0")
-  Print "        Description: '";
+  cout("   Property address: " + lpad$(Hex$(ad), 4, "0")) : endl()
+  cout("        Description: '")
   print_obj(o);
-  Print "'"
-  Print "         Properties:"
+  cout("'") : endl()
+  cout("         Properties:") : endl()
   p = 0
   Do
     p = get_next_prop(o, p)
@@ -324,53 +327,53 @@ Sub dmp_obj(o)
       ad = get_prop_addr(o, p)
       sz = get_prop_len(ad)
       x = rb(ad - 1)
-      If x\32 + 1 <> sz Then Error
-      Print "             ["; Str$(p); "] ";
+      If x \ 32 + 1 <> sz Then Error
+      cout("             [" + Str$(p) + "] ")
       For i = 1 To sz
         x = rb(ad)
         ad = ad + 1
-        Print lpad$(Hex$(x), 2, "0"); " ";
+        cout(lpad$(Hex$(x), 2, "0") + " ")
       Next i
-      Print
+      endl()
     EndIf
   Loop Until p = 0
 End Sub
 
 ' Prints dissasembly for an instruction.
 Sub dmp_op(m$, st, br)
-  Print rpad$(m$, 14);
+  cout(rpad$(m$, 14))
   If m$ = "CALL" Then
-    Print fmt_call_operands$();
+    cout(fmt_call_operands$())
   ElseIf m$ = "JUMP" Then
-    Print fmt_jump_operands$();
+    cout(fmt_jump_operands$())
   ElseIf m$ = "STORE" Or m$ = "DEC_CHK" Or m$ = "INC_CHK" Then
-    Print fmt_store_operands$();
+    cout(fmt_store_operands$())
   ElseIf m$ = "DEC" Or m$ = "INC" Or m$ = "PULL" Or m$= "LOAD" Then
-    Print fmt_store_operands$();
+    cout(fmt_store_operands$())
   Else
-    Print fmt_normal_operands$();
+    cout(fmt_normal_operands$())
   EndIf
 
-  If st > -1 Then Print " -> "; fmt_store_value$(st);
+  If st > -1 Then cout(" -> " + fmt_store_value$(st))
 
-  If br = 0 Then Print : Exit Sub
-  If br And &h80000 Then Print " [TRUE] "; Else Print " [FALSE] ";
-  If (br And &h7FFFF) = pc - 2 Then Print "RFALSE" : Exit Sub
-  If (br And &h7FFFF) = pc - 1 Then Print "RTRUE" : Exit Sub
-  Print Hex$(br And &h7FFFF)
+  If br = 0 Then endl() : Exit Sub
+  If br And &h80000 Then cout(" [TRUE] ") Else cout(" [FALSE] ")
+  If (br And &h7FFFF) = pc - 2 Then cout("RFALSE") : endl() : Exit Sub
+  If (br And &h7FFFF) = pc - 1 Then cout("RTRUE") : endl() : Exit Sub
+  cout(Hex$(br And &h7FFFF)) : endl()
 End Sub
 
 ' Print information about the routine starting at 'new_pc'.
 Sub dmp_routine(new_pc)
   Local i, locals_sz, x
   locals_sz = rb(new_pc)
-  Print "Routine "; Hex$(new_pc); ", "; Str$(locals_sz); " locals (";
+  cout("Routine " + Hex$(new_pc) + ", " + Str$(locals_sz) + " locals (")
   For i = 0 To locals_sz - 1
-    If i > 0 Then Print ", ";
+    If i > 0 Then cout(", ")
     x = rw(new_pc + 1 + i * 2)
-    Print lpad$(Hex$(x), 4, "0");
+    cout(lpad$(Hex$(x), 4, "0"))
   Next i
-  Print ")"
+  cout(")") : endl()
 End Sub
 
 ' Prints the contents of the stack.
@@ -379,39 +382,39 @@ End Sub
 Sub dmp_stack(a)
   Local i, tmp_fp, x
 
-  Print "TOP: ";
-  If sp = 0 Then Print "*empty*"
+  cout("TOP: ")
+  If sp = 0 Then cout("*empty*") : endl()
   tmp_fp = fp
 
   For i = sp - 1 To 0 Step -1
-    If i < sp - 1 Then Print "     ";
+    If i < sp - 1 Then cout("     ")
     x = st_peek(i)
 
     If x And &h8000 Then
-      Print fmt_hex$(x); "  "; lpad$(Str$(x - &h10000), 6, " ") + "  ";
+      cout(fmt_hex$(x) + "  " + lpad$(Str$(x - &h10000), 6, " ") + "  ")
     Else
-      Print fmt_hex$(x); "  "; lpad$(Str$(x), 6, " ") + "  ";
+      cout(fmt_hex$(x) + "  " + lpad$(Str$(x), 6, " ") + "  ")
     EndIf
 
     If tmp_fp = &hFFFF Then
       ' Nothing
     ElseIf i = tmp_fp Then
-      Print "previous fp";
-      If a <> 0 Then Print : Print String$(35, "-");
+      cout("previous fp")
+      If a <> 0 Then endl() : cout(String$(35, "-"))
       tmp_fp = x
     ElseIf i = tmp_fp + 1 Then
-      Print "store result";
+      cout("store result")
     ElseIf i = tmp_fp + 2 Then
-      Print "return address (lo)";
+      cout("return address (lo)")
     ElseIf i = tmp_fp + 3 Then
-      Print "return address (hi)";
+      cout("return address (hi)")
     ElseIf i = tmp_fp + 4 Then
-      Print "num locals";
+      cout("num locals")
     Else
-      Print "L" + lpad$(Str$(i - tmp_fp - 5), 2, "0");
+      cout("L" + lpad$(Str$(i - tmp_fp - 5), 2, "0"))
       ' TODO: Not everything on top of the stack is a local variable
     EndIf
-    Print
+    endl()
     If a = 0 And i = fp Then Exit For
   Next i
 End Sub
@@ -460,11 +463,11 @@ End Function
 
 Function fmt_store_value$(st)
   If st = 0 Then
-    Print "-(SP)";
+    cout("-(SP)")
   ElseIf st < &h10 Then
-    Print "L" + lpad$(Hex$(st - 1), 2, "0");
+    cout("L" + lpad$(Hex$(st - 1), 2, "0"))
   Else
-    Print "G" + lpad$(Hex$(st - &h10), 2, "0");
+    cout("G" + lpad$(Hex$(st - &h10), 2, "0"))
   EndIf
 End Function
 
