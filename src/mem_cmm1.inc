@@ -12,8 +12,6 @@ Dim BASE_STATIC = PAGE_SIZE
 Dim FILE_LEN = PAGE_SIZE
 Dim FIRST_SWAP_PAGE = -1
 
-Const MAX_WORD = 256 * 256 - 1
-
 Dim m(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
 
 Dim pf = 0 ' Counter for number of page faults
@@ -28,12 +26,12 @@ Dim next_page = 0
 
 Dim pc = 0
 
+Dim GLOBAL_VAR
+
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
   Local pp, vp
-  If pc < 0 Or pc >= FILE_LEN Then
-    Error "PC " + Str$(pc) + " > file length " + Str$(FILE_LEN)
-  EndIf
+  If pc < 0 Or pc >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
   vp = pc \ PAGE_SIZE
   pp = vp_to_pp(vp)
   If pp = 0 Then pp = mem_load(vp) : pf = pf + 1
@@ -44,9 +42,7 @@ End Function
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
   Local pp, vp
-  If a < 0 Or a >= FILE_LEN Then
-    Error "Address " + Str$(a) + " > file length " + Str$(FILE_LEN)
-  EndIf
+  If a < 0 Or a >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
   If a < BASE_STATIC Then rb = Peek(Var m(0), a) : Exit Function
   vp = a \ PAGE_SIZE
   pp = vp_to_pp(vp)
@@ -61,17 +57,15 @@ End Function
 
 ' Writes byte 'x' to 'a'
 Sub wb(a, x)
-  If a < 0 Or a >= BASE_STATIC Then Error
-  If x < 0 Or x > 255 Then Error
+  If a < 0 Or a >= BASE_STATIC Then Error "Invalid address: " + fmt_hex$(a)
+  If (x And &hFF) <> x Then Error "Invalid write value: " + Str$(x)
   Poke Var m(0), a, x
 End Sub
 
 ' Writes 16-bit word 'x' to 'a'
 Sub ww(a, x)
-  If a < 0 Or a >= BASE_STATIC - 1 Then
-    Error "Address for write is invalid: &h" + lpad$(Hex$(a), 4, "0")
-  EndIf
-  If x < 0 Or x > MAX_WORD Then Error "Value for write is invalid: " + Str$(x)
+  If a < 0 Or a >= BASE_STATIC - 1 Then Error "Invalid address: " + fmt_hex$(a)
+  If (x And &hFFFF) <> x Then Error "Invalid write value: " + Str$(x)
   Poke Var m(0), a, x \ 256
   Poke Var m(0), a + 1, x Mod 256
 End Sub

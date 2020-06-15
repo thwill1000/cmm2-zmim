@@ -6,6 +6,7 @@ Option Default Integer
 
 '#Include "mem_cmm2_fast.inc"
 #Include "mem_cmm2_safe.inc"
+'#Include "mem_cmm1.inc"
 #Include "stack.inc"
 #Include "variable.inc"
 #Include "decode.inc"

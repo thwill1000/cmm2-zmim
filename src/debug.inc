@@ -276,7 +276,7 @@ End Sub
 
 ' Dump CMM1 virtual memory map.
 Sub dmp_mmap
-  Local i
+  Local col, i
 
   On Error Skip 1
   i = NUM_PHYSICAL_PAGES
@@ -289,13 +289,24 @@ Sub dmp_mmap
 
   cout("Physical page -> Virtual page") : endl()
   For i = 0 To NUM_PHYSICAL_PAGES - 1
-    cout(Str$(i) + " -> " + Str$(pp_to_vp(i))) : endl()
+    cout(lpad$(Str$(i), 3, " ") + " -> " + lpad$(Str$(pp_to_vp(i)), 3, " "))
+    col = col + 1
+    cout(Chr$(13) + Chr$(27) + "[" + Str$(col * 15) + "C")
+    If col = 6 Then col = 0 : endl()
   Next i
+
+  If col <> 0 Then endl() : col = 0
+  endl()
 
   cout("Virtual page -> Physical page") : endl()
   For i = 0 To NUM_VIRTUAL_PAGES - 1
-    cout(Str$(i) + " -> " + Str$(vp_to_pp(i))) : endl()
+    cout(lpad$(Str$(i), 3, " ") + " -> " + lpad$(Str$(vp_to_pp(i)), 3, " "))
+    col = col + 1
+    cout(Chr$(13) + Chr$(27) + "[" + Str$(col * 15) + "C")
+    If col = 6 Then col = 0 : endl()
   Next i
+
+  If col <> 0 Then endl()
 End Sub
 
 ' Prints object 'o'.
