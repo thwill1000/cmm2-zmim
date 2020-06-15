@@ -7,7 +7,7 @@ Dim mad = Peek(VarAddr m()) + 8
 Dim FILE_LEN
 Dim pc
 Dim BASE_STATIC
-DIM GLOBAL_VAR
+Dim GLOBAL_VAR
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()

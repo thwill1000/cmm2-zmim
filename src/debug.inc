@@ -30,7 +30,10 @@ Function debug()
 
     debug = E_DEBUG
 
-    If cmd$(0) = "b" Then
+    If cmd$(0) = "abrv" Then
+      dmp_abrv()
+
+    ElseIf cmd$(0) = "b" Then
       ' Set address breakpoint
       a = Val(cmd$(1))
       If a >= 0 And a < FILE_LEN Then
@@ -86,6 +89,9 @@ Function debug()
     ElseIf cmd$(0) = "dict" Then
       ' Dump dictionary
       dmp_dict()
+
+    ElseIf cmd$(0) = "dmap" Then
+      dmp_mmap()
 
     ElseIf cmd$(0) = "G" Then
       ' Dump global variables
@@ -162,32 +168,33 @@ Function debug()
 End Function
 
 ' Prints abbreviations.
+' z3 always has 96 abbreviations.
 Sub dmp_abrv()
-  Local i
-  For i = 0 To 95 ' TODO: this shouldn't be hardcoded
-    cout(Str$(i) + ": {")
-    print_abrv(i)
-    cout("}") : endl()
+  Local col, i
+  For i = 0 To 95
+    cout("[" + lpad$(Str$(i), 2, " ") + "] {") : print_abrv(i) : cout("}")
+    col = col + 1
+    cout(Chr$(13) + Chr$(27) + "[" + Str$(col * 24) + "C")
+    If col = 3 Then col = 0 : endl()
   Next i
+
+  If col <> 0 Then endl()
 End Sub
 
 ' Prints dictionary.
 Sub dmp_dict()
   Local a, col, i, n, sep$, sz, x
 
-  cout("    **** Dictionary ****") : endl()
-  endl()
-
   a = rw(&h8) ' Dictionary address
-
   n = rb(a) : a = a + 1
   sep$ = Space$(n)
   For i = 1 To n : Poke Var sep$, i, rb(a) : a = a + 1 : Next i
-  cout("  Word separators = " + Chr$(34) + sep$ + Chr$(34)) : endl()
+  cout("Word separators = {" + sep$ + "}") : endl()
 
   sz = rb(a) : a = a + 1
   n = rw(a) : a = a + 2
-  cout("  Word count = " + Str$(n) + ", word size = " + Str$(sz)) : endl()
+  cout("Word count      = " + Str$(n)) : endl()
+  cout("Word size       = " + Str$(sz)) : endl()
   endl()
 
   For i = 1 To n
@@ -206,6 +213,8 @@ Sub dmp_dict()
     cout(Chr$(13) + Chr$(27) + "[" + Str$(col * 24) + "C")
     If col = 3 Then col = 0 : endl()
   Next i
+
+  If col <> 0 Then endl()
 End Sub
 
 ' Prints 'n' global variables starting from 'a'.
@@ -228,7 +237,7 @@ End Sub
 
 ' Prints Z-machine header.
 Sub dmp_hdr()
-  Local x
+  Local i
   cout("Version      = " + Str$(rb(&h00))) : endl()
   cout("Flags1       = &b" + lpad$(Bin$(rb(&h01)), 8, "0")) : endl()
   cout("Release      = " + Str$(rw(&h02))) : endl()
@@ -240,15 +249,10 @@ Sub dmp_hdr()
   cout("Base static  = " + fmt_hex$(rw(&h0E))) : endl()
   cout("Flags2       = &b" + lpad$(Bin$(rb(&h10)), 8, "0")) : endl()
   cout("Serial num   = ")
-  cout(Chr$(rb(&h12)))
-  cout(Chr$(rb(&h13)))
-  cout(Chr$(rb(&h14)))
-  cout(Chr$(rb(&h15)))
-  cout(Chr$(rb(&h16)))
-  cout(Chr$(rb(&h17))) : endl()
+  For i = &h12 To &h17 : cout(Chr$(rb(i))) : Next i
+  endl()
   cout("Abbrv tbl    = " + fmt_hex$(rw(&h18))) : endl()
-  x = 2 * rw(&h1A)
-  cout("File length  = " + Str$(x) + " bytes") : endl()
+  cout("File length  = " + Str$(2 * rw(&h1A)) + " bytes") : endl()
   cout("File chksum  = " + Str$(rw(&h1C))) : endl()
   cout("Std revision = " + Str$(rw(&h32))) : endl()
 End Sub
@@ -273,6 +277,15 @@ End Sub
 ' Dump CMM1 virtual memory map.
 Sub dmp_mmap
   Local i
+
+  On Error Skip 1
+  i = NUM_PHYSICAL_PAGES
+  If MM.ERRNO <> 0 Then
+    ' If NUM_PHYSICAL_PAGES in undefined then ...
+    cout("Not using virtual memory implementation.") : endl()
+    On Error Clear
+    Exit Sub
+  EndIf
 
   cout("Physical page -> Virtual page") : endl()
   For i = 0 To NUM_PHYSICAL_PAGES - 1
@@ -318,7 +331,7 @@ Sub dmp_obj(o)
   cout("Child object:" + Str$(x)) : endl()
 
   ad = get_prop_base(o)
-  cout("   Property address: " + lpad$(Hex$(ad), 4, "0")) : endl()
+  cout("   Property address: " + fmt_hex$(ad)) : endl()
   cout("        Description: '")
   print_obj(o);
   cout("'") : endl()
