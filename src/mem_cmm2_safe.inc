@@ -59,7 +59,7 @@ Sub mem_init(f$)
     ad = ad + Len(s$)
     If ad > j * sz \ 10 Then cout(Str$(j * 10) + "% ... ") : j = j + 1
   Loop
-  cout(" 100%") : endl()
+  cout("100%") : endl()
   cout("Read " + Str$(ad) + " bytes") : endl()
 
   Close #1
