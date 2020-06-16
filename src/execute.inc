@@ -285,16 +285,28 @@ Function ex_0op()
 
   ElseIf oc = &h5 Then
     ' SAVE
-    x = zsave()
-    _branch(x, br)
+    If script AND S_READ Then
+      cout("IGNORED 'save' command read from script") : endl()
+    Else
+      x = zsave()
+      _branch(x, br)
+    EndIf
 
   ElseIf oc = &h6 Then
     ' RESTORE
-    x = zsave(1)
+    If script AND S_READ Then
+      cout("IGNORED 'restore' command read from script") : endl()
+    Else
+      x = zsave(1)
+    EndIf
 
   ElseIf oc = &h7 Then
     ' RESTART
-    Run
+    If script AND S_READ Then
+      cout("IGNORED 'restart' command read from script") : endl()
+    Else
+      Run
+    EndIf
 
   ElseIf oc = &h8 Then
     ' RET_POPPED
@@ -348,7 +360,6 @@ Function ex_varop()
 
   ElseIf oc = &h4 Then
     ' READ
-    cout("> ")
     ex_varop = _read(oa(0), oa(1))
 
   ElseIf oc = &h5 Then
@@ -441,15 +452,12 @@ Function _read(text_buf, parse_buf)
 
   rtime = rtime - Timer
 
-  s$ = LCase$(cin$())
+  s$ = LCase$(cin$("> ", 1))
   If Left$(s$, 1) = "*" Then _read = ex_special(s$)
 
   rtime = rtime + Timer
 
   If _read <> E_OK Then Exit Function
-
-  ' Write non-empty input to a script
-  If script And S_WRITE Then If s$ <> "" Then Print #2, s$
 
   n = Len(s$)
   ' TODO: check for input too long
@@ -505,13 +513,17 @@ Function ex_special(cmd$)
     endl()
 
   ElseIf cmd$ = "*replay" Then
-    cout("Select a script file from '")
-    cout(ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "':")
-    endl()
-    f$ = file_choose$(ss$(SCRIPT_DIR) + "/" + ss$(STORY), "*.scr")
-    If f$ <> "" Then
-      Open f$ For Input As #3
-      script = script Or S_READ
+    If script AND S_READ Then
+      cout("IGNORED '*replay' command read from script")
+    Else
+      cout("Select a script file from '")
+      cout(ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "':")
+      endl()
+      f$ = file_choose$(ss$(SCRIPT_DIR) + "/" + ss$(STORY), "*.scr")
+      If f$ <> "" Then
+        Open f$ For Input As #3
+        script = script Or S_READ
+      EndIf
     EndIf
     endl()
 

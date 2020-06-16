@@ -20,9 +20,6 @@ Option Default Integer
 #Include "file.inc"
 #Include "debug.inc"
 
-'Dim BUSY$(1) LENGTH 16
-'BUSY$(0) = "\\\\||||////----"
-
 Const E_OK = 0
 Const E_UNKNOWN = 1
 Const E_UNIMPLEMENTED = 2
@@ -37,10 +34,6 @@ Dim num_ops = 0    ' Number of instructions processed.
 Dim ztrace = 0     ' Is instruction tracing enabled?
 Dim bp(NUM_BP - 1) ' The addresses of up to 10 breakpoints, -1 for unset.
 Dim rtime = 0      ' Time (ms) spent waiting for user input.
-Dim script = 0     ' Bit 1 is set for writing (via #2), bit 2 is set for reading (via #3)
-
-Const S_WRITE = &b01
-Const S_READ = &b10
 
 ' String "constants" that I don't want to take up 256 bytes
 Dim ss$(4) Length 20
@@ -104,8 +97,7 @@ Sub main()
   For i = Len(ss$(SCRIPT_DIR)) To Len(f$)
     If Peek(Var f$, i) = Asc(":") Then Poke Var f$, i, Asc("-")
   Next i
-  cout("Write script to '" + f$ + "' [Y|n]")
-  Input s$
+  s$ = cin$("Write script to '" + f$ + "' [Y|n] ")
   If LCase$(s$) <> "n" Then
     Open f$ For Output As #2
     script = S_WRITE

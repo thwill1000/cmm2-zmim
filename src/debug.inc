@@ -15,9 +15,8 @@ Function debug()
     cn = 0
     For i = 0 To 9 : cmd$(i) = "" : Next i
     rtime = rtime - Timer
-    Line Input "DEBUG >> ", s$
+    s$ = cin$("DEBUG >> ") + " "
     rtime = rtime + Timer
-    s$ = s$ + " "
     For i = 1 To Len(s$)
       c = Peek(Var s$, i)
       If Chr$(c) = " " Then

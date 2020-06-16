@@ -37,19 +37,19 @@ Function zsave(res)
   Next i
   ChDir ss$(INSTALL_DIR)
 
-  Line Input "Game number? ", s$
+  s$ = cin$("Game number? ")
   i = Val(s$)
   If i < 1 Or i > 10 Then i = 0
 
   If i > 0 And res And Not exists(i) Then i = 0
 
   If i > 0 And Not res And exists(i) Then
-    Line Input "Overwrite game " + Str$(i) + " [y|N]?", s$
+    s$ = cin$("Overwrite game " + Str$(i) + " [y|N]? ")
     If LCase$(s$) <> "y" Then i = 0
   EndIf
 
   If i > 0 And Not res Then
-    Line Input "Save game name? ", s$
+    s$ = cin$("Save game name? ")
     If s$ = "" Then i = 0
   EndIf
 

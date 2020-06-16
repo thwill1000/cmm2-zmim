@@ -41,9 +41,8 @@ Function file_choose$(d$, fspec$)
     If col = 1 Then endl()
   EndIf
 
-  Line Input "File number? ", f$
+  f$ = cin$("File number? ")
   If Val(f$) <> 0 Then file_choose$ = d$ + "/" + all$(Val(f$))
 
   ChDir old$ ' Restore working directory
 End Function
-
