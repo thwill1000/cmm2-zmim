@@ -13,16 +13,21 @@ Dim cbuf$
 ' Was the last character written to cbuf$ a space?
 Dim cspace
 
+' Index of last row of output
+Dim crow
+
 Const S_WRITE = &b01
 Const S_READ  = &b10
 
-Dim C_WIDTH = 80
+Dim C_HEIGHT = 48
+Dim C_WIDTH = 100
 
 ' @param  p$  prompt
 ' @param  r   if 1 then write input to the script
 Function cin$(p$, r)
   cout(p$)
   cflush()
+  crow = 0
 
   ' If configured read input from the script
   If script And S_READ Then
@@ -48,6 +53,7 @@ End Function
 ' the last 'word' or part thereof may be left in $cbuf.
 Sub cout(s$)
   Local c, i
+
   For i = 1 To Len(s$)
     c = Peek(Var s$, i)
 
@@ -64,17 +70,26 @@ End Sub
 ' If cbuf$ does not fit on the current line then first write CRLF and then if
 ' cbuf$ contains non-spaces write cbuf$ to the console.
 Sub cflush()
+  If Pos = 1 And crow > C_HEIGHT Then
+    Print "[MORE] ";
+    Local tmp$
+    Line Input tmp$
+    crow = 0
+  EndIf
+
   If Pos + Len(cbuf$) > C_WIDTH Then
     Print
-    If Not cspace Then Print cbuf$;
+    crow = crow + 1
+    If Not cspace Then cflush()
   Else
     Print cbuf$;
   EndIf
+
   cbuf$ = ""
 End Sub
 
 ' Flushes cbuf$ to the console and then writes CRLF.
 Sub endl()
   cflush()
-  Print
+  Print : crow = crow + 1
 End Sub
