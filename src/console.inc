@@ -22,13 +22,7 @@ Dim C_WIDTH = 80
 ' @param  r   if 1 then write input to the script
 Function cin$(p$, r)
   cout(p$)
-  If Pos + Len(cbuf$) > C_WIDTH Then
-    Print
-    If Not cspace Then Print cbuf$;
-  Else
-    Print cbuf$;
-  EndIf
-  cbuf$ = ""
+  cflush()
 
   ' If configured read input from the script
   If script And S_READ Then
@@ -48,16 +42,7 @@ Function cin$(p$, r)
   If (r = 1) And (script AND S_WRITE) And (cin$ <> "") Then Print #2, cin$
 End Function
 
-' Output s$
-'
-' For each characer
-'   IF we have switched from non-spaces to spaces, or vice-versa THEN
-'     IF cbuf$ does not fit on the current line THEN
-'       Output CRLF
-'       IF cbuf$ contains non-spaces THEN output and clear cbuf$
-'     ELSE
-'       Output and clear cbuf$
-'   Append new character to cbuf$
+' Outputs s$.
 '
 ' Note that calling this function will probably not output the entirety of s$;
 ' the last 'word' or part thereof may be left in $cbuf.
@@ -65,26 +50,31 @@ Sub cout(s$)
   Local c, i
   For i = 1 To Len(s$)
     c = Peek(Var s$, i)
-    If (c = &h20) Xor cspace Then
-      If Pos + Len(cbuf$) > C_WIDTH Then
-        Print
-        If Not cspace Then Print cbuf$;
-      Else
-        Print cbuf$;
-      EndIf
-      cbuf$ = ""
-      cspace = (c = &h20)
-    EndIf
+
+    ' If we have swtiched from non-spaces to spaces, or vice-versa then
+    ' flush the current contents of cbuf$ to the console.
+    If (c = &h20) Xor cspace Then cflush() : cspace = (c = &h20)
+
     cbuf$ = cbuf$ + Chr$(c)
   Next i
 End Sub
 
-' Output CRLF, first outputing cbuf$ if it contains non-spaces.
-Sub endl()
-  If Not cspace Then
-    If Pos + Len(cbuf$) > C_WIDTH Then Print
+' Writes cbuf$ to the console and clears it.
+'
+' If cbuf$ does not fit on the current line then first write CRLF and then if
+' cbuf$ contains non-spaces write cbuf$ to the console.
+Sub cflush()
+  If Pos + Len(cbuf$) > C_WIDTH Then
+    Print
+    If Not cspace Then Print cbuf$;
+  Else
     Print cbuf$;
   EndIf
   cbuf$ = ""
+End Sub
+
+' Flushes cbuf$ to the console and then writes CRLF.
+Sub endl()
+  cflush()
   Print
 End Sub
