@@ -105,7 +105,7 @@ Sub main()
 
 '  Input "Start in debugger [Y|n]"; s$
 '  If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
-  endl()
+  Cls
 
   ' Hack header bits
   x = rb(&h01)
