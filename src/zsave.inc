@@ -9,7 +9,7 @@
 ' @param  res  set 0 to save and 1 to restore
 ' @return      1 on success, 0 on failure or if cancelled
 Function zsave(res)
-  Local exists(10), i, s$, s2$(2) Length 40
+  Local exists(10), i, old_dir$, s$, s2$(2) Length 40
 
   If res Then
     cout("Select game to restore:") : endl()
@@ -17,6 +17,7 @@ Function zsave(res)
     cout("Select save game slot:") : endl()
   EndIf
 
+  old_dir$ = Cwd$
   ChDir ss$(SAVE_DIR) + "/" + ss$(STORY)
   For i = 1 To 10
     s$ = Dir$("game" + Str$(i) + ".sav")
@@ -35,7 +36,7 @@ Function zsave(res)
       Close #1
     EndIf
   Next i
-  ChDir ss$(INSTALL_DIR)
+  ChDir old_dir$
 
   s$ = cin$("Game number? ")
   i = Val(s$)
@@ -65,7 +66,7 @@ Function zsave(res)
     Line Input #1, s2$(1)
     Line Input #1, s2$(2)
     Line Input #1, s$
-    cout("Restoring '" + s$ + "' ...")
+    cout("Restoring '" + s$ + "' ...") : endl()
 
     Local ad, err, new_pc, new_fp, stack_sz, mem_sz
 

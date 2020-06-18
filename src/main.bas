@@ -48,7 +48,7 @@ Const VERSION$ = "Release 2 for Colour Maximite 2, MMBasic 5.05"
 Const COPYRIGHT$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 
 Sub main()
-  Local f$, i, old_pc, state, s$, x
+  Local f$, i, old_dir$, old_pc, state, s$, x
 
   Mode 1
   Cls
@@ -83,13 +83,14 @@ Sub main()
   endl()
 
   ' Ensure subdirectories for the current story exist in "saves/" and "scripts/"
+  old_dir$ = Cwd$
   ChDir(ss$(SAVE_DIR))
   s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error
   s$ = Dir$(ss$(STORY), Dir) : If s$ = "" Then MkDir(ss$(STORY))
   ChDir(ss$(SCRIPT_DIR))
   s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error
   s$ = Dir$(ss$(STORY), Dir) : If s$ = "" Then MkDir(ss$(STORY))
-  ChDir(ss$(INSTALL_DIR))
+  ChDir(old_dir$)
 
   ' Jump through hoops to create the name of the script file
   f$ = ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "/"

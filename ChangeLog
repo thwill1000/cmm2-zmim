@@ -5,6 +5,9 @@ Release 2:
  - Added word-wrapping.
  - Added paging, i.e. display [MORE] prompt when more than a page of text is
    output between input prompts.
+ - Clear console before the story file starts executing.
+ - Make a better effort to restore the original current working directory when
+   Z-MIM exits.
  - Minor improvements to the interactive debugger.
  - Cosmetic improvements to code and README.
 

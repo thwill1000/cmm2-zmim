@@ -2,9 +2,9 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 Function file_choose$(d$, fspec$)
-  Local col, f$, i, m, n, old$, x
+  Local col, f$, i, m, n, old_dir$, x
 
-  old$ = Cwd$
+  old_dir$ = Cwd$
   ChDir d$
 
   ' Count number of entries 'n' and their maximum length 'm'
@@ -15,7 +15,7 @@ Function file_choose$(d$, fspec$)
     f$ = Dir$()
   Loop
 
-  If n = 0 Then cout("No files found") : endl() : ChDir old$ : Exit Function
+  If n = 0 Then cout("No files found") : endl() : ChDir old_dir$ : Exit Function
 
   ' Create sorted array of entries 'all$'.
   ' Element 0 is always empty, even after the sort.
@@ -23,6 +23,8 @@ Function file_choose$(d$, fspec$)
   f$ = Dir$(fspec$)
   For i = 1 To n : all$(i) = f$ : f$ = Dir$() : Next i
   Sort all$()
+
+  ChDir old_dir$
 
   ' Display entries
   If n < 6 Then
@@ -44,5 +46,4 @@ Function file_choose$(d$, fspec$)
   f$ = cin$("File number? ")
   If Val(f$) <> 0 Then file_choose$ = d$ + "/" + all$(Val(f$))
 
-  ChDir old$ ' Restore working directory
 End Function
