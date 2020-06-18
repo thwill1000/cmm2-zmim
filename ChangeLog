@@ -1,0 +1,12 @@
+ChangeLog
+---------
+
+Release 2:
+ - Added word-wrapping.
+ - Added paging, i.e. display [MORE] prompt when more than a page of text is
+   output between input prompts.
+ - Minor improvements to the interactive debugger.
+ - Cosmetic improvements to code and README.
+
+Release 1:
+ - Initial public beta.

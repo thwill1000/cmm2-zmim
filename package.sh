@@ -1,6 +1,6 @@
 #!/bin/bash
 
-release=1
+release=2
 release_dir="zmim-r$release"
 base="$release_dir/zmim"
 
@@ -10,6 +10,7 @@ mkdir -p $base/scripts
 mkdir -p $base/src
 mkdir -p $base/stories
 
+cp ChangeLog $base
 cp LICENSE $base
 cp README.md $base
 cp zmim.bas $base

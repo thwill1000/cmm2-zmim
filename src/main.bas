@@ -44,7 +44,7 @@ Const STORY_DIR = 3
 Const STORY = 4
 
 Const DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
-Const VERSION$ = "Release 1 for Colour Maximite 2, MMBasic 5.05"
+Const VERSION$ = "Release 2 for Colour Maximite 2, MMBasic 5.05"
 Const COPYRIGHT$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 
 Sub main()
