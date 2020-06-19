@@ -13,13 +13,17 @@ Dim cbuf$
 ' Was the last character written to cbuf$ a space?
 Dim cspace
 
-' Index of last row of output
-Dim crow
+' Number of lines that have been output since the last prompt
+Dim clines
+
+' Number of consecutive empty lines that have been output.
+' If < 0 then don't output any more empty lines
+Dim cempty
 
 Const S_WRITE = &b01
 Const S_READ  = &b10
 
-Dim C_HEIGHT = 48
+Dim C_HEIGHT = 50
 Dim C_WIDTH = 100
 
 ' @param  p$  prompt
@@ -27,7 +31,7 @@ Dim C_WIDTH = 100
 Function cin$(p$, r)
   cout(p$)
   cflush()
-  crow = 0
+  clines = 0
 
   ' If configured read input from the script
   If script And S_READ Then
@@ -70,17 +74,17 @@ End Sub
 ' If cbuf$ does not fit on the current line then first write CRLF and then if
 ' cbuf$ contains non-spaces write cbuf$ to the console.
 Sub cflush()
-  If Pos = 1 And crow > C_HEIGHT Then
+  If Pos = 1 And clines > C_HEIGHT - 2 Then
     Print "[MORE] ";
     Do While Inkey$ <> "" : Loop
     Do While Inkey$ = "" : Loop
     Print
-    crow = 0
+    clines = 0
   EndIf
 
   If Pos + Len(cbuf$) > C_WIDTH Then
     Print
-    crow = crow + 1
+    clines = clines + 1
     If Not cspace Then cflush()
   Else
     Print cbuf$;
@@ -92,5 +96,16 @@ End Sub
 ' Flushes cbuf$ to the console and then writes CRLF.
 Sub endl()
   cflush()
-  Print : crow = crow + 1
+  If Pos = 1 Then cempty = cempty + 1 Else cempty = 0
+
+  If cempty >= 0 Then Print : clines = clines + 1
+
+  ' If the story outputs more than 10 empty lines then we assume it was trying
+  ' to clear the screen
+  If cempty > 10 Then
+    Local i
+    For i = 0 To C_HEIGHT - cempty - 2 : Print : Next i
+    cempty = -999 ' to avoid any unnecessary additional empty lines
+    clines = 0
+  EndIf
 End Sub

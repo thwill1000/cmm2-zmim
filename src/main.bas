@@ -106,13 +106,17 @@ Sub main()
 
 '  Input "Start in debugger [Y|n]"; s$
 '  If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
-  Cls
+
+  ' This will clear the console, see console#endl
+  For i = 0 To 10 : endl() : Next i
 
   ' Hack header bits
   x = rb(&h01)
   x = x Or  &b00010000 ' set bit 4 - status line not available
   x = x And &b10011111 ' clear bits 5 & 6 - no screen-splitting, fixed-pitch font
   wb(&h01, x)
+  wb(&h20, C_HEIGHT)
+  wb(&h21, C_WIDTH)
 
   decode_init()
   di_init()
