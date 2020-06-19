@@ -2,12 +2,22 @@ ChangeLog
 ---------
 
 Release 2:
- - Added word-wrapping.
- - Added paging, i.e. display [MORE] prompt when more than a page of text is
-   output between input prompts.
+ - Added word-wrapping
+   - assumes 100 character wide console.
+ - Added paging, i.e. displays [MORE] prompt when more than one page of text is
+   output between input prompts
+   - assumes 50 character high console.
  - Clear console before the story file starts executing.
- - Make a better effort to restore the original current working directory when
-   Z-MIM exits.
+ - Except for selecting a story file and choosing whether to write to a script
+   the input prompt is now now at the bottom of the console and the contents
+   only ever scroll upwards
+   - this is the standard/expected behaviour for a Z-machine implementation.
+ - Try to recognise when story is trying to clear the console and respond
+   appropriately
+   - the Z-machine provides no specific clear console instruction instruction
+     so old z3 stories often just print 20-40 blank lines on the assumption that
+     will be sufficient; as it probably was for a 1980s microcomputer.
+ - Try to restore the original current working directory when Z-MIM exits.
  - Minor improvements to the interactive debugger.
  - Cosmetic improvements to code and README.
 
