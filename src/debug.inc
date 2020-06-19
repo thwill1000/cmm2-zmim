@@ -86,7 +86,6 @@ Function debug()
       dmp_mem(a, Val(cmd$(2)))
 
     ElseIf cmd$(0) = "dict" Then
-      ' Dump dictionary
       dmp_dict()
 
     ElseIf cmd$(0) = "dmap" Then
@@ -169,51 +168,51 @@ End Function
 ' Prints abbreviations.
 ' z3 always has 96 abbreviations.
 Sub dmp_abrv()
-  Local col, i
-  For i = 0 To 95
-    cout("[" + lpad$(Str$(i), 2, " ") + "] {") : print_abrv(i) : cout("}")
-    col = col + 1
-    cout(Chr$(13) + Chr$(27) + "[" + Str$(col * 24) + "C")
-    If col = 3 Then col = 0 : endl()
+  Local i, j, nc, nr, width, x
+
+  nc = 3 : nr = CInt(96 / nc + 0.4999) : width = 24
+  For i = 0 To nr - 1
+    For j = 0 To nc - 1
+      cflush()
+      x = (j * nr) + i
+      If x < 96 Then
+        If j * width > Pos Then cout(Space$(j * width - Pos))
+        cout("[" + lpad$(Str$(x), 2) + "] {")
+        print_abrv(x)
+        cout "}"
+      EndIf
+    Next j
+    endl()
   Next i
 
-  If col <> 0 Then endl()
 End Sub
 
 ' Prints dictionary.
 Sub dmp_dict()
-  Local a, col, i, n, sep$, sz, x
+  Local a, i, j, nc, nr, width, x
 
-  a = rw(&h8) ' Dictionary address
-  n = rb(a) : a = a + 1
-  sep$ = Space$(n)
-  For i = 1 To n : Poke Var sep$, i, rb(a) : a = a + 1 : Next i
-  cout("Word separators = {" + sep$ + "}") : endl()
-
-  sz = rb(a) : a = a + 1
-  n = rw(a) : a = a + 2
-  cout("Word count      = " + Str$(n)) : endl()
-  cout("Word size       = " + Str$(sz)) : endl()
+  cout("Word separators = {" + DICT_SEP$(0) + "}") : endl()
+  cout("Word count      = " + Str$(DICT_ENTRY_COUNT)) : endl()
+  cout("Word size       = " + Str$(DICT_ENTRY_LEN)) : endl()
   endl()
 
-  For i = 1 To n
-    cout("[" + lpad$(Str$(i), 4, " ") + "] ")
-
-    x = 256 * rb(a) + rb(a + 1) : cout(lpad$(Hex$(x), 4, "0"))
-    x = 256 * rb(a + 2) + rb(a + 3) : cout(lpad$(Hex$(x), 4, "0") + " ")
-
-    ' Read 4 bytes of text
-    print_zstring(a)
-
-    ' Skip (sz - 4) bytes of data
-    a = a + sz - 4
-
-    col = col + 1
-    cout(Chr$(13) + Chr$(27) + "[" + Str$(col * 24) + "C")
-    If col = 3 Then col = 0 : endl()
+  nc = 3 : nr = CInt(DICT_ENTRY_COUNT / nc + 0.4999) : width = 24
+  For i = 0 To nr - 1
+    For j = 0 To nc - 1
+      cflush()
+      x = (j * nr) + i
+      If x < DICT_ENTRY_COUNT Then
+        If j * width > Pos Then cout(Space$(j * width - Pos))
+        cout("[" + lpad$(Str$(x + 1), 4) + "] ")
+        a = x * DICT_ENTRY_LEN + DICT_ENTRY_AD
+        x = rw(a) : cout(lpad$(Hex$(x), 4, "0"))
+        x = rw(a + 2) : cout(lpad$(Hex$(x), 4, "0") + " ")
+        print_zstring(a)
+      EndIf
+    Next j
+    endl()
   Next i
 
-  If col <> 0 Then endl()
 End Sub
 
 ' Prints 'n' global variables starting from 'a'.
@@ -275,7 +274,7 @@ End Sub
 
 ' Dump CMM1 virtual memory map.
 Sub dmp_mmap
-  Local col, i
+  Local i, j, nc, nr, width, x
 
   On Error Skip 1
   i = NUM_PHYSICAL_PAGES
@@ -287,25 +286,35 @@ Sub dmp_mmap
   EndIf
 
   cout("Physical page -> Virtual page") : endl()
-  For i = 0 To NUM_PHYSICAL_PAGES - 1
-    cout(lpad$(Str$(i), 3, " ") + " -> " + lpad$(Str$(pp_to_vp(i)), 3, " "))
-    col = col + 1
-    cout(Chr$(13) + Chr$(27) + "[" + Str$(col * 15) + "C")
-    If col = 6 Then col = 0 : endl()
+  nc = 6 : nr = CInt(NUM_PHYSICAL_PAGES / nc + 0.4999) : width = 15
+  For i = 0 To nr - 1
+    For j = 0 To nc - 1
+      cflush()
+      x = (j * nr) + i
+      If x < NUM_PHYSICAL_PAGES Then
+        If j * width > Pos Then cout(Space$(j * width - Pos))
+        cout(lpad$(Str$(x), 3) + " -> " + lpad$(Str$(pp_to_vp(x)), 3))
+      EndIf
+    Next j
+    endl()
   Next i
 
-  If col <> 0 Then endl() : col = 0
   endl()
 
   cout("Virtual page -> Physical page") : endl()
-  For i = 0 To NUM_VIRTUAL_PAGES - 1
-    cout(lpad$(Str$(i), 3, " ") + " -> " + lpad$(Str$(vp_to_pp(i)), 3, " "))
-    col = col + 1
-    cout(Chr$(13) + Chr$(27) + "[" + Str$(col * 15) + "C")
-    If col = 6 Then col = 0 : endl()
+  nr = CInt(NUM_VIRTUAL_PAGES / nc + 0.4999)
+  For i = 0 To nr - 1
+    For j = 0 To nc - 1
+      cflush()
+      x = (j * nr) + i
+      If x < NUM_VIRTUAL_PAGES Then
+        If j * width > Pos Then cout(Space$(j * width - Pos))
+        cout(lpad$(Str$(x), 3) + " -> " + lpad$(Str$(vp_to_pp(x)), 3))
+      EndIf
+    Next j
+    endl()
   Next i
 
-  If col <> 0 Then endl()
 End Sub
 
 ' Prints object 'o'.

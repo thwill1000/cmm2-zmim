@@ -72,8 +72,9 @@ End Sub
 Sub cflush()
   If Pos = 1 And crow > C_HEIGHT Then
     Print "[MORE] ";
-    Local tmp$
-    Line Input tmp$
+    Do While Inkey$ <> "" : Loop
+    Do While Inkey$ = "" : Loop
+    Print
     crow = 0
   EndIf
 
