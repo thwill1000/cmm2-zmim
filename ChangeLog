@@ -7,6 +7,7 @@ Release 2:
  - Added paging, i.e. displays [MORE] prompt when more than one page of text is
    output between input prompts
    - assumes 50 character high console.
+ - Made execution approximately 15% faster.
  - Changed startup so that console is now cleared before the story file starts
    executing.
  - Changed console so that it only ever scrolls upwards and the input prompt is
@@ -23,6 +24,7 @@ Release 2:
  - Fixed issue with Z-MIM changing the current working directory
    - it still does change it during operation but should now have restored it
      before it exits whether cleanly or due to an error or Ctrl-C.
+ - Fixed "Error: EXEC is not declared" when quitting after a 'restart'.
  - Minor improvements to the interactive debugger.
  - Cosmetic improvements to code and README.
 
