@@ -1,27 +1,20 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-' Base address of the dictionary
-Dim DICT_AD
-
-' Word separators, use an array so as not have 256 byte string
-Dim DICT_SEP$(1) Length 5
-
-' Length of a dictionary entry
-Dim DICT_ENTRY_LEN
-
-' Number of dictionary entries
-Dim DICT_ENTRY_COUNT
-
-' Base address of the dictionary entries
-Dim DICT_ENTRY_AD
+Dim DICT_AD               ' base address of the dictionary
+Dim DICT_SEP$(1) Length 5 ' word separators, use an array so as to avoid
+                          ' 256 byte string
+Dim DICT_ENTRY_LEN        ' length of a dictionary entry
+Dim DICT_ENTRY_COUNT      ' number of dictionary entries
+Dim DICT_ENTRY_AD         ' base address of the dictionary entries
 
 Sub di_init()
   Local i, ns
 
   DICT_AD = rw(&h08)
   ns = rb(DICT_AD) ' number of word separators
-  For i = 1 To ns : DICT_SEP$(0) = DICT_SEP$(0) + Chr$(rb(DICT_AD + i)) : Next i
+  Poke Var DICT_SEP$(0), 0, ns
+  For i = 1 To ns : Poke Var DICT_SEP$(0), i, rb(DICT_AD + i) : Next i
   DICT_ENTRY_LEN = rb(DICT_AD + ns + 1)
   DICT_ENTRY_COUNT = rw(DICT_AD + ns + 2)
   DICT_ENTRY_AD = DICT_AD + ns + 4

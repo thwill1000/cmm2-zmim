@@ -32,10 +32,14 @@ Const DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
 Const VERSION$ = "Release 2 for Colour Maximite 2, MMBasic 5.05"
 Const COPYRIGHT$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 
-Sub init()
+Sub main_init()
   Local i, x
 
+  endl()
   mem_init(ss$(STORY_DIR) + "/" + ss$(STORY) + ".z3")
+  di_init()
+  endl()
+  GLOBAL_VAR = rw(&h0C)
 
   ' Hack header bits
   x = rb(&h01)
@@ -46,11 +50,9 @@ Sub init()
   wb(&h21, C_WIDTH)
 
   pc = rw(&h06)
-  GLOBAL_VAR = rw(&h0C)
-  di_init()
-
-  num_bp = 0
-  For i = 0 To 9 : bp(i) = -1 : Next i
+  For i = 0 To 511 : stack(i) = 0 : Next i
+  sp = 0
+  fp = &hFFFF
 
 End Sub
 
@@ -58,6 +60,7 @@ Sub main()
   Local i, old_dir$, old_pc, state, s$
 
   de_init()
+  For i = 0 To 9 : bp(i) = -1 : Next i
 
   Mode 1
   Cls
@@ -98,9 +101,7 @@ Sub main()
   s$ = Dir$(ss$(STORY), Dir) : If s$ = "" Then MkDir(ss$(STORY))
   ChDir(old_dir$)
 
-  endl()
-  init()
-  endl()
+  main_init()
 
 '  If LCase$(cin$("Start in debugger [Y|n] ")) <> "n" Then
 '     state = E_BREAK

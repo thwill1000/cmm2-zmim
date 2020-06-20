@@ -320,7 +320,8 @@ Function ex_0op()
     If script AND S_READ Then
       cout("IGNORED 'restart' command read from script") : endl()
     Else
-      Run
+      main_init()
+      For x = 0 To 10 : endl() : Next x ' this will clear the console
     EndIf
 
   ElseIf oc = &h8 Then
