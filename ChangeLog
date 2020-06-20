@@ -17,13 +17,13 @@ Release 2:
    - EXCEPTION: the initial selection of a story file and choosing whether to
      write a script.
  - Changed console so that it recognises when a story is trying to clear the
-   console and repond appropriately
+   console and reponds appropriately
    - the Z-machine provides no specific clear console instruction instruction
      so old z3 stories often just print 20-40 blank lines on the assumption that
      will be sufficient; as it probably was for a 1980s microcomputer.
  - Fixed issue with Z-MIM changing the current working directory
-   - it still does change it during operation but should now have restored it
-     before it exits whether cleanly or due to an error or Ctrl-C.
+   - Z-MIM still changes it during operation but should now restore it before
+     exiting either cleanly or due to an error or Ctrl-C.
  - Fixed "Error: EXEC is not declared" when quitting after a 'restart'.
  - Minor improvements to the interactive debugger.
  - Cosmetic improvements to code and README.
