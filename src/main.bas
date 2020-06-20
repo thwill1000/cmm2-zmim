@@ -48,7 +48,7 @@ Const VERSION$ = "Release 2 for Colour Maximite 2, MMBasic 5.05"
 Const COPYRIGHT$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 
 Sub main()
-  Local f$, i, old_dir$, old_pc, state, s$, x
+  Local i, old_dir$, old_pc, state, s$, x
 
   Mode 1
   Cls
@@ -71,36 +71,36 @@ Sub main()
   ss$(SCRIPT_DIR) = ss$(INSTALL_DIR) + "/scripts"
   ss$(STORY_DIR) = ss$(INSTALL_DIR) + "/stories"
 
+  ' Select a story file
   cout("Select a story file from '" + ss$(STORY_DIR) + "':") : endl()
-  Do While f$ = ""
-    f$ = file_choose$(ss$(STORY_DIR), "*.z3")
+  Do While s$ = ""
+    s$ = file_choose$(ss$(STORY_DIR), "*.z3")
   Loop
-  ss$(STORY) = Mid$(f$, Len(ss$(STORY_DIR)) + 2)
-  ss$(STORY) = Left$(ss$(STORY), Len(ss$(STORY)) - 3)
-  endl()
-
-  mem_init(f$)
-  endl()
+  s$ = Mid$(s$, Len(ss$(STORY_DIR)) + 2)
+  ss$(STORY) = Left$(s$, Len(s$) - 3)
 
   ' Ensure subdirectories for the current story exist in "saves/" and "scripts/"
   old_dir$ = Cwd$
   ChDir(ss$(SAVE_DIR))
-  s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error
+  s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error "Unexpected file: " + s$
   s$ = Dir$(ss$(STORY), Dir) : If s$ = "" Then MkDir(ss$(STORY))
   ChDir(ss$(SCRIPT_DIR))
-  s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error
+  s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error "Unexpected file:" + s$
   s$ = Dir$(ss$(STORY), Dir) : If s$ = "" Then MkDir(ss$(STORY))
   ChDir(old_dir$)
 
+  endl()
+  mem_init(ss$(STORY_DIR) + "/" + ss$(STORY) + ".z3")
+  endl()
+
   ' Jump through hoops to create the name of the script file
-  f$ = ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "/"
-  f$ = f$ + ss$(STORY) + "-" + Date$ + "-" + Time$ + ".scr"
-  For i = Len(ss$(SCRIPT_DIR)) To Len(f$)
-    If Peek(Var f$, i) = Asc(":") Then Poke Var f$, i, Asc("-")
+  s$ = ss$(STORY) + "-" + Date$ + "-" + Time$ + ".scr"
+  For i = 1 To Len(s$)
+    If Peek(Var s$, i) = Asc(":") Then Poke Var s$, i, Asc("-")
   Next i
-  s$ = cin$("Write script to '" + f$ + "' [Y|n] ")
-  If LCase$(s$) <> "n" Then
-    Open f$ For Output As #2
+  s$ = ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "/" + s$
+  If LCase$(cin$("Write script to '" + s$ + "' [Y|n] ")) <> "n" Then
+    Open s$ For Output As #2
     script = S_WRITE
   EndIf
 
