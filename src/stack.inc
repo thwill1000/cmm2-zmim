@@ -1,7 +1,7 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-' Storrage for the stack  - we only store 16-bit unsigned integers
+' Storage for the stack  - we only store 16-bit unsigned integers
 ' 0 .. &hFFFF although they are often interpreted as signed.
 Dim stack(511)
 
@@ -14,13 +14,13 @@ Dim sp = 0
 Dim fp = &hFFFF
 
 ' Pops a 16-bit word from the stack.
-Function pop()
+Function st_pop()
   sp = sp - 1
-  pop = stack(sp)
+  st_pop = stack(sp)
 End Function
 
 ' Pushes a 16-bit word to the stack.
-Sub push(x)
+Sub st_push(x)
   stack(sp) = x
   sp = sp + 1
 End Sub

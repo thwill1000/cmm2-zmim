@@ -42,19 +42,19 @@ Function ex_2op()
     x = (a = b)
     If (Not x) And (onum > 2) Then x = (a = oa(2))
     If (Not x) And (onum > 3) Then x = (a = oa(3))
-    _branch(x, br)
+    ex_branch(x, br)
 
   ElseIf oc = &h2 Then
     ' JL
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
-    _branch(a < b, br)
+    ex_branch(a < b, br)
 
   ElseIf oc = &h3 Then
     ' JG
     If a > 32767 Then a = a - 65536
     If b > 32767 Then b = b - 65536
-    _branch(a > b, br)
+    ex_branch(a > b, br)
 
   ElseIf oc = &h4 Then
     ' DEC_CHK
@@ -65,7 +65,7 @@ Function ex_2op()
     y = x < b
     If x < 0 Then x = 65536 + x
     vset(a, x)
-    _branch(y, br)
+    ex_branch(y, br)
 
   ElseIf oc = &h5 Then
     ' INC_CHK
@@ -76,16 +76,16 @@ Function ex_2op()
     y = x > b
     If x < 0 Then x = 65536 + x
     vset(a, x)
-    _branch(y, br)
+    ex_branch(y, br)
 
   ElseIf oc = &h6 Then
     ' JIN
-    x = orel(a, PARENT)
-    _branch(x = b, br)
+    x = ob_rel(a, PARENT)
+    ex_branch(x = b, br)
 
   ElseIf oc = &h7 Then
     ' TEST
-    _branch((a And b) = b, br)
+    ex_branch((a And b) = b, br)
 
   ElseIf oc = &h8 Then
     ' OR
@@ -97,16 +97,16 @@ Function ex_2op()
 
   ElseIf oc = &hA Then
     ' TEST_ATTR: a = object, b = attribute
-    x = oattr(a, b)
-    _branch(x = 1, br)
+    x = ob_attr(a, b)
+    ex_branch(x = 1, br)
 
   ElseIf oc = &hB Then
     ' SET_ATTR
-    _ = oattr(a, b, 1, 1)
+    _ = ob_attr(a, b, 1, 1)
 
   ElseIf oc = &hC Then
     ' CLEAR_ATTR
-    _ = oattr(a, b, 1, 0)
+    _ = ob_attr(a, b, 1, 0)
 
   ElseIf oc = &hD Then
     ' STORE
@@ -129,17 +129,17 @@ Function ex_2op()
 
   ElseIf oc = &h11 Then
     ' GET_PROP
-    x = get_prop(a, b)
+    x = ob_prop_get(a, b)
     vset(st, x)
 
   ElseIf oc = &h12 Then
     ' GET_PROP_ADDR
-    x = get_prop_addr(a, b)
+    x = ob_prop_addr(a, b)
     vset(st, x)
 
   ElseIf oc = &h13 Then
     ' GET_NEXT_PROP
-    x = get_next_prop(a, b)
+    x = ob_next_prop(a, b)
     vset(st, x)
 
   ElseIf oc < &h19 Then
@@ -178,28 +178,28 @@ Function ex_1op()
 
   If oc = &h0 Then
     ' JZ
-    _branch(a = 0, br)
+    ex_branch(a = 0, br)
 
   ElseIf oc = &h1 Then
     ' GET_SIBLING
-    x = orel(a, SIBLING)
+    x = ob_rel(a, SIBLING)
     vset(st, x)
-    _branch(x <> 0, br)
+    ex_branch(x <> 0, br)
 
   ElseIf oc = &h2 Then
     ' GET_CHILD
-    x = orel(a, CHILD)
+    x = ob_rel(a, CHILD)
     vset(st, x)
-    _branch(x <> 0, br)
+    ex_branch(x <> 0, br)
 
   ElseIf oc = &h3 Then
     ' GET_PARENT
-    x = orel(a, PARENT)
+    x = ob_rel(a, PARENT)
     vset(st, x)
 
   ElseIf oc = &h4 Then
     ' GET_PROP_LEN
-    x = get_prop_len(a)
+    x = ob_prop_len(a)
     vset(st, x)
 
   ElseIf oc = &h5 Then
@@ -228,11 +228,11 @@ Function ex_1op()
 
   ElseIf oc = &hA Then
     ' PRINT_OBJECT
-    print_obj(a)
+    ob_print(a)
 
   ElseIf oc = &hB Then
     ' RET
-    _return(a)
+    ex_return(a)
 
   ElseIf oc = &hC Then
     ' JUMP
@@ -264,11 +264,11 @@ Function ex_0op()
 
   If oc = &h0 Then
     ' RTRUE
-    _return(1)
+    ex_return(1)
 
   ElseIf oc = &h1 Then
     ' RFALSE
-    _return(0)
+    ex_return(0)
 
   ElseIf oc = &h2 Then
     ' PRINT
@@ -278,7 +278,7 @@ Function ex_0op()
     ' PRINT_RET
     print_zstring(pc)
     endl()
-    _return(1)
+    ex_return(1)
 
   ElseIf oc = &h4 Then
     ' NOP
@@ -289,7 +289,7 @@ Function ex_0op()
       cout("IGNORED 'save' command read from script") : endl()
     Else
       x = zsave()
-      _branch(x, br)
+      ex_branch(x, br)
     EndIf
 
   ElseIf oc = &h6 Then
@@ -310,8 +310,8 @@ Function ex_0op()
 
   ElseIf oc = &h8 Then
     ' RET_POPPED
-    x = pop()
-    _return(x)
+    x = st_pop()
+    ex_return(x)
 
   ElseIf oc = &h9 Then
     ' POP - discards top item in stack
@@ -332,7 +332,7 @@ Function ex_0op()
   ElseIf oc = &hD Then
     ' VERIFY
     ' Actually verifying the story checksum is pointless, always branch.
-    _branch(1, br)
+    ex_branch(1, br)
 
   Else
     ex_0op = E_UNKNOWN
@@ -344,7 +344,7 @@ Function ex_varop()
 
   If oc = &h0 Then
     ' CALL
-    _call(st)
+    ex_call(st)
 
   ElseIf oc = &h1 Then
     ' STOREW
@@ -356,11 +356,11 @@ Function ex_varop()
 
   ElseIf oc = &h3 Then
     ' PUT_PROP
-    put_prop(oa(0), oa(1), oa(2))
+    ob_prop_set(oa(0), oa(1), oa(2))
 
   ElseIf oc = &h4 Then
     ' READ
-    ex_varop = _read(oa(0), oa(1))
+    ex_varop = ex_read(oa(0), oa(1))
 
   ElseIf oc = &h5 Then
     ' PRINT_CHAR
@@ -381,11 +381,11 @@ Function ex_varop()
 
   ElseIf oc = &h8 Then
     ' PUSH
-    push(oa(0))
+    st_push(oa(0))
 
   ElseIf oc = &h9 Then
     ' PULL
-    x = pop()
+    x = st_pop()
     ' Note special handing for op with indirect reference to the stack pointer
     If oa(0) = 0 Then st_poke(sp - 1, x) Else vset(oa(0), x)
 
@@ -406,58 +406,58 @@ Function ex_varop()
   EndIf
 End Function
 
-Sub _branch(z, br)
+Sub ex_branch(z, br)
   Local x
   If Not (z = (br And &h80000) > 0) Then Exit Sub
   x = br And &h7FFFF ' Bottom 19-bits
-  If x = pc - 1 Then _return(1) : Exit Sub
-  If x = pc - 2 Then _return(0) : Exit Sub
+  If x = pc - 1 Then ex_return(1) : Exit Sub
+  If x = pc - 2 Then ex_return(0) : Exit Sub
   pc = x
 End Sub
 
-Sub _return(x)
+Sub ex_return(x)
   Local st, _
   sp = fp + 4
-  pc = pop() * &h10000 + pop()
-  st = pop()
-  fp = pop()
+  pc = st_pop() * &h10000 + st_pop()
+  st = st_pop()
+  fp = st_pop()
   vset(st, x)
   If ztrace Then dmp_stack()
 End Sub
 
-Sub _call(st)
+Sub ex_call(st)
   Local i, nl, x
 
   ' When address 0 is called, nothing happens and return value is false
   If oa(0) = 0 Then vset(st, 0) : Exit Sub
 
-  push(fp)
+  st_push(fp)
   fp = sp - 1
-  push(st)
-  push(pc Mod &h10000)
-  push(pc \ &h10000)
+  st_push(st)
+  st_push(pc Mod &h10000)
+  st_push(pc \ &h10000)
   pc = 2 * oa(0)
   nl = rp() ' number of local variables
-  push(nl)
+  st_push(nl)
   For i = 1 To nl
     x = rp() * 256 + rp()
-    If i < onum Then push(oa(i)) Else push(x)
+    If i < onum Then st_push(oa(i)) Else st_push(x)
   Next i
 
   If ztrace Then dmp_routine(2 * oa(0)) : dmp_stack()
 End Sub
 
-Function _read(text_buf, parse_buf)
+Function ex_read(text_buf, parse_buf)
   Local ad, c, i, n, word$, s$, wc
 
   rtime = rtime - Timer
 
   s$ = LCase$(cin$("> ", 1))
-  If Left$(s$, 1) = "*" Then _read = ex_special(s$)
+  If Left$(s$, 1) = "*" Then ex_read = ex_special(s$)
 
   rtime = rtime + Timer
 
-  If _read <> E_OK Then Exit Function
+  If ex_read <> E_OK Then Exit Function
 
   n = Len(s$)
   ' TODO: check for input too long
@@ -519,7 +519,7 @@ Function ex_special(cmd$)
       cout("Select a script file from '")
       cout(ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "':")
       endl()
-      f$ = file_choose$(ss$(SCRIPT_DIR) + "/" + ss$(STORY), "*.scr")
+      f$ = fi_choose$(ss$(SCRIPT_DIR) + "/" + ss$(STORY), "*.scr")
       If f$ <> "" Then
         Open f$ For Input As #3
         script = script Or S_READ
@@ -561,7 +561,7 @@ End Function
 
 Sub ex_show_status()
   Local x
-  x = vget(&h10) : print_obj(x) : cout(", ")
+  x = vget(&h10) : ob_print(x) : cout(", ")
   x = vget(&h11) : cout("Score: " + Str$(x) + ", ")
   x = vget(&h12) : cout("Moves: " + Str$(x))
   endl()

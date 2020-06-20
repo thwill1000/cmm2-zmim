@@ -5,7 +5,7 @@
 ' If i = 0 then pops and returns the top value of the stack.
 Function vget(i)
   If i = 0 Then
-    vget = pop()
+    vget = st_pop()
   ElseIf i < &h10 Then
     vget = stack(fp + i + 4)
   ElseIf i <= &hFF Then
@@ -19,7 +19,7 @@ End Function
 ' If i = 0 then pushes the value onto the stack.
 Sub vset(i, x)
   If i = 0 Then
-    push(x)
+    st_push(x)
   ElseIf i < &h10 Then
     stack(fp + i + 4) = x
   ElseIf i <= &hFF Then

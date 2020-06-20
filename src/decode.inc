@@ -12,24 +12,24 @@ Dim ov(MAX_NUM_OPERANDS) ' operand raw values
 Dim st = 0
 Dim br = 0
 
-Sub decode_init()
+Sub de_init()
   Local i, s$, x
 
   Read x
   Dim inst_2op$(x - 1) LENGTH 15
-  For i = 0 To x - 1 : Read s$ : inst_2op$(i) = decode_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : inst_2op$(i) = de_format$(s$) : Next i
 
   Read x
   Dim inst_1op$(x - 1) LENGTH 14
-  For i = 0 To x - 1 : Read s$ : inst_1op$(i) = decode_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : inst_1op$(i) = de_format$(s$) : Next i
 
   Read x
   Dim inst_0op$(x - 1) LENGTH 12
-  For i = 0 To x - 1 : Read s$ : inst_0op$(i) = decode_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : inst_0op$(i) = de_format$(s$) : Next i
 
   Read x
   Dim inst_varop$(x - 1) LENGTH 14
-  For i = 0 To x - 1 : Read s$ : inst_varop$(i) = decode_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : inst_varop$(i) = de_format$(s$) : Next i
 End Sub
 
 ' Decode next instruction into global variables.
@@ -43,25 +43,25 @@ Function decode(tr)
   op = rp()
 
   If op < &h80 Then
-    decode_long(op)
+    de_long(op)
     s$ = inst_2op$(oc)
   ElseIf op < &hC0 Then
-    decode_short(op)
+    de_short(op)
     If op < &hB0 Then s$ = inst_1op$(oc) Else s$ = inst_0op$(oc)
   Else
-    decode_var(op)
+    de_var(op)
     If op < &hE0 Then s$ = inst_2op$(oc) Else s$ = inst_varop$(oc)
   EndIf
 
   If Left$(s$, 1) = "B" Then
     st = -1
-    br = decode_branch()
+    br = de_branch()
   ElseIf Left$(s$, 1) = "S" Then
     st = rp()
     br = 0
   ElseIf Left$(s$, 1) = "X" Then
     st = rp()
-    br = decode_branch()
+    br = de_branch()
   Else
     st = -1
     br = 0
@@ -72,7 +72,7 @@ Function decode(tr)
   decode = op
 End Function
 
-Sub decode_long(op)
+Sub de_long(op)
   oc = op And &b11111 ' bottom 5 bits
   onum = 2
   ov(0) = rp()
@@ -92,7 +92,7 @@ Sub decode_long(op)
   EndIf
 End Sub
 
-Sub decode_short(op)
+Sub de_short(op)
   oc = op And &b1111 ' bottom 4 bits
   onum = 1
   If op <= &h8F Then
@@ -106,7 +106,7 @@ Sub decode_short(op)
   EndIf
 End Sub
 
-Sub decode_var(op)
+Sub de_var(op)
   Local i, x
   oc = op And &b11111 ' bottom 5 bits
   onum = 4
@@ -135,7 +135,7 @@ End Sub
 '                   - if = pc - 2 then -> return false.
 '                   - if = pc - 1 then -> return true.
 '         bit 20    - set = branch on True, unset = branch on False.
-Function decode_branch()
+Function de_branch()
   Local a, of, x
   a = rp()
   of = a And &b111111 ' bottom 6 bits
@@ -150,10 +150,10 @@ Function decode_branch()
   ' If bit 7 of 'a' is set then set bit 20 in the return value
   If a And &h80 Then x = x Or &h80000
 
-  decode_branch = x
+  de_branch = x
 End Function
 
-Function decode_format$(a$)
+Function de_format$(a$)
   Local p, s$
 
   If Instr(a$, " SB") > 0 Then
@@ -168,7 +168,7 @@ Function decode_format$(a$)
   p = Instr(a$, " ")
   If p = 0 Then p = Len(a$) + 1
   s$ = s$ + Left$(a$, p - 1)
-  decode_format$ = s$
+  de_format$ = s$
 End Function
 
 ' 2-operand instructions &h0 - &h18

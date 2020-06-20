@@ -1,7 +1,7 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-Function file_choose$(d$, fspec$)
+Function fi_choose$(d$, fspec$)
   Local col, f$, i, m, n, old_dir$, x
 
   old_dir$ = Cwd$
@@ -44,6 +44,6 @@ Function file_choose$(d$, fspec$)
   EndIf
 
   f$ = cin$("File number? ")
-  If Val(f$) <> 0 Then file_choose$ = d$ + "/" + all$(Val(f$))
+  If Val(f$) <> 0 Then fi_choose$ = d$ + "/" + all$(Val(f$))
 
 End Function

@@ -73,7 +73,7 @@ Sub main()
   ' Select a story file
   cout("Select a story file from '" + ss$(STORY_DIR) + "':") : endl()
   Do While s$ = ""
-    s$ = file_choose$(ss$(STORY_DIR), "*.z3")
+    s$ = fi_choose$(ss$(STORY_DIR), "*.z3")
   Loop
   s$ = Mid$(s$, Len(ss$(STORY_DIR)) + 2)
   ss$(STORY) = Left$(s$, Len(s$) - 3)
@@ -117,7 +117,7 @@ Sub main()
   wb(&h20, C_HEIGHT)
   wb(&h21, C_WIDTH)
 
-  decode_init()
+  de_init()
   di_init()
 
   num_bp = 0

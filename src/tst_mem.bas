@@ -24,7 +24,7 @@ endl()
 cout("Testing sequential access:") : endl()
 Timer = 0
 Do While ad < FILE_LEN
-  cout(".")
+  cout(".") : cflush()
   Seek #1, ad + 1
   buf$ = Input$(255, #1)
   buf_sz = Len(buf$)
@@ -41,7 +41,7 @@ endl()
 cout("Testing random access:") : endl()
 Timer = 0
 For i = 1 To 5000
-  If i Mod 50 = 0 Then cout(".")
+  If i Mod 50 = 0 Then cout(".") : cflush()
   ad = Fix(Rnd * FILE_LEN)
   Seek #1, ad + 1
   buf$ = Input$(1, #1)
@@ -54,7 +54,7 @@ endl()
 cout("Test read/write:") : endl()
 Timer = 0
 For i = 1 To 5000
-  If i Mod 50 = 0 Then cout(".")
+  If i Mod 50 = 0 Then cout(".") : cflush()
   ad = Fix(Rnd * BASE_STATIC)
   x = Fix(Rnd * 255)
   wb(ad, x)

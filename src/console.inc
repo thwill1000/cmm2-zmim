@@ -104,7 +104,7 @@ Sub endl()
   ' to clear the screen
   If cempty > 10 Then
     Local i
-    For i = 0 To C_HEIGHT - cempty - 2 : Print : Next i
+    For i = 0 To C_HEIGHT - cempty - 1 : Print : Next i
     cempty = -999 ' to avoid any unnecessary additional empty lines
     clines = 0
   EndIf

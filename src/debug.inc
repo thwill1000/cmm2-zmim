@@ -341,30 +341,30 @@ Sub dmp_obj(o)
   cout(Str$(o) + ". ")
   cout("Attributes: ")
   For i = 0 To 31
-    x = oattr(o, i)
+    x = ob_attr(o, i)
     If x <> 0 Then cout(Str$(i))
   Next i
   endl()
 
-  x = orel(o, PARENT)
+  x = ob_rel(o, PARENT)
   cout("   Parent object: " + Str$(x) + "  ")
-  x = orel(o, SIBLING)
+  x = ob_rel(o, SIBLING)
   cout("Sibling object: " + Str$(x) + "  ")
-  x = orel(o, CHILD)
+  x = ob_rel(o, CHILD)
   cout("Child object:" + Str$(x)) : endl()
 
-  ad = get_prop_base(o)
+  ad = ob_prop_base(o)
   cout("   Property address: " + fmt_hex$(ad)) : endl()
   cout("        Description: '")
-  print_obj(o);
+  ob_print(o);
   cout("'") : endl()
   cout("         Properties:") : endl()
   p = 0
   Do
-    p = get_next_prop(o, p)
+    p = ob_next_prop(o, p)
     If p > 0 Then
-      ad = get_prop_addr(o, p)
-      sz = get_prop_len(ad)
+      ad = ob_prop_addr(o, p)
+      sz = ob_prop_len(ad)
       x = rb(ad - 1)
       If x \ 32 + 1 <> sz Then Error
       cout("             [" + Str$(p) + "] ")
