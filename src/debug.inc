@@ -36,19 +36,20 @@ Function debug()
       ' Set address breakpoint
       a = Val(cmd$(1))
       If a >= 0 And a < FILE_LEN Then
-        For i = 0 To NUM_BP - 1
+        For i = 0 To 9
           If bp(i) = a Then
             cout("Duplicate breakpoint [" + Str$(i) + "]") : endl()
             a = -1
             Exit For
           EndIf
         Next i
-        For i = 0 To NUM_BP - 1
+        For i = 0 To 9
           If a = -1 Then
             ' Duplicate breakpoint previously reported
             Exit For
           ElseIf bp(i) = -1 Then
             bp(i) = a
+            num_bp = num_bp + 1
             cout("Set breakpoint [" + Str$(i) + "] at " + fmt_hex$(bp(i)))
             endl()
             Exit For
@@ -61,14 +62,15 @@ Function debug()
 
     ElseIf cmd$(0) = "B" Then
       ' List address breakpoints
-      a = 0
-      For i = 0 To NUM_BP - 1
-        If bp(i) <> -1 Then
-          cout("[" + Str$(i) + "] " + fmt_hex$(bp(i))) : endl()
-          a = a + 1
-        EndIf
-      Next i
-      If a = 0 Then cout("No address breakpoints set") : endl()
+      If num_bp = 0 Then
+        cout("No address breakpoints set") : endl()
+      Else
+        For i = 0 To 9
+          If bp(i) <> -1 Then
+            cout("[" + Str$(i) + "] " + fmt_hex$(bp(i))) : endl()
+          EndIf
+        Next i
+      EndIf
 
     ElseIf cmd$(0) = "c" Then
       ' Continue
@@ -129,12 +131,13 @@ Function debug()
     ElseIf cmd$(0) = "v" Then
       ' Clear address breakpoint
       a = Val(cmd$(1))
-      If a < 0 Or a >= NUM_BP Then
+      If a < 0 Or a > 9 Then
         cout("Invalid address breakpoint") : endl()
       ElseIf bp(a) = -1 Then
         cout("Address breakpoint [" + Str$(a) + "] already cleared") :endl()
       Else
         bp(a) = -1
+        num_bp = num_bp - 1
         cout("Address breakpoint [" + Str$(a) + "] cleared") : endl()
       EndIf
 
@@ -153,7 +156,8 @@ Function debug()
 
     ElseIf cmd$(0) = "z" Then
       ' Clear all breakpoints
-      For i = 0 To NUM_BP - 1 : bp(i) = -1 : Next i
+      For i = 0 To 9 : bp(i) = -1 : Next i
+      num_bp = 0
       cout("All breakpoints cleared") : endl()
 
     Else

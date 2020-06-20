@@ -28,12 +28,11 @@ Const E_QUIT = 4
 Const E_DEBUG = 5
 Const E_REPEAT = 6 ' Repeat last operation
 
-Const NUM_BP = 10
-
-Dim num_ops = 0    ' Number of instructions processed.
-Dim ztrace = 0     ' Is instruction tracing enabled?
-Dim bp(NUM_BP - 1) ' The addresses of up to 10 breakpoints, -1 for unset.
-Dim rtime = 0      ' Time (ms) spent waiting for user input.
+Dim num_ops = 0 ' Number of instructions processed
+Dim ztrace = 0  ' Is instruction tracing enabled?
+Dim num_bp      ' Number of active breakpoints
+Dim bp(9)       ' The addresses of up to 10 breakpoints, -1 for unset
+Dim rtime = 0   ' Time (ms) spent waiting for user input
 
 ' String "constants" that I don't want to take up 256 bytes
 Dim ss$(4) Length 20
@@ -121,21 +120,23 @@ Sub main()
   decode_init()
   di_init()
 
-  For i = 0 To NUM_BP - 1 : bp(i) = -1 : Next i
+  num_bp = 0
+  For i = 0 To 9 : bp(i) = -1 : Next i
 
   Timer = 0
 
   Do While state <> E_QUIT
-    If pc <> old_pc Then ' Prevents repeatedly hitting breakpoint when continuing
-      For i = 0 To NUM_BP - 1
+    ' If there are active breakpoint and the PC has changed since we last checked
+    If num_bp > 0 And pc <> old_pc Then
+      For i = 0 To 9
         If pc = bp(i) Then
           cout("[Breakpoint " + Str$(i) + " reached]") : endl()
           state = E_BREAK
         EndIf
       Next i
-      old_pc = pc
     EndIf
 
+    old_pc = pc
     If state = E_OK Or state = E_REPEAT Then
       state = exec(ztrace)
     Else
