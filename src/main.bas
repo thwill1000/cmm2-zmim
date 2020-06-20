@@ -46,8 +46,32 @@ Const DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
 Const VERSION$ = "Release 2 for Colour Maximite 2, MMBasic 5.05"
 Const COPYRIGHT$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 
+Sub init()
+  Local i, x
+
+  mem_init(ss$(STORY_DIR) + "/" + ss$(STORY) + ".z3")
+
+  ' Hack header bits
+  x = rb(&h01)
+  x = x Or  &b00010000 ' set bit 4 - status line not available
+  x = x And &b10011111 ' clear bits 5 & 6 - no screen-splitting, fixed-pitch font
+  wb(&h01, x)
+  wb(&h20, C_HEIGHT)
+  wb(&h21, C_WIDTH)
+
+  pc = rw(&h06)
+  GLOBAL_VAR = rw(&h0C)
+  di_init()
+
+  num_bp = 0
+  For i = 0 To 9 : bp(i) = -1 : Next i
+
+End Sub
+
 Sub main()
-  Local i, old_dir$, old_pc, state, s$, x
+  Local i, old_dir$, old_pc, state, s$
+
+  de_init()
 
   Mode 1
   Cls
@@ -89,8 +113,14 @@ Sub main()
   ChDir(old_dir$)
 
   endl()
-  mem_init(ss$(STORY_DIR) + "/" + ss$(STORY) + ".z3")
+  init()
   endl()
+
+'  If LCase$(cin$("Start in debugger [Y|n] ")) <> "n" Then
+'     state = E_BREAK
+'  Else
+'     state = E_OK
+'  EndIf
 
   ' Jump through hoops to create the name of the script file
   s$ = ss$(STORY) + "-" + Date$ + "-" + Time$ + ".scr"
@@ -103,25 +133,8 @@ Sub main()
     script = S_WRITE
   EndIf
 
-'  Input "Start in debugger [Y|n]"; s$
-'  If LCase$(s$) = "n" Then state = E_OK Else state = E_BREAK
-
   ' This will clear the console, see console#endl
   For i = 0 To 10 : endl() : Next i
-
-  ' Hack header bits
-  x = rb(&h01)
-  x = x Or  &b00010000 ' set bit 4 - status line not available
-  x = x And &b10011111 ' clear bits 5 & 6 - no screen-splitting, fixed-pitch font
-  wb(&h01, x)
-  wb(&h20, C_HEIGHT)
-  wb(&h21, C_WIDTH)
-
-  de_init()
-  di_init()
-
-  num_bp = 0
-  For i = 0 To 9 : bp(i) = -1 : Next i
 
   Timer = 0
 

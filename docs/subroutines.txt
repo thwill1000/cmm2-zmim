@@ -141,6 +141,7 @@ main.bas: (1)
     Const COPYRIGHT$
 
   Subroutines/Functions:
+    init
     main
     == 1 ==
 

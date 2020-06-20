@@ -57,9 +57,7 @@ Sub mem_init(f$)
 
   Close #1
 
-  ' Read header data.
-  pc = Peek(Byte mad + &h06) * 256 + Peek(Byte mad + &h07)
-  GLOBAL_VAR = Peek(Byte mad + &h0C) * 256 + Peek(Byte mad + &h0D)
+  ' Read memory sizes from header
   BASE_STATIC = Peek(Byte mad + &h0E) * 256 + Peek(Byte mad + &h0F)
   FILE_LEN = (Peek(Byte mad + &h1A) * 256 + Peek(Byte mad + &h1B)) * 2
 

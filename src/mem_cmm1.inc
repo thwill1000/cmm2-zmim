@@ -112,17 +112,15 @@ Sub mem_init(f$)
 
   cout("Loading '" + MEM_FILE$ + "'") : endl()
 
-  ' Load page 0 which contains the header.
+  ' Load page 0 which contains the header
   cout("  Header page: 0") : endl()
   If mem_load(0) <> 0 Then Error
 
-  ' Read header data.
-  pc = rw(&h06)
-  GLOBAL_VAR = rw(&h0C)
+  ' Read memory sizes from header
   BASE_STATIC = rw(&h0E)
   FILE_LEN = rw(&h1A) * 2
 
-  ' Initialise dynamic memory.
+  ' Initialise dynamic memory
   FIRST_SWAP_PAGE = BASE_STATIC \ PAGE_SIZE
   If BASE_STATIC Mod PAGE_SIZE > 0 Then FIRST_SWAP_PAGE = FIRST_SWAP_PAGE + 1
   cout("  Dynamic pages: ")
