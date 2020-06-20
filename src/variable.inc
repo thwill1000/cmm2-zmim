@@ -1,6 +1,8 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
+Dim GLOBAL_VAR ' base address for global variables
+
 ' Gets variable 'i'.
 ' If i = 0 then pops and returns the top value of the stack.
 Function vget(i)

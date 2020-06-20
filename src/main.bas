@@ -11,28 +11,14 @@ Option Default Integer
 #Include "variable.inc"
 #Include "decode.inc"
 #Include "execute.inc"
+#Include "console.inc"
 #Include "zstring.inc"
 #Include "objects.inc"
 #Include "util.inc"
 #Include "dict.inc"
 #Include "zsave.inc"
-#Include "console.inc"
 #Include "file.inc"
 #Include "debug.inc"
-
-Const E_OK = 0
-Const E_UNKNOWN = 1
-Const E_UNIMPLEMENTED = 2
-Const E_BREAK = 3
-Const E_QUIT = 4
-Const E_DEBUG = 5
-Const E_REPEAT = 6 ' Repeat last operation
-
-Dim num_ops = 0 ' Number of instructions processed
-Dim ztrace = 0  ' Is instruction tracing enabled?
-Dim num_bp      ' Number of active breakpoints
-Dim bp(9)       ' The addresses of up to 10 breakpoints, -1 for unset
-Dim rtime = 0   ' Time (ms) spent waiting for user input
 
 ' String "constants" that I don't want to take up 256 bytes
 Dim ss$(4) Length 20
@@ -160,7 +146,7 @@ Sub main()
   endl()
   cout("Num instructions processed = " + Str$(num_ops)) : endl()
   cout("Instructions / second      = ")
-  cout(Format$(num_ops / ((Timer - rtime) / 1000), "%.1f"))
+  cout(Format$(1000 * num_ops / Timer, "%.1f"))
   endl()
   If MM.DEVICE$ <> "Colour Maximite 2" Then
     cout("Num page faults            = " + Str$(pf)) : endl()

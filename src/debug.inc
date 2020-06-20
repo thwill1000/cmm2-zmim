@@ -1,6 +1,9 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
+Dim bp(9) ' The addresses of up to 10 breakpoints, -1 for unset
+          ' execute#num_bp should also be updated when these are changed
+
 ' Interactive debugger.
 Function debug()
   Local a, b, c, cmd$(9) Length 20, cn, i, op, pc_old, s$, sp_old
@@ -14,9 +17,9 @@ Function debug()
     ' Read line of input and parse into space separated commands/arguments.
     cn = 0
     For i = 0 To 9 : cmd$(i) = "" : Next i
-    rtime = rtime - Timer
+    t = Timer
     s$ = cin$("DEBUG >> ") + " "
-    rtime = rtime + Timer
+    Timer = t
     For i = 1 To Len(s$)
       c = Peek(Var s$, i)
       If Chr$(c) = " " Then

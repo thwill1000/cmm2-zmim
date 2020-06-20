@@ -22,7 +22,7 @@ debug.inc:
 ------------------------------
 
   Globals:
-    <none>
+    bp(9)
 
   Subroutines/Functions:
     debug (f)
@@ -49,6 +49,7 @@ decode.inc:
 ------------------------------
 
   Globals:
+    pc
     oc
     onum
     oa(4)
@@ -90,7 +91,17 @@ execute.inc:
 ------------------------------
 
   Globals:
-    <none>
+    Const E_OK = 0
+    Const E_UNKNOWN = 1
+    Const E_UNIMPLEMENTED = 2
+    Const E_BREAK = 3
+    Const E_QUIT = 4
+    Const E_DEBUG = 5
+    Const E_REPEAT = 6
+    fp
+    num_bp
+    num_ops
+    ztrace
 
   Subroutines/Functions:
     exec (f)
@@ -121,18 +132,6 @@ main.bas: (1)
 ------------------------------
 
   Globals:
-    Const E_OK = 0
-    Const E_UNKNOWN = 1
-    Const E_UNIMPLEMENTED = 2
-    Const E_BREAK = 3
-    Const E_QUIT = 4
-    Const E_DEBUG = 5
-    Const E_REPEAT = 6
-    num_ops
-    ztrace
-    num_bp
-    bp(9)
-    rtime
     ss$(4)
     Const INSTALL_DIR = 0
     Const SAVE_DIR = 1
@@ -153,11 +152,9 @@ mem_cmm.inc:
 
   Globals:
     m()
-    mad
+    MAD
     FILE_LEN
-    pc
     BASE_STATIC
-    GLOBAL_VAR
 
   Subroutines/Functions:
     rp (f)
@@ -196,7 +193,6 @@ stack.inc:
   Globals:
     stack(511)
     sp
-    fp
 
   Subroutines/Functions:
     st_pop (f)
@@ -221,7 +217,7 @@ variable.inc: (2)
 ------------------------------
 
   Globals:
-    <none>
+    GLOBAL_VAR
 
   Subroutines/Functions:
     vget (f)

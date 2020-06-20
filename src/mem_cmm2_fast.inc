@@ -3,37 +3,35 @@
 
 ' Storage for z-machine memory
 Dim m(128 * 1024 / 8 + 16)
-Dim mad = Peek(VarAddr m()) + 8
+Dim MAD = Peek(VarAddr m()) + 8
 Dim FILE_LEN
-Dim pc
 Dim BASE_STATIC
-Dim GLOBAL_VAR
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
-  rp = Peek(Byte mad + pc)
+  rp = Peek(Byte MAD + pc)
   pc = pc + 1
 End Function
 
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
-  rb = Peek(Byte mad + a)
+  rb = Peek(Byte MAD + a)
 End Function
 
 ' Reads a 16-bit word from 'a' but DOES NOT increment a
 Function rw(a)
-  rw = Peek(Byte mad + a) * 256 + Peek(Byte mad + a + 1)
+  rw = Peek(Byte MAD + a) * 256 + Peek(Byte MAD + a + 1)
 End Function
 
 ' Writes byte 'x' to 'a'
 Sub wb(a, x)
-  Poke Byte mad + a, x
+  Poke Byte MAD + a, x
 End Sub
 
 ' Writes 16-bit word 'x' to 'a'
 Sub ww(a, x)
-  Poke Byte mad + a, x \ 256
-  Poke Byte mad + a + 1, x Mod 256
+  Poke Byte MAD + a, x \ 256
+  Poke Byte MAD + a + 1, x Mod 256
 End Sub
 
 Sub mem_init(f$)
@@ -58,8 +56,8 @@ Sub mem_init(f$)
   Close #1
 
   ' Read memory sizes from header
-  BASE_STATIC = Peek(Byte mad + &h0E) * 256 + Peek(Byte mad + &h0F)
-  FILE_LEN = (Peek(Byte mad + &h1A) * 256 + Peek(Byte mad + &h1B)) * 2
+  BASE_STATIC = rw(&h0E)
+  FILE_LEN = rw(&h1A) * 2
 
   If FILE_LEN > ad Then Error "Story file is truncated"
 End Sub

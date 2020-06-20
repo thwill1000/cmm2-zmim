@@ -24,10 +24,6 @@ Dim vp_to_pp(NUM_VIRTUAL_PAGES - 1)
 
 Dim next_page = 0
 
-Dim pc = 0
-
-Dim GLOBAL_VAR
-
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
   Local pp, vp

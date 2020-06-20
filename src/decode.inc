@@ -1,6 +1,8 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
+Dim pc       ' the program counter
+
 ' The currently decoded instruction
 Dim oc = 0   ' operand code
 Dim onum = 0 ' number of operands

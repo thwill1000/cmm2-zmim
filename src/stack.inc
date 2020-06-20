@@ -1,17 +1,10 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-' Storage for the stack  - we only store 16-bit unsigned integers
-' 0 .. &hFFFF although they are often interpreted as signed.
-Dim stack(511)
-
-' Stack pointer; points to the *next* element in the stack.
-Dim sp = 0
-
-' Frame pointer; points to the stack element that is the first element
-' for the current routine. This has the value &hFFFF if we are not in
-' a routine.
-Dim fp = &hFFFF
+Dim stack(511)  ' storage for the stack  - we only store 16-bit unsigned
+                ' integers 0 .. &hFFFF although they are often interpreted as
+                ' signed.
+Dim sp          ' stack pointer; points to the *next* element in the stack.
 
 ' Pops a 16-bit word from the stack.
 Function st_pop()

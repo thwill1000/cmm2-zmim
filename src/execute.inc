@@ -1,6 +1,21 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
+Const E_OK = 0            ' last operation succeeded
+Const E_UNKNOWN = 1       ' last operation unkown
+Const E_UNIMPLEMENTED = 2 ' last operation implemented
+Const E_BREAK = 3         ' TODO: document
+Const E_QUIT = 4          ' last operation was a "Quit"
+Const E_DEBUG = 5         ' TODO: document
+Const E_REPEAT = 6        ' repeat last operation
+
+Dim fp = &hFFFF ' frame pointer; points to the stack element that is the first
+                ' element for the current routine. This has the value &FFFF if
+                ' we are not in a routine.
+Dim num_bp  ' numer of active breakpoints
+Dim num_ops ' number of instructions processed
+Dim ztrace  ' is instruction tracing enabled? 0 or 1
+
 Function exec(tr)
   Local op, pc_old, sp_old
 
@@ -448,14 +463,14 @@ Sub ex_call(st)
 End Sub
 
 Function ex_read(text_buf, parse_buf)
-  Local ad, c, i, n, word$, s$, wc
+  Local ad, c, i, n, word$, s$, t, wc
 
-  rtime = rtime - Timer
+  t = Timer
 
   s$ = LCase$(cin$("> ", 1))
   If Left$(s$, 1) = "*" Then ex_read = ex_special(s$)
 
-  rtime = rtime + Timer
+  Timer = t
 
   If ex_read <> E_OK Then Exit Function
 

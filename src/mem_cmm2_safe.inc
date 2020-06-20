@@ -5,9 +5,7 @@
 Dim m(128 * 1024 / 8 + 16)
 Dim mad = Peek(VarAddr m()) + 8
 Dim FILE_LEN
-Dim pc
 Dim BASE_STATIC
-Dim GLOBAL_VAR
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
@@ -65,8 +63,9 @@ Sub mem_init(f$)
   Close #1
 
   ' Read memory sizes from header
-  BASE_STATIC = Peek(Byte mad + &h0E) * 256 + Peek(Byte mad + &h0F)
-  FILE_LEN = (Peek(Byte mad + &h1A) * 256 + Peek(Byte mad + &h1B)) * 2
+  FILE_LEN = 512 ' temporary value to avoid "Invalid address" error from rw()
+  BASE_STATIC = rw(&h0E)
+  FILE_LEN = rw(&h1A) * 2
 
   If FILE_LEN > ad Then Error "Story file is truncated"
 End Sub
