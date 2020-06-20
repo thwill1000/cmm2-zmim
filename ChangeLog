@@ -7,17 +7,22 @@ Release 2:
  - Added paging, i.e. displays [MORE] prompt when more than one page of text is
    output between input prompts
    - assumes 50 character high console.
- - Clear console before the story file starts executing.
- - Except for selecting a story file and choosing whether to write to a script
-   the input prompt is now now at the bottom of the console and the contents
-   only ever scroll upwards
-   - this is the standard/expected behaviour for a Z-machine implementation.
- - Try to recognise when story is trying to clear the console and respond
-   appropriately
+ - Changed startup so that console is now cleared before the story file starts
+   executing.
+ - Changed console so that it only ever scrolls upwards and the input prompt is
+   always at the bottom
+   - this is the conventional behaviour for the console of a Z-machine
+     implementation.
+   - EXCEPTION: the initial selection of a story file and choosing whether to
+     write a script.
+ - Changed console so that it recognises when a story is trying to clear the
+   console and repond appropriately
    - the Z-machine provides no specific clear console instruction instruction
      so old z3 stories often just print 20-40 blank lines on the assumption that
      will be sufficient; as it probably was for a 1980s microcomputer.
- - Try to restore the original current working directory when Z-MIM exits.
+ - Fixed issue with Z-MIM changing the current working directory
+   - it still does change it during operation but should now have restored it
+     before it exits whether cleanly or due to an error or Ctrl-C.
  - Minor improvements to the interactive debugger.
  - Cosmetic improvements to code and README.
 
