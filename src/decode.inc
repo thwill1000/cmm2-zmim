@@ -1,35 +1,33 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-Const MAX_NUM_OPERANDS = 4 ' requires up to 8 for z4+
-
 ' The currently decoded instruction
-Dim oc = 0               ' operand code
-Dim onum = 0             ' number of operands
-Dim oa(MAX_NUM_OPERANDS) ' operand values with variables looked-up
-Dim ot(MAX_NUM_OPERANDS) ' operand types
-Dim ov(MAX_NUM_OPERANDS) ' operand raw values
-Dim st = 0
-Dim br = 0
+Dim oc = 0   ' operand code
+Dim onum = 0 ' number of operands
+Dim oa(4)    ' operand values with variables looked-up
+Dim ot(4)    ' operand types
+Dim ov(4)    ' operand raw values
+Dim st = 0   ' store location, -1 for no store
+Dim br = 0   ' branch desintation, 0 for no branch
 
 Sub de_init()
   Local i, s$, x
 
   Read x
-  Dim inst_2op$(x - 1) LENGTH 15
-  For i = 0 To x - 1 : Read s$ : inst_2op$(i) = de_format$(s$) : Next i
+  Dim OP0$(x - 1) LENGTH 12
+  For i = 0 To x - 1 : Read s$ : OP0$(i) = de_format$(s$) : Next i
 
   Read x
-  Dim inst_1op$(x - 1) LENGTH 14
-  For i = 0 To x - 1 : Read s$ : inst_1op$(i) = de_format$(s$) : Next i
+  Dim OP1$(x - 1) LENGTH 14
+  For i = 0 To x - 1 : Read s$ : OP1$(i) = de_format$(s$) : Next i
 
   Read x
-  Dim inst_0op$(x - 1) LENGTH 12
-  For i = 0 To x - 1 : Read s$ : inst_0op$(i) = de_format$(s$) : Next i
+  Dim OP2$(x - 1) LENGTH 15
+  For i = 0 To x - 1 : Read s$ : OP2$(i) = de_format$(s$) : Next i
 
   Read x
-  Dim inst_varop$(x - 1) LENGTH 14
-  For i = 0 To x - 1 : Read s$ : inst_varop$(i) = de_format$(s$) : Next i
+  Dim OPV$(x - 1) LENGTH 14
+  For i = 0 To x - 1 : Read s$ : OPV$(i) = de_format$(s$) : Next i
 End Sub
 
 ' Decode next instruction into global variables.
@@ -44,13 +42,13 @@ Function decode(tr)
 
   If op < &h80 Then
     de_long(op)
-    s$ = inst_2op$(oc)
+    s$ = OP2$(oc)
   ElseIf op < &hC0 Then
     de_short(op)
-    If op < &hB0 Then s$ = inst_1op$(oc) Else s$ = inst_0op$(oc)
+    If op < &hB0 Then s$ = OP1$(oc) Else s$ = OP0$(oc)
   Else
     de_var(op)
-    If op < &hE0 Then s$ = inst_2op$(oc) Else s$ = inst_varop$(oc)
+    If op < &hE0 Then s$ = OP2$(oc) Else s$ = OPV$(oc)
   EndIf
 
   If Left$(s$, 1) = "B" Then
@@ -67,7 +65,7 @@ Function decode(tr)
     br = 0
   EndIf
 
-  If tr Then dmp_op(Mid$(s$, 2), st, br)
+  If tr Then dmp_op(Mid$(s$, 2))
 
   decode = op
 End Function
@@ -171,13 +169,11 @@ Function de_format$(a$)
   de_format$ = s$
 End Function
 
-' 2-operand instructions &h0 - &h18
-Data 25
-Data "Unknown&h0",  "JE B",     "JL B",       "JG B",            "DEC_CHK B"
-Data "INC_CHK B",   "JIN B",    "TEST B",     "OR S",            "AND S"
-Data "TEST_ATTR B", "SET_ATTR", "CLEAR_ATTR", "STORE",           "INSERT_OBJ"
-Data "LOADW S",     "LOADB S",  "GET_PROP S", "GET_PROP_ADDR S", "GEN_NEXT_PROP S"
-Data "ADD S",       "SUB S",    "MUL S",      "DIV S",           "MOD S"
+' 0-operand instructions &h0 - &hD
+Data 14
+Data "RTRUE",        "RFALSE",      "PRINT",       "PRINT_RET",   "NOP"
+Data "SAVE B",       "RESTORE B",   "RESTART",     "RET_POPPED",  "POP"
+Data "QUIT",         "NEW_LINE",    "SHOW_STATUS", "VERIFY B"
 
 ' 1-operand instructions &h0 - &hF
 Data 16
@@ -186,16 +182,18 @@ Data "INC",          "DEC",            "PRINT_ADDR",   "Unknown&h8",   "REMOVE_O
 Data "PRINT_OBJECT", "RET",            "JUMP",         "PRINT_PADDR",  "LOAD S"
 Data "NOT S"
 
-' 0-operand instructions &h0 - &hD
-Data 14
-Data "RTRUE",        "RFALSE",      "PRINT",       "PRINT_RET",   "NOP"
-Data "SAVE B",       "RESTORE B",   "RESTART",     "RET_POPPED",  "POP"
-Data "QUIT",         "NEW_LINE",    "SHOW_STATUS", "VERIFY B"
+' 2-operand instructions &h0 - &h18
+Data 25
+Data "Unknown&h0",  "JE B",     "JL B",       "JG B",            "DEC_CHK B"
+Data "INC_CHK B",   "JIN B",    "TEST B",     "OR S",            "AND S"
+Data "TEST_ATTR B", "SET_ATTR", "CLEAR_ATTR", "STORE",           "INSERT_OBJ"
+Data "LOADW S",     "LOADB S",  "GET_PROP S", "GET_PROP_ADDR S", "GEN_NEXT_PROP S"
+Data "ADD S",       "SUB S",    "MUL S",      "DIV S",           "MOD S"
 
 ' Var-operand instructions &h0 - &h15
 Data 22
 Data "CALL S",       "STOREW",      "STOREB",      "PUT_PROP",    "READ"
-Data "PRINT_CHAR",   "PRINT_NUM",   "RANDOM S",      "PUSH",        "PULL"
+Data "PRINT_CHAR",   "PRINT_NUM",   "RANDOM S",    "PUSH",        "PULL"
 Data "SPLIT_WINDOW", "SET_WINDOW",  "Unknown&hC",  "Unknown&hD",  "Unknown&hE"
 Data "Unknown&hF",   "Unknown&h10", "Unknown&h11", "Unknown&h12", "OUTPUT_STREAM"
 Data "INPUT_STREAM", "SOUND_EFFECT"

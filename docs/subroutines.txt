@@ -49,14 +49,17 @@ decode.inc:
 ------------------------------
 
   Globals:
-    Const MAX_NUM_OPERANDS = 4
     oc
     onum
-    oa(MAX_NUM_OPERANDS)
-    ot(MAX_NUM_OPERANDS
-    ov(MAX_NUM_OPERANDS)
+    oa(4)
+    ot(4
+    ov(4)
     st
     br
+    OP0$()
+    OP1$()
+    OP2$()
+    OPV$()
 
   Subroutines/Functions:
     de_init

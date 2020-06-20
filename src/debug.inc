@@ -378,8 +378,10 @@ Sub dmp_obj(o)
   Loop Until p = 0
 End Sub
 
-' Prints dissasembly for an instruction.
-Sub dmp_op(m$, st, br)
+' Prints dissassembly for the current instruction.
+'
+' @param  m$  instruction mnemonic
+Sub dmp_op(m$)
   cout(rpad$(m$, 14))
   If m$ = "CALL" Then
     cout(fmt_call_operands$())
