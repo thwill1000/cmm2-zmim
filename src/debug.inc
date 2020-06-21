@@ -6,7 +6,7 @@ Dim bp(9) ' The addresses of up to 10 breakpoints, -1 for unset
 
 ' Interactive debugger.
 Function debug()
-  Local a, b, c, cmd$(9) Length 20, cn, i, op, pc_old, s$, sp_old
+  Local a, b, c, cmd$(9) Length 20, cn, i, op, pc_old, s$, t, sp_old
 
   ' Decode and display the next instruction but don't execute it.
   pc_old = pc : sp_old = sp
