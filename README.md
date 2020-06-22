@@ -83,7 +83,7 @@ While the concept of the Colour Maximite 2 is borrowed from the computers of the
 
 The power of the ARM processor means it is capable of running BASIC at speeds comparable to running native machine-code on an 8-bit home computer with the additional advantage of vastly more memory and superior graphics and audio capabilities.
 
-For more information see the official [Colour Maximite 2](http://geoffg.net/maximite.html) website.
+More information can be found on the official Colour Maximite 2 website at http://geoffg.net/maximite.html
 
 **2. Will you be supporting the original Colour Maximite / Mono Maximite ?**
 
