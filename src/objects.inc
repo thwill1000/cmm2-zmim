@@ -2,7 +2,16 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 ' Constants for ob_rel()
-Const PARENT = 4 : Const SIBLING = 5 : Const CHILD = 6
+'!comment_if CMM1
+Const PARENT = 4
+Const SIBLING = 5
+Const CHILD = 6
+'!endif
+'!uncomment_if CMM1
+'PARENT = 4
+'SIBLING = 5
+'CHILD = 6
+'!endif
 
 ' Gets/sets object attribute.
 Function ob_attr(o, a, s, x)

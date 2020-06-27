@@ -1,6 +1,7 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
+'!comment_if CMM1
 Const E_OK = 0            ' last operation succeeded
 Const E_UNKNOWN = 1       ' last operation unkown
 Const E_UNIMPLEMENTED = 2 ' last operation implemented
@@ -8,10 +9,20 @@ Const E_BREAK = 3         ' TODO: document
 Const E_QUIT = 4          ' last operation was a "Quit"
 Const E_DEBUG = 5         ' TODO: document
 Const E_REPEAT = 6        ' repeat last operation
+'!endif
+'!uncomment_if CMM1
+'E_OK = 0
+'E_UNKNOWN = 1
+'E_UNIMPLEMENTED = 2
+'E_BREAK = 3
+'E_QUIT = 4
+'E_DEBUG = 5
+'E_REPEAT = 6
+'!endif
 
-Dim fp = &hFFFF ' frame pointer; points to the stack element that is the first
-                ' element for the current routine. This has the value &FFFF if
-                ' we are not in a routine.
+Dim fp      ' frame pointer; points to the stack element that is the first
+            ' element for the current routine. This has the value &FFFF if
+            ' we are not in a routine.
 Dim num_bp  ' numer of active breakpoints
 Dim num_ops ' number of instructions processed
 Dim ztrace  ' is instruction tracing enabled? 0 or 1
@@ -525,7 +536,7 @@ Function ex_special(cmd$)
     endl()
     cout(DESCRIPTION$) : endl()
     cout("A Toy Plastic Trumpet Production for Sockpuppet Studios") : endl()
-    cout(COPYRIGHT$) : endl()
+    cout(COPYRIGHT_$) : endl()
     cout(VERSION$) : endl()
     endl()
     cout("Programmer:           Thomas Hugo Williams") : endl()
@@ -538,9 +549,9 @@ Function ex_special(cmd$)
       cout("IGNORED '*replay' command read from script")
     Else
       cout("Select a script file from '")
-      cout(ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "':")
+      cout(ss$(SCRIPT_DIR) + "\" + ss$(STORY) + "':")
       endl()
-      f$ = fi_choose$(ss$(SCRIPT_DIR) + "/" + ss$(STORY), "*.scr")
+      f$ = fi_choose$(ss$(SCRIPT_DIR) + "\" + ss$(STORY), "*.scr")
       If f$ <> "" Then
         Open f$ For Input As #3
         script = script Or S_READ
@@ -562,6 +573,7 @@ Function ex_special(cmd$)
 End Function
 
 Function ex_random(range)
+'!comment_if CMM1
   Static x = 7
   Static a = 1103515245 ' a, c and m are same values as used by glibc
   Static c = 12345
@@ -578,6 +590,18 @@ Function ex_random(range)
   x = (a * x + c) Mod m
 
   ex_random = 1 + CInt((range - 1) * (x / m))
+'!endif
+'!uncomment_if CMM1
+'  If range = 0 Then
+'    Randomize Timer
+'    Exit Function
+'  ElseIf range < 0 Then
+'    Randomize Abs(range)
+'    Exit Function
+'  EndIf
+'
+'  ex_random = 1 + CInt((range - 1) * Rnd())
+'!endif
 End Function
 
 Sub ex_show_status()

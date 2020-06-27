@@ -1,22 +1,29 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 1, MMBasic 4.5
 
+'!comment_if CMM1
 Const PAGE_SIZE = 512
-Const NUM_PHYSICAL_PAGES = 80
+Const NUM_PHYSICAL_PAGES = 60
 Const NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
+'!endif
+'!uncomment_if CMM1
+'PAGE_SIZE = 512
+'NUM_PHYSICAL_PAGES = 60
+'NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
+'!endif
 
 Dim FILE_LEN                          ' length of z-machine file
                                       ' also the size of virtual memory used
 Dim BASE_STATIC                       ' memory addresses below this are read on
                                       ' startup and not swapped in/out
-Dim FIRST_SWAP_PAGE = -1              ' index of the first physical page that
+Dim FIRST_SWAP_PAGE                   ' index of the first physical page that
                                       ' can be swapped in/out
 Dim m(NUM_PHYSICAL_PAGES*PAGE_SIZE\4) ' physical z-machine memory
-Dim pf = 0                            ' counter for number of page faults
+Dim pf                                ' counter for number of page faults
 Dim MEM_FILE$                         ' the z-machine file
 Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)  ' map of physical pages -> virtual pages
 Dim vp_to_pp(NUM_VIRTUAL_PAGES - 1)   ' map of virtual pages -> physical pages
-Dim next_page = 0                     ' next page of physical memory to use on
+Dim next_page                         ' next page of physical memory to use on
                                       ' a page fault
 
 ' Reads a byte from 'pc' and increments 'pc'

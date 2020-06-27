@@ -1,18 +1,24 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-Option Explicit On
-Option Default Integer
-
 '!set CMM1
 '!set NO_DEBUG
 
 '!comment_if CMM1
-'#Include "mem_cmm2_fast.inc"
+Option Explicit On
+Option Default Integer
+'!endif
+
+'!uncomment_if CMM1
+'Mode 1
+'!endif
+
+'!comment_if CMM1
+#Include "mem_cmm2_fast.inc"
 '!endif
 '#Include "mem_cmm2_safe.inc"
 '!uncomment_if CMM1
-#Include "mem_cmm1.inc"
+'#Include "mem_cmm1.inc"
 '!endif
 #Include "stack.inc"
 #Include "variable.inc"
@@ -31,21 +37,34 @@ Option Default Integer
 
 ' String "constants" that I don't want to take up 256 bytes
 Dim ss$(4) Length 20
+
+'!comment_if CMM1
 Const INSTALL_DIR = 0
 Const SAVE_DIR = 1
 Const SCRIPT_DIR = 2
 Const STORY_DIR = 3
 Const STORY = 4
-
 Const DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
 Const VERSION$ = "Release 2 for Colour Maximite 2, MMBasic 5.05"
-Const COPYRIGHT$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
+Const COPYRIGHT_$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
+'!endif
+
+'!uncomment_if CMM1
+'INSTALL_DIR = 0
+'SAVE_DIR = 1
+'SCRIPT_DIR = 2
+'STORY_DIR = 3
+'STORY = 4
+'DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
+'VERSION$ = "Release 2 for Colour Maximite 2, MMBasic 5.05"
+'COPYRIGHT_$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
+'!endif
 
 Sub main_init()
   Local i, x
 
   endl()
-  mem_init(ss$(STORY_DIR) + "/" + ss$(STORY) + ".z3")
+  mem_init(ss$(STORY_DIR) + "\" + ss$(STORY) + ".z3")
   di_init()
   endl()
   GLOBAL_VAR = rw(&h0C)
@@ -85,14 +104,14 @@ Sub main()
   endl()
   cout(DESCRIPTION$) : endl()
   endl()
-  cout(COPYRIGHT$) : endl()
+  cout(COPYRIGHT_$) : endl()
   cout(VERSION$) : endl()
   endl()
 
-  ss$(INSTALL_DIR) = "A:/zmim"
-  ss$(SAVE_DIR) = ss$(INSTALL_DIR) + "/saves"
-  ss$(SCRIPT_DIR) = ss$(INSTALL_DIR) + "/scripts"
-  ss$(STORY_DIR) = ss$(INSTALL_DIR) + "/stories"
+  ss$(INSTALL_DIR) = "\zmim"
+  ss$(SAVE_DIR) = ss$(INSTALL_DIR) + "\saves"
+  ss$(SCRIPT_DIR) = ss$(INSTALL_DIR) + "\scripts"
+  ss$(STORY_DIR) = ss$(INSTALL_DIR) + "\stories"
 
   ' Select a story file
   cout("Select a story file from '" + ss$(STORY_DIR) + "':") : endl()
@@ -102,7 +121,7 @@ Sub main()
   s$ = Mid$(s$, Len(ss$(STORY_DIR)) + 2)
   ss$(STORY) = Left$(s$, Len(s$) - 3)
 
-  ' Ensure subdirectories for the current story exist in "saves/" and "scripts/"
+  ' Ensure subdirectories for the current story exist in "saves\" and "scripts\"
   old_dir$ = Cwd$
   ChDir(ss$(SAVE_DIR))
   s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error "Unexpected file: " + s$
@@ -125,7 +144,7 @@ Sub main()
   For i = 1 To Len(s$)
     If Peek(Var s$, i) = Asc(":") Then Poke Var s$, i, Asc("-")
   Next i
-  s$ = ss$(SCRIPT_DIR) + "/" + ss$(STORY) + "/" + s$
+  s$ = ss$(SCRIPT_DIR) + "\" + ss$(STORY) + "\" + s$
   If LCase$(cin$("Write script to '" + s$ + "' [Y|n] ")) <> "n" Then
     Open s$ For Output As #2
     script = S_WRITE

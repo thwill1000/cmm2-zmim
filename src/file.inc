@@ -22,7 +22,9 @@ Function fi_choose$(d$, fspec$)
   Local all$(n) LENGTH m
   f$ = Dir$(fspec$)
   For i = 1 To n : all$(i) = f$ : f$ = Dir$() : Next i
+'!comment_if CMM1
   Sort all$()
+'!endif
 
   ChDir old_dir$
 
@@ -36,7 +38,9 @@ Function fi_choose$(d$, fspec$)
     For i = 1 To n
       x = 1 + (i \ 2) + col * (n \ 2)
       If x > n Then Exit For
-      cout("  [" + Format$(x, "%2g") + "] " + rpad$(all$(x), m + 2))
+      f$ = rpad$(all$(x), m + 2) ' use intermediate var because MMBasic 4.5
+                                 ' can't handle nested user fn calls
+      cout("  [" + Format$(x, "%2g") + "] " + f$)
       If col = 1 Then endl()
       col = (col + 1) Mod 2
     Next i
@@ -44,6 +48,6 @@ Function fi_choose$(d$, fspec$)
   EndIf
 
   f$ = cin$("File number? ")
-  If Val(f$) <> 0 Then fi_choose$ = d$ + "/" + all$(Val(f$))
+  If Val(f$) <> 0 Then fi_choose$ = d$ + "\" + all$(Val(f$))
 
 End Function

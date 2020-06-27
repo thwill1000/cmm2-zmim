@@ -4,31 +4,39 @@
 'Dim BUSY$(1) LENGTH 16
 'BUSY$(0) = "\\\\||||////----"
 
-Dim script = 0 ' bit 1 is set for writing (via #2),
-               ' bit 2 is set for reading (via #3)
+Dim script ' bit 1 is set for writing (via #2),
+           ' bit 2 is set for reading (via #3)
+Dim cbuf$  ' console write buffer
+Dim cspace ' was the last character written to cbuf$ a space?
+Dim clines ' number of lines that have been output since the last prompt
+Dim cempty ' number of consecutive empty lines that have been output.
+           ' If < 0 then don't output any more empty lines
 
-' Console write buffer
-Dim cbuf$
-
-' Was the last character written to cbuf$ a space?
-Dim cspace
-
-' Number of lines that have been output since the last prompt
-Dim clines
-
-' Number of consecutive empty lines that have been output.
-' If < 0 then don't output any more empty lines
-Dim cempty
-
+'!comment_if CMM1
 Const S_WRITE = &b01
 Const S_READ  = &b10
+'!endif
+'!uncomment_if CMM1
+'S_WRITE = &b01
+'S_READ  = &b10
+'!endif
 
+'!comment_if CMM1
 Dim C_HEIGHT = 50
 Dim C_WIDTH = 100
+'!endif
+'!uncomment_if CMM1
+'C_HEIGHT = 36
+'C_WIDTH = 80
+'!endif
 
 ' @param  p$  prompt
 ' @param  r   if 1 then write input to the script
 Function cin$(p$, r)
+'!uncomment_if CMM1
+'  Local s$
+'!endif
+
   cout(p$)
   cflush()
   clines = 0
@@ -40,7 +48,14 @@ Function cin$(p$, r)
       script = script And S_WRITE
       Close #3
     Else
+'!comment_if CMM1
       cout(cin$) : endl()
+'!endif
+'!uncomment_if CMM1
+'      ' In MMBasic 4.5 calling cout(cin$) just prints an empty string.
+'      ' Fix this by assigning to an intermediate variable.
+'      s$ = cin$ : cout(s$) : endl()
+'!endif
     EndIf
   EndIf
 
@@ -54,7 +69,7 @@ End Function
 ' Outputs s$.
 '
 ' Note that calling this function will probably not output the entirety of s$;
-' the last 'word' or part thereof may be left in $cbuf.
+' the last 'word' or part thereof may be left in cbuf$.
 Sub cout(s$)
   Local c, i
 
