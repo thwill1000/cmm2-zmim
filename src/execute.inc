@@ -514,7 +514,12 @@ Function ex_special(cmd$)
   ex_special = E_REPEAT
 
   If cmd$ = "*break" Then
+'!comment_if CMM1
     ex_special = E_BREAK
+'!endif
+'!uncomment_if CMM1
+'    ex_special = E_OK
+'!endif
 
   ElseIf cmd$ = "*credits" Then
     endl()

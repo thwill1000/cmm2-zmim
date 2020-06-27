@@ -1,33 +1,30 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' For Colour Maximite 1, MMBasic 4.5
 
 Const PAGE_SIZE = 512
 Const NUM_PHYSICAL_PAGES = 80
 Const NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
 
-' Memory addresses below this are read on startup and not swapped in/out
-' - not properly set until the z-machine header is read
-Dim BASE_STATIC = PAGE_SIZE
-
-Dim FILE_LEN = PAGE_SIZE
-Dim FIRST_SWAP_PAGE = -1
-
-Dim m(NUM_PHYSICAL_PAGES * PAGE_SIZE \ 4)
-
-Dim pf = 0 ' Counter for number of page faults
-
-' Map of physical pages -> virtual pages
-Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)
-
-' Map of virtual pages -> physical pages
-Dim vp_to_pp(NUM_VIRTUAL_PAGES - 1)
-
-Dim next_page = 0
+Dim FILE_LEN                          ' length of z-machine file
+                                      ' also the size of virtual memory used
+Dim BASE_STATIC                       ' memory addresses below this are read on
+                                      ' startup and not swapped in/out
+Dim FIRST_SWAP_PAGE = -1              ' index of the first physical page that
+                                      ' can be swapped in/out
+Dim m(NUM_PHYSICAL_PAGES*PAGE_SIZE\4) ' physical z-machine memory
+Dim pf = 0                            ' counter for number of page faults
+Dim MEM_FILE$                         ' the z-machine file
+Dim pp_to_vp(NUM_PHYSICAL_PAGES - 1)  ' map of physical pages -> virtual pages
+Dim vp_to_pp(NUM_VIRTUAL_PAGES - 1)   ' map of virtual pages -> physical pages
+Dim next_page = 0                     ' next page of physical memory to use on
+                                      ' a page fault
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
   Local pp, vp
+'!comment_if NO_DEBUG
   If pc < 0 Or pc >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
+'!endif
   vp = pc \ PAGE_SIZE
   pp = vp_to_pp(vp)
   If pp = 0 Then pp = mem_load(vp) : pf = pf + 1
@@ -38,7 +35,9 @@ End Function
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
   Local pp, vp
+'!comment_if NO_DEBUG
   If a < 0 Or a >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
+'!endif
   If a < BASE_STATIC Then rb = Peek(Var m(0), a) : Exit Function
   vp = a \ PAGE_SIZE
   pp = vp_to_pp(vp)
@@ -53,15 +52,19 @@ End Function
 
 ' Writes byte 'x' to 'a'
 Sub wb(a, x)
+'!comment_if NO_DEBUG
   If a < 0 Or a >= BASE_STATIC Then Error "Invalid address: " + fmt_hex$(a)
   If (x And &hFF) <> x Then Error "Invalid write value: " + Str$(x)
+'!endif
   Poke Var m(0), a, x
 End Sub
 
 ' Writes 16-bit word 'x' to 'a'
 Sub ww(a, x)
+'!comment_if NO_DEBUG
   If a < 0 Or a >= BASE_STATIC - 1 Then Error "Invalid address: " + fmt_hex$(a)
   If (x And &hFFFF) <> x Then Error "Invalid write value: " + Str$(x)
+'!endif
   Poke Var m(0), a, x \ 256
   Poke Var m(0), a + 1, x Mod 256
 End Sub
@@ -70,7 +73,6 @@ End Sub
 ' @return physical page number
 Function mem_load(vp)
   Local ad, buf$, buf_sz, i, pp, to_read
-
   pp = next_page
 
   ' TODO: Implement some form of Least Recently Used algorithm.
@@ -104,7 +106,7 @@ End Function
 Sub mem_init(f$)
   Local i
 
-  Dim MEM_FILE$ = f$
+  MEM_FILE$ = f$
 
   cout("Loading '" + MEM_FILE$ + "'") : endl()
 
@@ -112,9 +114,10 @@ Sub mem_init(f$)
   cout("  Header page: 0") : endl()
   If mem_load(0) <> 0 Then Error
 
-  ' Read memory sizes from header
-  BASE_STATIC = rw(&h0E)
-  FILE_LEN = rw(&h1A) * 2
+  ' Read memory sizes from header.
+  ' Note: we can't call rw() until both of these are initialised.
+  BASE_STATIC = Peek(Var m(0),&h0E)*256 + Peek(Var m(0),&h0F)
+  FILE_LEN = (Peek(Var m(0),&h1A) * 256 + Peek(Var m(0),&h1B)) * 2
 
   ' Initialise dynamic memory
   FIRST_SWAP_PAGE = BASE_STATIC \ PAGE_SIZE

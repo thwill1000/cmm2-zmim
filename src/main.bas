@@ -4,9 +4,16 @@
 Option Explicit On
 Option Default Integer
 
-#Include "mem_cmm2_fast.inc"
+'!set CMM1
+'!set NO_DEBUG
+
+'!comment_if CMM1
+'#Include "mem_cmm2_fast.inc"
+'!endif
 '#Include "mem_cmm2_safe.inc"
-'#Include "mem_cmm1.inc"
+'!uncomment_if CMM1
+#Include "mem_cmm1.inc"
+'!endif
 #Include "stack.inc"
 #Include "variable.inc"
 #Include "decode.inc"
@@ -18,7 +25,9 @@ Option Default Integer
 #Include "dict.inc"
 #Include "zsave.inc"
 #Include "file.inc"
+'!comment_if NO_DEBUG
 #Include "debug.inc"
+'!endif
 
 ' String "constants" that I don't want to take up 256 bytes
 Dim ss$(4) Length 20
@@ -60,7 +69,9 @@ Sub main()
   Local i, old_dir$, old_pc, state, s$
 
   de_init()
+'!comment_if NO_DEBUG
   For i = 0 To 9 : bp(i) = -1 : Next i
+'!endif
 
   Mode 1
   Cls
@@ -126,6 +137,7 @@ Sub main()
   Timer = 0
 
   Do While state <> E_QUIT
+'!comment_if NO_DEBUG
     ' If there are active breakpoint and the PC has changed since we last checked
     If num_bp > 0 And pc <> old_pc Then
       For i = 0 To 9
@@ -135,6 +147,7 @@ Sub main()
         EndIf
       Next i
     EndIf
+'!endif
 
     old_pc = pc
     If state = E_OK Or state = E_REPEAT Then
@@ -149,9 +162,9 @@ Sub main()
   cout("Instructions / second      = ")
   cout(Format$(1000 * num_ops / Timer, "%.1f"))
   endl()
-  If MM.DEVICE$ <> "Colour Maximite 2" Then
-    cout("Num page faults            = " + Str$(pf)) : endl()
-  EndIf
+'!uncomment_if CMM1
+'  cout("Num page faults            = " + Str$(pf)) : endl()
+'!endif
 
   If script And S_WRITE Then Close #2
   If script And S_READ Then Close #3
