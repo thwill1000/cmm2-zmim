@@ -1,0 +1,21 @@
+open mailbox
+take leaflet
+read leaflet
+south
+east
+open window
+enter window
+take all
+open sack
+west
+take all
+open trophy case
+move rug
+open trap door
+lantern on
+turn lantern on
+down
+n
+i
+quit
+y

@@ -1,6 +1,12 @@
 ChangeLog
 ---------
 
+Release 3 beta 1:
+ - Added CMM1 implementation at /zmim/zmim_cm1.bas
+   - currently, and perhaps forever this is too slow to be playable.
+ - Fixed missing variable declaration in interactive debugger.
+ - Minor updates to the README.
+
 Release 2:
  - Added word-wrapping
    - assumes 100 character wide console.

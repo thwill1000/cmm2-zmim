@@ -45,7 +45,7 @@ Const SCRIPT_DIR = 2
 Const STORY_DIR = 3
 Const STORY = 4
 Const DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
-Const VERSION$ = "Release 2 for Colour Maximite 2, MMBasic 5.05"
+Const VERSION$ = "Release 3b1 for Colour Maximite 2, MMBasic 5.05"
 Const COPYRIGHT_$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 '!endif
 
@@ -56,7 +56,7 @@ Const COPYRIGHT_$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 'STORY_DIR = 3
 'STORY = 4
 'DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
-'VERSION$ = "Release 2 for Colour Maximite 2, MMBasic 5.05"
+'VERSION$ = "Release 3b1 for Colour Maximite 1, MMBasic 4.5C"
 'COPYRIGHT_$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 '!endif
 
@@ -145,7 +145,7 @@ Sub main()
     If Peek(Var s$, i) = Asc(":") Then Poke Var s$, i, Asc("-")
   Next i
   s$ = ss$(SCRIPT_DIR) + "\" + ss$(STORY) + "\" + s$
-  If LCase$(cin$("Write script to '" + s$ + "' [Y|n] ")) <> "n" Then
+  If LCase$(cin$("Write script to '" + s$ + "' [y|N] ")) = "y" Then
     Open s$ For Output As #2
     script = S_WRITE
   EndIf
