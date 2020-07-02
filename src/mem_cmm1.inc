@@ -49,7 +49,7 @@ Function rb(a)
   vp = a \ PAGE_SIZE
   pp = vp_to_pp(vp)
   If pp = 0 Then pp = mem_load(vp) : pf = pf + 1
-  rb = Peek(Var m(0), pp * PAGE_SIZE + (a Mod Page_SIZE))
+  rb = Peek(Var m(0), pp * PAGE_SIZE + (a Mod PAGE_SIZE))
 End Function
 
 ' Reads a 16-bit word from 'a' but DOES NOT increment a

@@ -2,52 +2,56 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 Function fi_choose$(d$, fspec$)
-  Local col, f$, i, m, n, old_dir$, x
+  Local f$, i, j, nc, nr, old_dir$, sz, width, x
 
   old_dir$ = Cwd$
   ChDir d$
 
-  ' Count number of entries 'n' and their maximum length 'm'
+  ' Count number of entries 'sz' and their maximum length 'width'.
+  ' Ignore files prefixed with full-stop.
   f$ = Dir$(fspec$)
   Do While f$ <> ""
-    n = n + 1
-    If Len(f$) > m Then m = Len(f$)
+    If Left$(f$, 1) <> "." Then
+      sz = sz + 1
+      If Len(f$) > width Then width = Len(f$)
+    EndIf
     f$ = Dir$()
   Loop
 
-  If n = 0 Then cout("No files found") : endl() : ChDir old_dir$ : Exit Function
+  If sz = 0 Then cout("No files found") : endl() : ChDir old_dir$ : Exit Function
 
   ' Create sorted array of entries 'all$'.
-  ' Element 0 is always empty, even after the sort.
-  Local all$(n) LENGTH m
+  ' Once again ignore all files prefixed with full-stop.
+  Local all$(sz - 1) LENGTH width
   f$ = Dir$(fspec$)
-  For i = 1 To n : all$(i) = f$ : f$ = Dir$() : Next i
+  i = 0
+  Do
+    If Left$(f$, 1) <> "." Then all$(i) = f$ : i = i + 1
+    f$ = Dir$()
+  Loop Until i = sz
 '!comment_if CMM1
   Sort all$()
 '!endif
 
   ChDir old_dir$
 
-  ' Display entries
-  If n < 6 Then
-    For i = 1 To n
-      cout("  [" + Format$(i, "%2g") + "] " + all$(i)) : endl()
-    Next i
-  Else
-    col = 0
-    For i = 1 To n
-      x = 1 + (i \ 2) + col * (n \ 2)
-      If x > n Then Exit For
-      f$ = rpad$(all$(x), m + 2) ' use intermediate var because MMBasic 4.5
-                                 ' can't handle nested user fn calls
-      cout("  [" + Format$(x, "%2g") + "] " + f$)
-      If col = 1 Then endl()
-      col = (col + 1) Mod 2
-    Next i
-    If col = 1 Then endl()
-  EndIf
+  ' Display entries in one column if < 8, otherwise 2 columns.
+  If sz < 8 Then nc = 1 Else nc = 2
+  nr = CInt(sz / nc + 0.4999)
+  width = width + 10
+  For i = 0 To nr - 1
+    For j = 0 to nc - 1
+      cflush()
+      x = (j * nr) + i
+      If x < sz Then
+        If j * width > Pos Then cout(Space$(j * width - Pos))
+        cout("  [" + Format$(x + 1, "%2g") + "] " + all$(x))
+      EndIf
+    Next j
+    endl()
+  Next i
 
   f$ = cin$("File number? ")
-  If Val(f$) <> 0 Then fi_choose$ = d$ + "\" + all$(Val(f$))
+  If Val(f$) > 0 And Val(f$) <= sz Then fi_choose$ = d$ + "\" + all$(Val(f$) - 1)
 
 End Function
