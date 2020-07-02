@@ -1,8 +1,32 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-'!set CMM1
+'!set INLINE_CONSTANTS
+''!set CMM1
 '!set NO_DEBUG
+
+'!uncomment_if INLINE_CONSTANTS
+'!replace INSTALL_DIR 0
+'!replace SAVE_DIR    1
+'!replace SCRIPT_DIR  2
+'!replace STORY_DIR   3
+'!replace STORY       4
+'!replace DESCRIPTION$ "Z-MIM: a Z-Machine Interpreter for the Maximite"
+'!replace VERSION$     "Release 3b1 for Colour Maximite 1, MMBasic 4.5C"
+'!replace COPYRIGHT_$  "Copyright (c) 2019-20 Thomas Hugo Williams"
+'!replace S_WRITE      &b01
+'!replace S_READ       &b10
+'!replace E_OK         0
+'!replace E_UNKNOWN    1
+'!replace E_UNIMPLEMENTED 2
+'!replace E_BREAK 3
+'!replace E_QUIT 4
+'!replace E_DEBUG 5
+'!replace E_REPEAT 6
+'!replace PARENT 4
+'!replace SIBLING 5
+'!replace CHILD 6
+'!endif
 
 '!comment_if CMM1
 Option Explicit On
@@ -38,7 +62,7 @@ Option Default Integer
 ' String "constants" that I don't want to take up 256 bytes
 Dim ss$(4) Length 20
 
-'!comment_if CMM1
+'!comment_if INLINE_CONSTANTS
 Const INSTALL_DIR = 0
 Const SAVE_DIR = 1
 Const SCRIPT_DIR = 2
@@ -47,17 +71,6 @@ Const STORY = 4
 Const DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
 Const VERSION$ = "Release 3b1 for Colour Maximite 2, MMBasic 5.05"
 Const COPYRIGHT_$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
-'!endif
-
-'!uncomment_if CMM1
-'INSTALL_DIR = 0
-'SAVE_DIR = 1
-'SCRIPT_DIR = 2
-'STORY_DIR = 3
-'STORY = 4
-'DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
-'VERSION$ = "Release 3b1 for Colour Maximite 1, MMBasic 4.5C"
-'COPYRIGHT_$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
 '!endif
 
 Sub main_init()

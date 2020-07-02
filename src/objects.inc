@@ -2,15 +2,10 @@
 ' For Colour Maximite 2, MMBasic 5.05
 
 ' Constants for ob_rel()
-'!comment_if CMM1
+'!comment_if INLINE_CONSTANTS
 Const PARENT = 4
 Const SIBLING = 5
 Const CHILD = 6
-'!endif
-'!uncomment_if CMM1
-'PARENT = 4
-'SIBLING = 5
-'CHILD = 6
 '!endif
 
 ' Gets/sets object attribute.

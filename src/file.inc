@@ -22,7 +22,10 @@ Function fi_choose$(d$, fspec$)
 
   ' Create sorted array of entries 'all$'.
   ' Once again ignore all files prefixed with full-stop.
-  Local all$(sz - 1) LENGTH width
+  ' MMBasic doesn't allow creation of an array with a single element so just
+  ' in case we include an extra dummy element that will always be sorted last.
+  Local all$(sz) LENGTH width
+  all$(sz) = Chr$(&h7F)
   f$ = Dir$(fspec$)
   i = 0
   Do

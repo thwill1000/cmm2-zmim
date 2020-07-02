@@ -12,13 +12,9 @@ Dim clines ' number of lines that have been output since the last prompt
 Dim cempty ' number of consecutive empty lines that have been output.
            ' If < 0 then don't output any more empty lines
 
-'!comment_if CMM1
+'!comment_if INLINE_CONSTANTS
 Const S_WRITE = &b01
 Const S_READ  = &b10
-'!endif
-'!uncomment_if CMM1
-'S_WRITE = &b01
-'S_READ  = &b10
 '!endif
 
 '!comment_if CMM1

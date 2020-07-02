@@ -1,7 +1,7 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-'!comment_if CMM1
+'!comment_if INLINE_CONSTANTS
 Const E_OK = 0            ' last operation succeeded
 Const E_UNKNOWN = 1       ' last operation unkown
 Const E_UNIMPLEMENTED = 2 ' last operation implemented
@@ -9,15 +9,6 @@ Const E_BREAK = 3         ' TODO: document
 Const E_QUIT = 4          ' last operation was a "Quit"
 Const E_DEBUG = 5         ' TODO: document
 Const E_REPEAT = 6        ' repeat last operation
-'!endif
-'!uncomment_if CMM1
-'E_OK = 0
-'E_UNKNOWN = 1
-'E_UNIMPLEMENTED = 2
-'E_BREAK = 3
-'E_QUIT = 4
-'E_DEBUG = 5
-'E_REPEAT = 6
 '!endif
 
 Dim fp      ' frame pointer; points to the stack element that is the first
