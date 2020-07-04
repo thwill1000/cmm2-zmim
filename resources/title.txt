@@ -1,0 +1,12 @@
+        ______     __  __ _____ __  __
+       |___  /    |  \/  |_   _|  \/  |
+          / /_____| \  / | | | | \  / |
+         / /______| |\/| | | | | |\/| |
+        / /__     | |  | |_| |_| |  | |
+       /_____|    |_|  |_|_____|_|  |_|
+
+Z-MIM: a Z-Machine Interpreter for the Maximite
+
+Release 3b1 for Colour Maximite 2, MMBasic 5.05
+Copyright (c) 2019-20 Thomas Hugo Williams
+

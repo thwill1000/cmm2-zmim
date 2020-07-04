@@ -1,15 +1,10 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 1, MMBasic 4.5
 
-'!comment_if CMM1
+'!comment_if INLINE_CONSTANTS
 Const PAGE_SIZE = 512
 Const NUM_PHYSICAL_PAGES = 60
 Const NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
-'!endif
-'!uncomment_if CMM1
-'PAGE_SIZE = 512
-'NUM_PHYSICAL_PAGES = 60
-'NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
 '!endif
 
 Dim FILE_LEN                          ' length of z-machine file

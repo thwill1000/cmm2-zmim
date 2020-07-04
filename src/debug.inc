@@ -101,7 +101,7 @@ Function debug()
       dmp_global(Val(cmd$(1)), Val(cmd$(2)))
 
     ElseIf cmd$(0) = "h" Then
-      dbg_help()
+      cecho(ss$(RESOURCES_DIR) + "\debug_help.txt")
 
     ElseIf cmd$(0) = "H" Then
       ' Dump header
@@ -533,14 +533,3 @@ Function fmt_normal_operands$()
   Next i
   fmt_normal_operands$ = a$
 End Function
-
-' Prints debugger help information.
-Sub dbg_help()
-  Local s$
-  Open ss$(INSTALL_DIR) + "/src/resources/debug_help.txt" For Input As #1
-  Do
-    Line Input #1, s$
-    cout(s$) : endl()
-  Loop While Not Eof(#1)
-  Close #1
-End Sub

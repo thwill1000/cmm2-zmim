@@ -15,21 +15,15 @@ Dim cempty ' number of consecutive empty lines that have been output.
 '!comment_if INLINE_CONSTANTS
 Const S_WRITE = &b01
 Const S_READ  = &b10
-'!endif
 
-'!comment_if CMM1
 Dim C_HEIGHT = 50
 Dim C_WIDTH = 100
-'!endif
-'!uncomment_if CMM1
-'C_HEIGHT = 36
-'C_WIDTH = 80
 '!endif
 
 ' @param  p$  prompt
 ' @param  r   if 1 then write input to the script
 Function cin$(p$, r)
-'!uncomment_if CMM1
+'!uncomment_if TARGET_CMM1
 '  Local s$
 '!endif
 
@@ -44,10 +38,10 @@ Function cin$(p$, r)
       script = script And S_WRITE
       Close #3
     Else
-'!comment_if CMM1
+'!comment_if TARGET_CMM1
       cout(cin$) : endl()
 '!endif
-'!uncomment_if CMM1
+'!uncomment_if TARGET_CMM1
 '      ' In MMBasic 4.5 calling cout(cin$) just prints an empty string.
 '      ' Fix this by assigning to an intermediate variable.
 '      s$ = cin$ : cout(s$) : endl()
@@ -119,4 +113,17 @@ Sub endl()
     cempty = -999 ' to avoid any unnecessary additional empty lines
     clines = 0
   EndIf
+End Sub
+
+' Echos the contents of a (hopefully) text file to the console.
+Sub cecho(f$)
+  Local s$
+
+  Open f$ For Input As #1
+  Do
+    Line Input #1, s$
+    cout(s$)
+    endl()
+  Loop While Not Eof(#1)
+  Close #1
 End Sub

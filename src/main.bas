@@ -1,47 +1,41 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-'!set INLINE_CONSTANTS
-''!set CMM1
-'!set NO_DEBUG
+If Mm.Device$ <> "Colour Maximite" Then
+  Option Explicit On
+  Option Default Integer
+EndIf
+
+Mode 1
+
+'!set TARGET_CMM1
+
+'!uncomment_if TARGET_CMM1
+''!set INLINE_CONSTANTS
+''!set COMPRESS_IDS
+''!set NO_DEBUG
+''!set USE_VIRTUAL_MEMORY
+'!endif
+
+'!uncomment_if TARGET_CMM2_OPT
+''!set INLINE_CONSTANTS
+''!set COMPRESS_IDS
+''!set NO_DEBUG
+'!endif
 
 '!uncomment_if INLINE_CONSTANTS
-'!replace INSTALL_DIR 0
-'!replace SAVE_DIR    1
-'!replace SCRIPT_DIR  2
-'!replace STORY_DIR   3
-'!replace STORY       4
-'!replace DESCRIPTION$ "Z-MIM: a Z-Machine Interpreter for the Maximite"
-'!replace VERSION$     "Release 3b1 for Colour Maximite 1, MMBasic 4.5C"
-'!replace COPYRIGHT_$  "Copyright (c) 2019-20 Thomas Hugo Williams"
-'!replace S_WRITE      &b01
-'!replace S_READ       &b10
-'!replace E_OK         0
-'!replace E_UNKNOWN    1
-'!replace E_UNIMPLEMENTED 2
-'!replace E_BREAK 3
-'!replace E_QUIT 4
-'!replace E_DEBUG 5
-'!replace E_REPEAT 6
-'!replace PARENT 4
-'!replace SIBLING 5
-'!replace CHILD 6
+'#Include "constants.def"
 '!endif
 
-'!comment_if CMM1
-Option Explicit On
-Option Default Integer
+'!uncomment_if COMPRESS_IDS
+'#Include "ids.def"
 '!endif
 
-'!uncomment_if CMM1
-'Mode 1
-'!endif
-
-'!comment_if CMM1
+'!comment_if USE_VIRTUAL_MEMORY
 #Include "mem_cmm2_fast.inc"
-'!endif
 '#Include "mem_cmm2_safe.inc"
-'!uncomment_if CMM1
+'!endif
+'!uncomment_if USE_VIRTUAL_MEMORY
 '#Include "mem_cmm1.inc"
 '!endif
 #Include "stack.inc"
@@ -60,24 +54,22 @@ Option Default Integer
 '!endif
 
 ' String "constants" that I don't want to take up 256 bytes
-Dim ss$(4) Length 20
+Dim ss$(5) Length 20
 
 '!comment_if INLINE_CONSTANTS
 Const INSTALL_DIR = 0
-Const SAVE_DIR = 1
-Const SCRIPT_DIR = 2
-Const STORY_DIR = 3
-Const STORY = 4
-Const DESCRIPTION$ = "Z-MIM: a Z-Machine Interpreter for the Maximite"
-Const VERSION$ = "Release 3b1 for Colour Maximite 2, MMBasic 5.05"
-Const COPYRIGHT_$ = "Copyright (c) 2019-20 Thomas Hugo Williams"
+Const RESOURCES_DIR = 1
+Const SAVE_DIR = 2
+Const SCRIPT_DIR = 3
+Const STORY_DIR = 4
+Const STORY_FILE = 5
 '!endif
 
 Sub main_init()
   Local i, x
 
   endl()
-  mem_init(ss$(STORY_DIR) + "\" + ss$(STORY) + ".z3")
+  mem_init(ss$(STORY_DIR) + "\" + ss$(STORY_FILE) + ".z3")
   di_init()
   endl()
   GLOBAL_VAR = rw(&h0C)
@@ -100,31 +92,25 @@ End Sub
 Sub main()
   Local i, old_dir$, old_pc, state, s$
 
+  ss$(INSTALL_DIR)   = "\zmim"
+  ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resources"
+  ss$(SAVE_DIR)      = ss$(INSTALL_DIR) + "\saves"
+  ss$(SCRIPT_DIR)    = ss$(INSTALL_DIR) + "\scripts"
+  ss$(STORY_DIR)     = ss$(INSTALL_DIR) + "\stories"
+
+  Cls
+
+'!comment_if TARGET_CMM1
+  cecho(ss$(RESOURCES_DIR) + "\title.txt")
+'!endif
+'!uncomment_if TARGET_CMM1
+'  cecho(ss$(RESOURCES_DIR) + "\titl_cm1.txt")
+'!endif
+
   de_init()
 '!comment_if NO_DEBUG
   For i = 0 To 9 : bp(i) = -1 : Next i
 '!endif
-
-  Mode 1
-  Cls
-
-  cout("        ______     __  __ _____ __  __ ") : endl()
-  cout("       |___  /    |  \/  |_   _|  \/  |") : endl()
-  cout("          / /_____| \  / | | | | \  / |") : endl()
-  cout("         / /______| |\/| | | | | |\/| |") : endl()
-  cout("        / /__     | |  | |_| |_| |  | |") : endl()
-  cout("       /_____|    |_|  |_|_____|_|  |_|") : endl()
-  endl()
-  cout(DESCRIPTION$) : endl()
-  endl()
-  cout(COPYRIGHT_$) : endl()
-  cout(VERSION$) : endl()
-  endl()
-
-  ss$(INSTALL_DIR) = "\zmim"
-  ss$(SAVE_DIR) = ss$(INSTALL_DIR) + "\saves"
-  ss$(SCRIPT_DIR) = ss$(INSTALL_DIR) + "\scripts"
-  ss$(STORY_DIR) = ss$(INSTALL_DIR) + "\stories"
 
   ' Select a story file
   cout("Select a story file from '" + ss$(STORY_DIR) + "':") : endl()
@@ -132,16 +118,16 @@ Sub main()
     s$ = fi_choose$(ss$(STORY_DIR), "*.z3")
   Loop
   s$ = Mid$(s$, Len(ss$(STORY_DIR)) + 2)
-  ss$(STORY) = Left$(s$, Len(s$) - 3)
+  ss$(STORY_FILE) = Left$(s$, Len(s$) - 3)
 
   ' Ensure subdirectories for the current story exist in "saves\" and "scripts\"
   old_dir$ = Cwd$
   ChDir(ss$(SAVE_DIR))
-  s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error "Unexpected file: " + s$
-  s$ = Dir$(ss$(STORY), Dir) : If s$ = "" Then MkDir(ss$(STORY))
+  s$ = Dir$(ss$(STORY_FILE), File) : If s$ <> "" Then Error "Unexpected file: " + s$
+  s$ = Dir$(ss$(STORY_FILE), Dir) : If s$ = "" Then MkDir(ss$(STORY_FILE))
   ChDir(ss$(SCRIPT_DIR))
-  s$ = Dir$(ss$(STORY), File) : If s$ <> "" Then Error "Unexpected file:" + s$
-  s$ = Dir$(ss$(STORY), Dir) : If s$ = "" Then MkDir(ss$(STORY))
+  s$ = Dir$(ss$(STORY_FILE), File) : If s$ <> "" Then Error "Unexpected file:" + s$
+  s$ = Dir$(ss$(STORY_FILE), Dir) : If s$ = "" Then MkDir(ss$(STORY_FILE))
   ChDir(old_dir$)
 
   main_init()
@@ -153,11 +139,11 @@ Sub main()
 '  EndIf
 
   ' Jump through hoops to create the name of the script file
-  s$ = ss$(STORY) + "-" + Date$ + "-" + Time$ + ".scr"
+  s$ = ss$(STORY_FILE) + "-" + Date$ + "-" + Time$ + ".scr"
   For i = 1 To Len(s$)
     If Peek(Var s$, i) = Asc(":") Then Poke Var s$, i, Asc("-")
   Next i
-  s$ = ss$(SCRIPT_DIR) + "\" + ss$(STORY) + "\" + s$
+  s$ = ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE) + "\" + s$
   If LCase$(cin$("Write script to '" + s$ + "' [y|N] ")) = "y" Then
     Open s$ For Output As #2
     script = S_WRITE
@@ -194,7 +180,7 @@ Sub main()
   cout("Instructions / second      = ")
   cout(Format$(1000 * num_ops / Timer, "%.1f"))
   endl()
-'!uncomment_if CMM1
+'!uncomment_if USE_VIRTUAL_MEMORY
 '  cout("Num page faults            = " + Str$(pf)) : endl()
 '!endif
 

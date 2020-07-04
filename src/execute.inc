@@ -516,33 +516,29 @@ Function ex_special(cmd$)
   ex_special = E_REPEAT
 
   If cmd$ = "*break" Then
-'!comment_if CMM1
+'!comment_if TARGET_CMM1
     ex_special = E_BREAK
 '!endif
-'!uncomment_if CMM1
+'!uncomment_if TARGET_CMM1
 '    ex_special = E_OK
 '!endif
 
   ElseIf cmd$ = "*credits" Then
-    endl()
-    cout(DESCRIPTION$) : endl()
-    cout("A Toy Plastic Trumpet Production for Sockpuppet Studios") : endl()
-    cout(COPYRIGHT_$) : endl()
-    cout(VERSION$) : endl()
-    endl()
-    cout("Programmer:           Thomas Hugo Williams") : endl()
-    cout("Z-Machine Technical:  Fredrik Ramsberg") : endl()
-    cout("Consultant") : endl()
-    endl()
+'!comment_if TARGET_CMM1
+    cecho(ss$(RESOURCES_DIR) + "\credits.txt")
+'!endif
+'!uncomment_if TARGET_CMM1
+'    cecho(ss$(RESOURCES_DIR) + "\cred_cm1.txt")
+'!endif
 
   ElseIf cmd$ = "*replay" Then
     If script AND S_READ Then
       cout("IGNORED '*replay' command read from script")
     Else
       cout("Select a script file from '")
-      cout(ss$(SCRIPT_DIR) + "\" + ss$(STORY) + "':")
+      cout(ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE) + "':")
       endl()
-      f$ = fi_choose$(ss$(SCRIPT_DIR) + "\" + ss$(STORY), "*.scr")
+      f$ = fi_choose$(ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE), "*.scr")
       If f$ <> "" Then
         Open f$ For Input As #3
         script = script Or S_READ
@@ -564,7 +560,7 @@ Function ex_special(cmd$)
 End Function
 
 Function ex_random(range)
-'!comment_if CMM1
+'!comment_if TARGET_CMM1
   Static x = 7
   Static a = 1103515245 ' a, c and m are same values as used by glibc
   Static c = 12345
@@ -582,7 +578,7 @@ Function ex_random(range)
 
   ex_random = 1 + CInt((range - 1) * (x / m))
 '!endif
-'!uncomment_if CMM1
+'!uncomment_if TARGET_CMM1
 '  If range = 0 Then
 '    Randomize Timer
 '    Exit Function

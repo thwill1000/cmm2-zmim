@@ -32,7 +32,7 @@ Function fi_choose$(d$, fspec$)
     If Left$(f$, 1) <> "." Then all$(i) = f$ : i = i + 1
     f$ = Dir$()
   Loop Until i = sz
-'!comment_if CMM1
+'!comment_if TARGET_CMM1
   Sort all$()
 '!endif
 
