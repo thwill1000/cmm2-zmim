@@ -122,7 +122,7 @@ Sub de_var(op)
     ElseIf ot(i) = &b10 Then
       ' VARIABLE
       ov(i) = rp() : oa(i) = vget(ov(i))
-    Else ' ot(i) = &11
+    Else ' ot(i) = &b11
       ' OMITTED
       onum = onum - 1
     EndIf
