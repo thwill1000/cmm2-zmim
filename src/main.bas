@@ -93,7 +93,12 @@ Sub main()
   Local i, old_dir$, old_pc, state, s$
 
   ss$(INSTALL_DIR)   = "\zmim"
+'!comment_if TARGET_CMM1
   ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resources"
+'!endif
+'!uncomment_if TARGET_CMM1
+'  ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resour~1"
+'!endif
   ss$(SAVE_DIR)      = ss$(INSTALL_DIR) + "\saves"
   ss$(SCRIPT_DIR)    = ss$(INSTALL_DIR) + "\scripts"
   ss$(STORY_DIR)     = ss$(INSTALL_DIR) + "\stories"
