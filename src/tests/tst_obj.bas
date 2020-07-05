@@ -4,20 +4,19 @@
 Option Explicit On
 Option Default Integer
 
-'#Include "mem_cmm2_fast.inc"
-#Include "mem_cmm2_safe.inc"
-#Include "objects.inc"
-#Include "debug.inc"
-#Include "util.inc"
-#Include "zstring.inc"
-#Include "console.inc"
+'#Include "../mem_cmm2_fast.inc"
+#Include "../mem_cmm2_safe.inc"
+#Include "../objects.inc"
+#Include "../debug.inc"
+#Include "../util.inc"
+#Include "../zstring.inc"
+#Include "../console.inc"
 
-Dim ad, f$, i, o, x, _
+Dim ad, i, o, x, _
 
 Cls
 
-f$ = "A:/zmim/stories/minizork.z3"
-mem_init(f$)
+mem_init("/zmim/stories/minizork.z3")
 
 endl()
 cout("Executing object tests") : endl()

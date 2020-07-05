@@ -1,21 +1,21 @@
 Option Explicit On
 Option Default Integer
 
-'#Include "mem_cmm2_fast.inc"
-#Include "mem_cmm2_safe.inc"
-#Include "dict.inc"
-#Include "zstring.inc"
-#Include "console.inc"
-#Include "util.inc"
+'#Include "../mem_cmm2_fast.inc"
+#Include "../mem_cmm2_safe.inc"
+#Include "../dict.inc"
+#Include "../zstring.inc"
+#Include "../console.inc"
+#Include "../util.inc"
 
 Dim a, s$, x
 
 Cls
 
-mem_init("A:/zmim/stories/minizork.z3")
+mem_init("/zmim/stories/minizork.z3")
 di_init()
 
-Open "A:/zmim/src/tests/minizork.dic" For Input As #1
+Open "/zmim/src/tests/minizork.dic" For Input As #1
 Timer = 0
 Do While Not Eof(#1)
   Line Input #1, s$

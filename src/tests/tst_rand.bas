@@ -1,8 +1,8 @@
 Option Explicit On
 Option Default Integer
 
-#Include "execute.inc"
-#Include "console.inc"
+#Include "../execute.inc"
+#Include "../console.inc"
 
 Dim i, buckets(40), x, y
 

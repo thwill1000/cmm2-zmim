@@ -4,15 +4,15 @@
 Option Explicit On
 Option Default Integer
 
-'#Include "mem_cmm2_fast.inc"
-#Include "mem_cmm2_safe.inc"
-#Include "console.inc"
+'#Include "../mem_cmm2_fast.inc"
+#Include "../mem_cmm2_safe.inc"
+#Include "../console.inc"
 
 Dim ad, buf$, buf_sz, file$, i, x
 
 Cls
 
-file$ = "A:/zmim/stories/minizork.z3"
+file$ = "/zmim/stories/minizork.z3"
 mem_init(file$)
 
 endl()

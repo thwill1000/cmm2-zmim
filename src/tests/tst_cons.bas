@@ -1,7 +1,7 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-#Include "console.inc"
+#Include "../console.inc"
 
 Cls
 
