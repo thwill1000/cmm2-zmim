@@ -50,22 +50,24 @@ End Function
 
 ' Outputs s$.
 '
-' Note that calling this function will probably not output the entirety of s$;
-' the last 'word' or part thereof may be left in cbuf$.
+' s$ is appended to cbuf$ one character at a time. Only when we switch from
+' non-spaces to spaces or vice versa do we flush the contents of cbuf$ to the
+' console. As a result calling this function will probably not print the
+' entirety of s$; ' the last 'word' or part thereof may be left in cbuf$.
 Sub cout(s$)
-  Local c$, i
-
   cn_count = 0
 
-  For i = 1 To Len(s$)
-    c$ = Mid$(s$, i, 1)
-
-    ' If we have swtiched from non-spaces to spaces, or vice-versa then
-    ' flush the current contents of cbuf$ to the console.
-    If (c$ = " ") Xor cspace Then cflush() : cspace = (c$ = " ")
-
-    cbuf$ = cbuf$ + c$
-  Next i
+  If Len(s$) = 1 Then
+    If (s$ = " ") Xor cspace Then cflush() : cspace = (s$ = " ")
+    cbuf$ = cbuf$ + s$
+  Else
+    Local c$, i
+    For i = 1 To Len(s$)
+      c$ = Mid$(s$, i, 1)
+      If (c$ = " ") Xor cspace Then cflush() : cspace = (c$ = " ")
+      cbuf$ = cbuf$ + c$
+    Next i
+  EndIf
 End Sub
 
 ' Writes cbuf$ to the console and clears it.
