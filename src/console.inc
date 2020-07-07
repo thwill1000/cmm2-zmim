@@ -75,25 +75,27 @@ End Sub
 ' If cbuf$ does not fit on the current line then first write CRLF and then if
 ' cbuf$ contains non-spaces write cbuf$ to the console.
 Sub cflush()
-  If cn_x = 1 And clines > C_HEIGHT - 2 Then
-    Print "[MORE] ";
-    Do While Inkey$ <> "" : Loop
-    Do While Inkey$ = "" : Loop
-    Print
-    clines = 0
-  EndIf
+  Do
+    If cn_x = 1 And clines > C_HEIGHT - 2 Then
+      Print "[MORE] ";
+      Do While Inkey$ <> "" : Loop
+      Do While Inkey$ = "" : Loop
+      Print
+      clines = 0
+    EndIf
 
-  If cn_x + Len(cbuf$) > C_WIDTH Then
-    Print
-    clines = clines + 1
-    cn_x = 1
-    If Not cspace Then cflush()
-  Else
-    Print cbuf$;
-    cn_x = cn_x + Len(cbuf$)
-  EndIf
-
-  cbuf$ = ""
+    If cn_x + Len(cbuf$) > C_WIDTH Then
+      Print
+      clines = clines + 1
+      cn_x = 1
+      If cspace Then cbuf$ = "" : Exit Sub
+    Else
+      Print cbuf$;
+      cn_x = cn_x + Len(cbuf$)
+      cbuf$ = ""
+      Exit Sub
+    EndIf
+  Loop
 End Sub
 
 ' Flushes cbuf$ to the console and then writes CRLF.
