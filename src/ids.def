@@ -5,7 +5,8 @@
 '!replace cbuf$             cb$
 '!replace cspace            csp
 '!replace clines            cli
-'!replace cempty            cem
+'!replace cn_count          cco
+'!replace cn_x              cx
 '!replace C_HEIGHT          CHE
 '!replace C_WIDTH           CWI
 '!replace cflush            cfl
