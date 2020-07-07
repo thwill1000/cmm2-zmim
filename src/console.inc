@@ -1,9 +1,6 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
-'Dim BUSY$(1) LENGTH 16
-'BUSY$(0) = "\\\\||||////----"
-
 Dim script   ' bit 1 is set for writing (via #2),
              ' bit 2 is set for reading (via #3)
 Dim cbuf$    ' console write buffer
@@ -12,6 +9,7 @@ Dim clines   ' number of lines that have been output since the last prompt
 Dim cn_count ' number of consecutive calls to cendl() without an
              ' intervening call to cout()
 Dim cn_x = 1 ' current horizontal cursor position, indexed from 1
+Dim cn_spin  ' is the spinning cursor currently displayed?
 
 '!comment_if INLINE_CONSTANTS
 Const S_WRITE = &b01
@@ -75,6 +73,8 @@ End Sub
 ' If cbuf$ does not fit on the current line then first write CRLF and then if
 ' cbuf$ contains non-spaces write cbuf$ to the console.
 Sub cflush()
+  If cn_spin Then Print Chr$(8); : cn_spin = 0
+
   Do
     If cn_x = 1 And clines > C_HEIGHT - 2 Then
       Print "[MORE] ";
@@ -113,6 +113,7 @@ Sub endl()
   EndIf
 
   cflush()
+  If cn_x = 1 Then Print " "; ' to overwrite any spinning cursor
   Print
   cn_count = cn_count + 1
   clines = clines + 1

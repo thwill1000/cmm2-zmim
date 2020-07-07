@@ -7,6 +7,7 @@
 '!replace clines            cli
 '!replace cn_count          cco
 '!replace cn_x              cx
+'!replace cn_spin           csi
 '!replace C_HEIGHT          CHE
 '!replace C_WIDTH           CWI
 '!replace cflush            cfl

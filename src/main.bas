@@ -172,6 +172,12 @@ Sub main()
     EndIf
 '!endif
 
+'!uncomment_if CMM1
+    ' On the CMM1 we display a spinning cursor to indicate instruction execution
+'    If cn_spin Then Print Chr$(8); Else cn_spin = 1
+'    Print Mid$("\|/-", (num_ops Mod 4) + 1, 1);
+'!endif
+
     old_pc = pc
     If state = E_OK Or state = E_REPEAT Then
       state = exec(ztrace)
