@@ -1,3 +1,5 @@
+' Copyright (c) 2020 Thomas Hugo Williams
+'
 ' Global variable and function/subroutine name replacements.
 
 ' From "console.inc"

@@ -1,6 +1,8 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
+'!set MEM_INCLUDED
+
 ' Storage for z-machine memory
 Dim m(128 * 1024 / 8 + 16)
 Dim MAD = Peek(VarAddr m()) + 8

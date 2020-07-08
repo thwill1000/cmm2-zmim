@@ -8,35 +8,8 @@ EndIf
 
 Mode 1
 
-'!set TARGET_CMM1
-
-'!uncomment_if TARGET_CMM1
-''!set INLINE_CONSTANTS
-''!set COMPRESS_IDS
-''!set NO_DEBUG
-''!set USE_VIRTUAL_MEMORY
-'!endif
-
-'!uncomment_if TARGET_CMM2_OPT
-''!set INLINE_CONSTANTS
-''!set COMPRESS_IDS
-''!set NO_DEBUG
-'!endif
-
-'!uncomment_if INLINE_CONSTANTS
-'#Include "constants.def"
-'!endif
-
-'!uncomment_if COMPRESS_IDS
-'#Include "ids.def"
-'!endif
-
-'!comment_if USE_VIRTUAL_MEMORY
-#Include "mem_cmm2_fast.inc"
-'#Include "mem_cmm2_safe.inc"
-'!endif
-'!uncomment_if USE_VIRTUAL_MEMORY
-'#Include "mem_cmm1.inc"
+'!comment_if MEM_INCLUDED
+#Include "mem_cmm2_safe.inc"
 '!endif
 #Include "stack.inc"
 #Include "variable.inc"
@@ -191,7 +164,7 @@ Sub main()
   cout("Instructions / second      = ")
   cout(Format$(1000 * num_ops / Timer, "%.1f"))
   endl()
-'!uncomment_if USE_VIRTUAL_MEMORY
+'!uncomment_if USING_VIRTUAL_MEMORY
 '  cout("Num page faults            = " + Str$(pf)) : endl()
 '!endif
 

@@ -1,6 +1,9 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
 ' For Colour Maximite 1, MMBasic 4.5
 
+'!set MEM_INCLUDED
+'!set USING_VIRTUAL_MEMORY
+
 '!comment_if INLINE_CONSTANTS
 Const PAGE_SIZE = 512
 Const NUM_PHYSICAL_PAGES = 60

@@ -1,4 +1,8 @@
+' Copyright (c) 2020 Thomas Hugo Williams
+'
 ' Constant values to inline
+
+'!set INLINE_CONSTANTS
 
 ' From "console.inc"
 '!replace S_WRITE   &b01
