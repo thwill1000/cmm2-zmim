@@ -4,8 +4,9 @@
 
 '!set TARGET_CMM2
 '!set NO_DEBUG
+'!indent 1
+'!replace "mem_cmm2_safe.inc" "mem_cmm2_fast.inc"
 
 #Include "constants.mbt"
 #Include "ids.mbt"
-#Include "mem_cmm2_fast.inc"
 #Include "main.bas"

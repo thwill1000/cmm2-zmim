@@ -8,9 +8,7 @@ EndIf
 
 Mode 1
 
-'!comment_if MEM_INCLUDED
 #Include "mem_cmm2_safe.inc"
-'!endif
 #Include "stack.inc"
 #Include "variable.inc"
 #Include "decode.inc"
