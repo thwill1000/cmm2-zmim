@@ -524,12 +524,7 @@ Function ex_special(cmd$)
 '!endif
 
   ElseIf cmd$ = "*credits" Then
-'!comment_if TARGET_CMM1
     cecho(ss$(RESOURCES_DIR) + "\credits.txt")
-'!endif
-'!uncomment_if TARGET_CMM1
-'    cecho(ss$(RESOURCES_DIR) + "\cred_cm1.txt")
-'!endif
 
   ElseIf cmd$ = "*replay" Then
     If script AND S_READ Then

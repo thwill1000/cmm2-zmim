@@ -7,14 +7,6 @@
 ' From "console.inc"
 '!replace S_WRITE   &b01
 '!replace S_READ    &b10
-'!comment_if TARGET_CMM1
-'!replace C_HEIGHT  50
-'!replace C_WIDTH   100
-'!endif
-'!uncomment_if TARGET_CMM1
-'!replace C_HEIGHT  36
-'!replace C_WIDTH   80
-'!endif
 
 ' From "execute.inc"
 '!replace E_OK             0
