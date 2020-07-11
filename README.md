@@ -6,9 +6,11 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2019-2020
 
 ## How do I run it?
 
- - Copy all the files to ```A:\ZMIM\```
+ - Download the latest release: https://github.com/thwill1000/zmim/releases/download/r3/zmim-r3.zip
+    - or clone/download the latest work in progress: https://github.com/thwill1000/zmim
+ - Extract all the files to ```\ZMIM\```
     - to run from a different directory you need to edit the ```ss$(0)="\zmim"``` string in the ```main()``` subroutine of ```zmim.bas```.
- - `RUN "/zmim/zmim.bas"`
+ - `RUN "\zmim\zmim.bas"`
 
 ## Story Files
 
@@ -75,7 +77,7 @@ Z-MIM currently has the following limitations:
 
 ## FAQ
 
-**1. What is a Colour Maximite 2 ?**
+**1. What is the Colour Maximite 2 ?**
 
 The Colour Maximite 2 is a small self contained "Boot to BASIC" computer inspired by the home computers of the early 80's such as the Tandy TRS-80, Commodore 64 and Apple II.
 
@@ -87,7 +89,7 @@ More information can be found on the official Colour Maximite 2 website at http:
 
 **2. Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?**
 
-The current release includes a Colour Maximite 1 version (which may also work on the Mono Maximite, but it untested) this can be executed with `RUN "/zmim/zmim_cm1.bas"`
+The current release includes a Colour Maximite 1 version (which may also work on the Mono Maximite, but it untested) this can be executed with `RUN "\zmim\zmim_cm1.bas"`
 
 However it is 25 times slower (~30 instructions per second) than the Colour Maximite 2 version (~800 instructions per second) and as a result pretty much unplayable.
 
@@ -103,7 +105,7 @@ This is currently the only option on the Colour Maximite 2 unless you want to re
 
 **5. How do I play these games ?**
 
-Try playing "tutorial.z3" or read something like https://www.z-machine-matter.com/playing.html 
+Try playing "tutorial.z3" or read https://www.z-machine-matter.com/playing.html 
 
 **6. How do I find out more about Interactive Fiction ?**
 
