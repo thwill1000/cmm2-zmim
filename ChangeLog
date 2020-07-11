@@ -8,7 +8,7 @@ Release 3:
      at '/zmim/src/main.bas' this is now slower than Release 2 because it
      uses an error checking memory implementation.
  - Added CMM1 implementation at '/zmim/zmim_cm1.bas'
-   - currently, and probably forever this is too slow to be playable but is
+   - currently, and probably forever, this is too slow to be playable but is
      included for completeness as the CMM1 was the original target for this
      project.
  - Fixed missing variable declaration in interactive debugger.

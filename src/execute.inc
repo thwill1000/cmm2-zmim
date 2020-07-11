@@ -516,10 +516,10 @@ Function ex_special(cmd$)
   ex_special = E_REPEAT
 
   If cmd$ = "*break" Then
-'!comment_if TARGET_CMM1
+'!comment_if NO_DEBUG
     ex_special = E_BREAK
 '!endif
-'!uncomment_if TARGET_CMM1
+'!uncomment_if NO_DEBUG
 '    ex_special = E_OK
 '!endif
 
