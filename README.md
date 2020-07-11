@@ -6,9 +6,9 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2019-2020
 
 ## How do I run it?
 
- - Copy all the files to ```A:/ZMIM/```
-    - to run from a different directory you need to edit the ```INSTALL_DIR``` string in ```src/main.bas```.
- - `run "/zmim/zmim.bas"`
+ - Copy all the files to ```A:\ZMIM\```
+    - to run from a different directory you need to edit the ```ss$(0)="\zmim"``` string in the ```main()``` subroutine of ```zmim.bas```.
+ - `RUN "/zmim/zmim.bas"`
 
 ## Story Files
 
@@ -85,13 +85,13 @@ The power of the ARM processor means it is capable of running BASIC at speeds co
 
 More information can be found on the official Colour Maximite 2 website at http://geoffg.net/maximite.html
 
-**2. Will you be supporting the original Colour Maximite / Mono Maximite ?**
+**2. Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?**
 
-Perhaps.
+The current release includes a Colour Maximite 1 version (which may also work on the Mono Maximite, but it untested) this can be executed with `RUN "/zmim/zmim_cm1.bas"`
 
-I started developing this on the original Colour Maximite and when I switched to the CMM2 I tried to ensure I kept the memory footprint small and used only backward compatible features (or those that could be easily translated).
+However it is 25 times slower (~30 instructions per second) than the Colour Maximite 2 version (~800 instructions per second) and as a result pretty much unplayable.
 
-However a good Z-machine implementation needs to run at more than 1000 Z-machine instructions per second. Currently Z-MIM runs at about 650 instructions per second on the CMM2 and early tests on the original Colour Maximite suggest that can only manage about 20 instructions per second. In conclusion it may be possible to port back, but most likely will be unplayable ... or at least comparable to playing it over a very slow dial-up modem.
+Pi-cromite and MMBasic for DOS versions are "in progress", watch this space.
 
 **3. Will you be supporting .z4, .z5, etc. story formats ?**
 
