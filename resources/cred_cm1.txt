@@ -1,7 +1,7 @@
 
 Z-MIM: a Z-Machine Interpreter for the Maximite
 A Toy Plastic Trumpet Production for Sockpuppet Studios
-Release 3b1 for Colour Maximite 1, MMBasic 4.5C
+Release 3 for Colour Maximite 1, MMBasic 4.5C
 Copyright (c) 2019-20 Thomas Hugo Williams
 
 Programmer:           Thomas Hugo Williams

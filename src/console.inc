@@ -75,7 +75,7 @@ End Sub
 ' If cbuf$ does not fit on the current line then first write CRLF and then if
 ' cbuf$ contains non-spaces write cbuf$ to the console.
 Sub cflush()
-  If cn_spin Then Print Chr$(8); : cn_spin = 0
+  If cn_spin Then Print Chr$(8); " "; Chr$(8); : cn_spin = 0
 
   Do
     If cn_x = 1 And clines > C_HEIGHT - 2 Then
@@ -102,6 +102,8 @@ End Sub
 
 ' Flushes cbuf$ to the console and then writes CRLF.
 Sub endl()
+  cflush()
+
   If cn_count < 0 Then
     Exit Sub
   ElseIf cn_count >= 10 Then
@@ -114,8 +116,6 @@ Sub endl()
     Exit Sub
   EndIf
 
-  cflush()
-  If cn_x = 1 Then Print " "; ' to overwrite any spinning cursor
   Print
   cn_count = cn_count + 1
   clines = clines + 1

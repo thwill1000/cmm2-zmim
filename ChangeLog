@@ -1,9 +1,16 @@
 ChangeLog
 ---------
 
-Release 3 beta 1:
- - Added CMM1 implementation at /zmim/zmim_cm1.bas
-   - currently, and perhaps forever this is too slow to be playable.
+Release 3:
+ - Optimised the CMM2 implementation at '/zmim/zmim.bas'; this is approximately
+   15% faster than Release 2.
+   - The unoptimised version, with readable source-code can still be found
+     at '/zmim/src/main.bas' this is now slower than Release 2 because it
+     uses an error checking memory implementation.
+ - Added CMM1 implementation at '/zmim/zmim_cm1.bas'
+   - currently, and probably forever this is too slow to be playable but is
+     included for completeness as the CMM1 was the original target for this
+     project.
  - Fixed missing variable declaration in interactive debugger.
  - Minor updates to the README.
 

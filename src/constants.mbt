@@ -27,7 +27,7 @@
 
 ' From "mem_cmm1.inc"
 '!replace PAGE_SIZE           512
-'!replace NUM_PHYSICAL_PAGES  60
+'!replace NUM_PHYSICAL_PAGES  88
 '!replace NUM_VIRTUAL_PAGES   256
 
 ' From "objects.inc"

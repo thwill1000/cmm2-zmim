@@ -36,6 +36,33 @@ Const STORY_DIR = 4
 Const STORY_FILE = 5
 '!endif
 
+'!comment_if TARGET_CMM1
+' Gets name in format "story-DD-MM-YY-hh-mm-ss.scr"
+Function script_file_name$()
+  Local i, s$
+  s$ = ss$(STORY_FILE) + "-" + Date$ + "-" + Time$ + ".scr"
+  For i = 1 To Len(s$)
+    If Peek(Var s$, i) = Asc(":") Then Poke Var s$, i, Asc("-")
+  Next i
+  script_file_name$ = s$
+  Print script_file_name$
+End Function
+'!endif
+
+'!uncomment_if TARGET_CMM1
+'' Returns name in format "MMDDhhmm.scr"
+'Function script_file_name$()
+'  Local a(7), i, s$(1) Length 20
+'  a(0) = 4  : a(1) = 5  : a(2) = 1  : a(3) = 2
+'  a(4) = 12 : a(5) = 13 : a(6) = 15 : a(7) = 16
+'  s$(0) = Date$ + ":" + Time$
+'  For i = 0 To 7
+'    s$(1) = s$(1) + Mid$(s$(0), a(i), 1)
+'  Next i
+'  script_file_name$ = s$(1) + ".scr"
+'End Function
+'!endif
+
 Sub main_init()
   Local i, x
 
@@ -108,12 +135,7 @@ Sub main()
 '     state = E_OK
 '  EndIf
 
-  ' Jump through hoops to create the name of the script file
-  s$ = ss$(STORY_FILE) + "-" + Date$ + "-" + Time$ + ".scr"
-  For i = 1 To Len(s$)
-    If Peek(Var s$, i) = Asc(":") Then Poke Var s$, i, Asc("-")
-  Next i
-  s$ = ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE) + "\" + s$
+  s$ = ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE) + "\" + script_file_name$()
   If LCase$(cin$("Write script to '" + s$ + "' [y|N] ")) = "y" Then
     Open s$ For Output As #2
     script = S_WRITE
@@ -137,10 +159,10 @@ Sub main()
     EndIf
 '!endif
 
-'!uncomment_if CMM1
-    ' On the CMM1 we display a spinning cursor to indicate instruction execution
+'!uncomment_if TARGET_CMM1
+'    ' On the CMM1 we display a spinning cursor to indicate instruction execution
 '    If cn_spin Then Print Chr$(8); Else cn_spin = 1
-'    Print Mid$("\|/-", (num_ops Mod 4) + 1, 1);
+'    Print Mid$("\\\\||||////----", (num_ops Mod 16) + 1, 1);
 '!endif
 
     old_pc = pc

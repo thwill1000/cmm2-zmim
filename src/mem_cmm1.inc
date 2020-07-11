@@ -5,7 +5,7 @@
 
 '!comment_if INLINE_CONSTANTS
 Const PAGE_SIZE = 512
-Const NUM_PHYSICAL_PAGES = 60
+Const NUM_PHYSICAL_PAGES = 88
 Const NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
 '!endif
 
@@ -116,6 +116,7 @@ Sub mem_init(f$)
 
   ' Load page 0 which contains the header
   cout("  Header page: 0") : endl()
+  next_page = 0
   If mem_load(0) <> 0 Then Error
 
   ' Read memory sizes from header.

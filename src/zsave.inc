@@ -99,7 +99,7 @@ Function zsave(res)
     ' Read stack (2 bytes / entry)
     For i = 0 To stack_sz - 1
       s$ = Input$(2, #1)
-      push(Peek(Var s$, 1) * 256 + Peek(Var s$, 2))
+      st_push(Peek(Var s$, 1) * 256 + Peek(Var s$, 2))
     Next i
 
     ' Read dynamic memory
