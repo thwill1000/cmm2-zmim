@@ -4,6 +4,8 @@ A Z-machine interpreter to allow the classic Infocom works of interactive fictio
 Written in MMBasic 5.05 by Thomas Hugo Williams in 2019-2020
  - Z-machine technical advice was provided by Fredrik Ramsberg, co-author of [Ozmoo](https://github.com/johanberntsson/ozmoo).
 
+You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> but if you use it then perhaps you would like to buy me a coffee? [![paypal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T5F7BZ5NZFF66&source=url)
+
 ## How do I run it?
 
  - Download the latest release: https://github.com/thwill1000/zmim/releases/download/r3/zmim-r3.zip
