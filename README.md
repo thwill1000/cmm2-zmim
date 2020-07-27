@@ -1,5 +1,5 @@
 # Z-MIM
-A Z-machine interpreter to allow the classic Infocom works of interactive fiction to be played on the [Colour Maximite 2](http://geoffg.net/maximite.html).
+A Z-machine interpreter allowing the classic Infocom works of interactive fiction to be played on the [Colour Maximite 2](http://geoffg.net/maximite.html).
 
 Written in MMBasic 5.05 by Thomas Hugo Williams in 2019-2020
  - Z-machine technical advice was provided by Fredrik Ramsberg, co-author of [Ozmoo](https://github.com/johanberntsson/ozmoo).
