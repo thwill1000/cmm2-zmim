@@ -15,6 +15,9 @@ Release 3:
    - currently, and probably forever, this is too slow to be playable but is
      included for completeness as the CMM1 was the original target for this
      project.
+ - Fixed bug that could cause a story to be omitted in the story file chooser.
+   - also ignore all story files beginning with full-stop, they are an artefact
+     created by macOS.
  - Fixed missing variable declaration in interactive debugger.
  - Minor updates to the README.
 
