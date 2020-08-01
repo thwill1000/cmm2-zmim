@@ -1,6 +1,10 @@
 ChangeLog
 ---------
 
+Release 3.1:
+ - Minor performance improvement by using LGetByte() instead of Peek()
+   to read Z-machine memory.
+
 Release 3:
  - Optimised the CMM2 implementation at '/zmim/zmim.bas'; this is approximately
    15% faster than Release 2.

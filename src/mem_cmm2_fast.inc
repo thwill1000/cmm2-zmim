@@ -9,18 +9,18 @@ Dim BASE_STATIC
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
-  rp = Peek(Byte MAD + pc)
+  rp = LGetByte(m(), pc)
   pc = pc + 1
 End Function
 
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
-  rb = Peek(Byte MAD + a)
+  rb = LGetByte(m(), a)
 End Function
 
 ' Reads a 16-bit word from 'a' but DOES NOT increment a
 Function rw(a)
-  rw = Peek(Byte MAD + a) * 256 + Peek(Byte MAD + a + 1)
+  rw = LGetByte(m(), a) * 256 + LGetByte(m(), a + 1)
 End Function
 
 ' Writes byte 'x' to 'a'

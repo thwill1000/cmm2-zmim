@@ -10,20 +10,20 @@ Dim BASE_STATIC
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
   If pc < 0 Or pc >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(pc)
-  rp = Peek(Byte mad + pc)
+  rp = LGetByte(m(), pc)
   pc = pc + 1
 End Function
 
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
   If a < 0 Or a >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
-  rb = Peek(Byte mad + a)
+  rb = LGetByte(m(), a)
 End Function
 
 ' Reads a 16-bit word from 'a' but DOES NOT increment a
 Function rw(a)
   If a < 0 Or a >= FILE_LEN - 1 Then Error "Invalid address: " + fmt_hex$(a)
-  rw = Peek(Byte mad + a) * 256 + Peek(Byte mad + a + 1)
+  rw = LGetByte(m(), a) * 256 + LGetByte(m(), a + 1)
 End Function
 
 ' Writes byte 'x' to 'a'
