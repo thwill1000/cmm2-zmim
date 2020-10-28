@@ -2,6 +2,8 @@ ChangeLog
 ---------
 
 Release 3.1:
+ - Fixed bug where "Integer array too small" array reported when restarting
+   a story (Issue #21).
  - Minor performance improvement by using LGetByte() instead of Peek()
    to read Z-machine memory.
 

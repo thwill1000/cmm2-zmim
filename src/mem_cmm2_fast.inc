@@ -37,6 +37,8 @@ End Sub
 Sub mem_init(f$)
   Local ad, i, j, s$, sz
 
+  LongString Clear m()
+
   cout("Loading '" + f$ + "'") : endl()
   cout("0% ... ")
 
