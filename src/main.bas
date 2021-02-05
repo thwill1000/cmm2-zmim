@@ -1,4 +1,4 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
+' Copyright (c) 2019-21 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
 If Mm.Device$ <> "Colour Maximite" Then
@@ -45,7 +45,6 @@ Function script_file_name$()
     If Peek(Var s$, i) = Asc(":") Then Poke Var s$, i, Asc("-")
   Next i
   script_file_name$ = s$
-  Print script_file_name$
 End Function
 '!endif
 
