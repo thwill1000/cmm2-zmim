@@ -7,6 +7,6 @@
 
 Z-MIM: a Z-Machine Interpreter for the Maximite
 
-Release 3 for Colour Maximite 1, MMBasic 4.5C
-Copyright (c) 2019-20 Thomas Hugo Williams
+Release 3.0.1 for Colour Maximite 1, MMBasic 4.5C
+   Copyright (c) 2019-20 Thomas Hugo Williams
 

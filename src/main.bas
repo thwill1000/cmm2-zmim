@@ -25,7 +25,7 @@ Mode 1
 '!endif
 
 ' String "constants" that I don't want to take up 256 bytes
-Dim ss$(5) Length 20
+Dim ss$(5) Length 32
 
 '!comment_if INLINE_CONSTANTS
 Const INSTALL_DIR = 0
@@ -89,12 +89,21 @@ End Sub
 Sub main()
   Local i, old_dir$, old_pc, state, s$
 
-  ss$(INSTALL_DIR)   = "\zmim"
-  If Mm.Device$ = "Colour Maximite" Then
-    ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resour~1"
-  Else
-    ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resources"
-  EndIf
+'!comment_if TARGET_CMM1
+  s$ = Mm.Info(Path)
+  If Right$(s$, 1) = "/" Then s$ = Left$(s$, Len(s$) - 1)
+  If Right$(s$, 1) = "\" Then s$ = Left$(s$, Len(s$) - 1)
+  ss$(INSTALL_DIR) = ""
+  For i = 1 To Len(s$)
+    Cat ss$(INSTALL_DIR), Choice(Mid$(s$, i, 1) = "/", "\", Mid$(s$, i, 1))
+  Next
+  Cat ss$(INSTALL_DIR), "\.."
+  ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resources"
+'!endif
+'!uncomment_if TARGET_CMM1
+'  ss$(INSTALL_DIR) = "\zmim"
+'  ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resour~1"
+'!endif
   ss$(SAVE_DIR)      = ss$(INSTALL_DIR) + "\saves"
   ss$(SCRIPT_DIR)    = ss$(INSTALL_DIR) + "\scripts"
   ss$(STORY_DIR)     = ss$(INSTALL_DIR) + "\stories"
@@ -110,9 +119,9 @@ Sub main()
 
   ' Select a story file
   cout("Select a story file from '" + ss$(STORY_DIR) + "':") : endl()
-  Do While s$ = ""
+  Do
     s$ = fi_choose$(ss$(STORY_DIR), "*.z3")
-  Loop
+  Loop Until s$ <> ""
   s$ = Mid$(s$, Len(ss$(STORY_DIR)) + 2)
   ss$(STORY_FILE) = Left$(s$, Len(s$) - 3)
 
@@ -141,7 +150,8 @@ Sub main()
   EndIf
 
   ' This will clear the console, see console#endl
-  For i = 0 To 10 : endl() : Next i
+'  For i = 0 To 10 : endl() : Next i
+  endl()
 
   Timer = 0
 

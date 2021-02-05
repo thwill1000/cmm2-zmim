@@ -541,6 +541,9 @@ Function ex_special(cmd$)
     EndIf
     endl()
 
+  ElseIf cmd$ = "*screenshot" Then
+    ex_screenshot()
+
   ElseIf cmd$ = "*status" Then
     ex_show_status()
 
@@ -585,6 +588,23 @@ Function ex_random(range)
 '  ex_random = 1 + CInt((range - 1) * Rnd())
 '!endif
 End Function
+
+Sub ex_screenshot()
+  Local f$, i = 1
+  Do
+    f$ = "screen" + Str$(i) + ".bmp"
+    If Dir$(f$) = "" Then Exit Do
+    i = i + 1
+  Loop
+'!comment_if TARGET_CMM1
+  Save Image f$
+'!endif
+'!uncomment_if TARGET_CMM1
+'  SaveBmp f$
+'!endif
+  cout("Saved '" + Cwd$ + "/" + f$ + "'") : endl()
+  endl()
+End Sub
 
 Sub ex_show_status()
   Local x

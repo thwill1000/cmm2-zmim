@@ -1,9 +1,10 @@
 ChangeLog
 ---------
 
-Release 3.1:
+Release 3.0.1:
  - Fixed bug where "Integer array too small" array reported when restarting
    a story (Issue #21).
+ - Removed leftover debugging code that would echo the transcript filename
  - Minor performance improvement by using LGetByte() instead of Peek()
    to read Z-machine memory.
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-release=3
+release=3.0.1
 release_dir="zmim-r$release"
 base="$release_dir/zmim"
 
