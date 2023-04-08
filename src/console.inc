@@ -126,6 +126,7 @@ End Sub
 Sub cecho(f$)
   Local s$
 
+  Print f$
   Open f$ For Input As #1
   Do
     Line Input #1, s$

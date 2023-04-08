@@ -25,7 +25,7 @@ Mode 1
 '!endif
 
 ' String "constants" that I don't want to take up 256 bytes
-Dim ss$(5) Length 20
+Dim ss$(5)
 
 '!comment_if INLINE_CONSTANTS
 Const INSTALL_DIR = 0
@@ -90,7 +90,8 @@ End Sub
 Sub main()
   Local i, old_dir$, old_pc, state, s$
 
-  ss$(INSTALL_DIR)   = "\zmim"
+'  ss$(INSTALL_DIR)   = "\zmim"
+  ss$(INSTALL_DIR) = "\home\thwill\github\zmim"
   If Mm.Device$ = "Colour Maximite" Then
     ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resour~1"
   Else
