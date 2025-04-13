@@ -1,8 +1,9 @@
 ' Transpiled on 01-08-2020 19:19:55
 
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2025 Thomas Hugo Williams
 '
-' Hand-optimised PicoMite version derived from CMM2 version by Peter Mather
+' 13-Apr-2025: Changes by @cjstoddard to run on PicoCalc.
+' 01-Jan-2022: Hand-optimised PicoMite version derived from CMM2 version by Peter Mather.
 
 If MM.Device$<>"Colour Maximite"Then
  Option Explicit On
@@ -614,15 +615,15 @@ Function esp(cmd$)
  If cmd$="*break"Then
   esp=0
  ElseIf cmd$="*credits"Then
-  cecho(ss$(1)+"\credits.txt")
+  cecho(ss$(1)+"/credits.txt")
  ElseIf cmd$="*replay"Then
   If csc And &b10 Then
    cou("IGNORED '*replay' command read from script")
   Else
    cou("Select a script file from '")
-   cou(ss$(3)+"\"+ss$(5)+"':")
+   cou(ss$(3)+"/"+ss$(5)+"':")
    cen()
-   f$=fi_choose$(ss$(3)+"\"+ss$(5),"*.scr")
+   f$=fi_choose$(ss$(3)+"/"+ss$(5),"*.scr")
    If f$<>""Then
     Open f$ For Input As #3
     csc=csc Or &b10
@@ -1027,7 +1028,7 @@ Function zsv(res)
   cou("Select save game slot:"):cen()
  EndIf
  old_dir$=Cwd$
- Chdir ss$(2)+"\"+ss$(5)
+ Chdir ss$(2)+"/"+ss$(5)
  For i=1 To 10
   s$=Dir$("game"+Str$(i)+".sav")
   cou("  ["+Format$(i,"%2g")+"] ")
@@ -1058,7 +1059,7 @@ Function zsv(res)
   If s$=""Then i=0
  EndIf
  If i=0 Then cou("Cancelled"):cen():Exit Function
- s2$(0)=ss$(2)+"\"+ss$(5)+"\game"+Str$(i)+".sav"
+ s2$(0)=ss$(2)+"/"+ss$(5)+"/game"+Str$(i)+".sav"
  If res Then
   Open s2$(0)For Input As #1
   Line Input #1,s2$(0)
@@ -1156,10 +1157,14 @@ Function fi_choose$(d$,fspec$)
   cen()
  Next i
  f$=ci$("File number? ")
- If Val(f$)>0 And Val(f$)<=sz Then fi_choose$=d$+"\"+all$(Val(f$)-1)
+ If Val(f$)>0 And Val(f$)<=sz Then fi_choose$=d$+"/"+all$(Val(f$)-1)
 End Function
 
-Dim ss$(5)Length 20
+If Mm.Info(Device X) = "MMB4L" Then
+  Dim ss$(5) Length 255
+Else
+  Dim ss$(5) Length 20
+EndIf
 
 Function script_file_name$()
  Local i,s$
@@ -1174,7 +1179,7 @@ End Function
 Sub main_init()
  Local i,x
  cen()
- mem_init(ss$(4)+"\"+ss$(5)+".z3")
+ mem_init(ss$(4)+"/"+ss$(5)+".z3")
  di_init()
  cen()
  gva=rw(&h0C)
@@ -1192,17 +1197,19 @@ End Sub
 
 Sub main()
  Local i,old_dir$,state,s$
- ss$(0)="\zmim"
+ ' ss$(0)="/zmim"
+ ss$(0)=Left$(Mm.Info(Path), Len(Mm.Info(Path)) - 1)
+ If ss$(0) = "NON" Then ss$(0) = Cwd$
  If MM.Device$="Colour Maximite"Then
-  ss$(1)=ss$(0)+"\resour~1"
+  ss$(1)=ss$(0)+"/resour~1"
  Else
-  ss$(1)=ss$(0)+"\resources"
+  ss$(1)=ss$(0)+"/resources"
  EndIf
- ss$(2)=ss$(0)+"\saves"
- ss$(3)=ss$(0)+"\scripts"
- ss$(4)=ss$(0)+"\stories"
+ ss$(2)=ss$(0)+"/saves"
+ ss$(3)=ss$(0)+"/scripts"
+ ss$(4)=ss$(0)+"/stories"
  CLS
- cecho(ss$(1)+"\title.txt")
+ cecho(ss$(1)+"/title_pico.txt")
  de_init()
  cou("Select a story file from '"+ss$(4)+"':"):cen()
  Do While s$=""
@@ -1219,7 +1226,7 @@ Sub main()
  s$=Dir$(ss$(5),Dir):If s$=""Then Mkdir (ss$(5))
  Chdir (old_dir$)
  main_init()
- s$=ss$(3)+"\"+ss$(5)+"\"+script_file_name$()
+ s$=ss$(3)+"/"+ss$(5)+"/"+script_file_name$()
  If LCase$(ci$("Write script to '"+s$+"' [y|N] "))="y"Then
   Open s$ For Output As #2
   csc=&b01

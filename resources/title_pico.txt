@@ -1,0 +1,12 @@
+        ______     __  __ _____ __  __
+       |___  /    |  \/  |_   _|  \/  |
+          / /_____| \  / | | | | \  / |
+         / /______| |\/| | | | | |\/| |
+        / /__     | |  | |_| |_| |  | |
+       /_____|    |_|  |_|_____|_|  |_|
+
+Z-MIM: a Z-Machine Interpreter for MMBasic
+
+Release 3.2 for PicoMite, MMBasic 6.00
+Copyright (c) 2019-2025 Thomas Hugo Williams
+

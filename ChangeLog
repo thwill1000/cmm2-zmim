@@ -1,6 +1,13 @@
 ChangeLog
 ---------
 
+Release 3.2 (PicoMite / PicoCalc)
+ - Changes only affect the transpiled "zmim_pico.bas" file and have not yet
+   been merged into the untranspiled "src/".
+ - Updated by @cjstoddard to use forward-slash file separators.
+ - Updated title text.
+ - Updated resource path and string lengths to allow the code to run under MMB4L.
+
 Release 3.1:
  - Fixed bug where "Integer array too small" array reported when restarting
    a story (Issue #21).
