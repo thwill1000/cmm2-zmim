@@ -1,15 +1,20 @@
-' Transpiled on 01-08-2020 19:19:55
-
 ' Copyright (c) 2020-2025 Thomas Hugo Williams
 '
 ' 13-Apr-2025: Changes by @cjstoddard to run on PicoCalc.
 ' 01-Jan-2022: Hand-optimised PicoMite version derived from CMM2 version by Peter Mather.
 
-If MM.Device$<>"Colour Maximite"Then
- Option Explicit On
- Option Default Integer
+Option Explicit On
+Option Default Integer
+
+Const PICO_CALC = (Mm.Device$ = "MMB4L") Or (Mm.HRes = 320 And Mm.VRes = 480)
+If PICO_CALC Then
+  const C_HEIGHT = 26
+  const C_WIDTH = 40
+Else
+  const C_HEIGHT = 50
+  const C_WIDTH = 100
 EndIf
-'Mode 1
+
 Dim m(128*1024/8+16)
 Dim MAD=Peek(VarAddr m())+8
 Dim fsz
@@ -684,7 +689,11 @@ Function ci$(p$,r)
    cou(s$):cen()
   EndIf
  EndIf
- If Not(csc And &b10)Then Line Input s$:cx=1
+ If Not(csc And &b10)Then
+   Line Input s$
+   cx=1
+   If Pos <> 1 Then Print ' Workaround PicoCalc bug
+ EndIf
  If (r=1)And(csc And &b01)And(s$<>"")Then Print #2,s$
  ci$=s$
 End Function
@@ -707,14 +716,19 @@ End Sub
 Sub cfl()
  If csi Then Print Chr$(8);" ";Chr$(8);:csi=0
  Do
-  If cx=1 And cli>50-2 Then
+  If cx=1 And cli>C_HEIGHT-2 Then
    Print "[MORE] ";
    Do While Inkey$<>"":Loop
    Do While Inkey$="":Loop
    Print
    cli=0
   EndIf
-  If cx+Len(cb$)>100 Then
+  If Len(cb$) > C_WIDTH Then
+   Print Left$(cb$, C_WIDTH - cx)
+   cli=cli+1
+   cx=1
+   cb$=Mid$(cb$, C_WIDTH - cx)
+  ElseIf cx+Len(cb$)>C_WIDTH Then
    Print
    cli=cli+1
    cx=1
@@ -734,7 +748,7 @@ Sub cen()
  Exit Sub
  ElseIf cco>=10 Then
   Local i
-  For i=0 To 50-cco-1:Print :Next i
+  For i=0 To C_HEIGHT-cco-1:Print :Next i
   cco=-999
   cli=0
  Exit Sub
@@ -1187,8 +1201,8 @@ Sub main_init()
  x=x Or &b00010000
  x=x And &b10011111
  wb(&h01,x)
- wb(&h20,50)
- wb(&h21,100)
+ wb(&h20,C_HEIGHT)
+ wb(&h21,C_WIDTH)
  pc=rw(&h06)
  For i=0 To 511:stk(i)=0:Next i
  sp=0
