@@ -1,12 +1,15 @@
 ChangeLog
 ---------
 
-Release 3.2 (PicoMite / PicoCalc)
+Version 3.2.0 (PicoMite / PicoCalc)
  - Changes only affect the transpiled "zmim_pico.bas" file and have not yet
    been merged into the untranspiled "src/".
- - Updated by @cjstoddard to use forward-slash file separators.
- - Updated title text.
- - Updated resource path and string lengths to allow the code to run under MMB4L.
+ - Added identification of PicoCalc hardware:
+   - use 40x26 character console.
+   - workaround LINE INPUT bug.
+ - Changed to use forward-slash file separators (by @cjstoddard).
+ - Changed title text.
+ - Changed resource path and string lengths to allow the code to run under MMB4L.
 
 Release 3.1:
  - Fixed bug where "Integer array too small" array reported when restarting
