@@ -6,7 +6,9 @@ Version 3.2.0 (PicoMite / PicoCalc)
    been merged into the untranspiled "src/".
  - Added identification of PicoCalc hardware:
    - use 40x26 character console.
-   - workaround LINE INPUT bug.
+   - workaround bug with LINE INPUT where it does not add a newline.
+   - workaround bug with LINE INPUT where it returns spurious characters when
+     "modifier keys" pressed.
  - Changed to use forward-slash file separators (by @cjstoddard).
  - Changed title text.
  - Changed resource path and string lengths to allow the code to run under MMB4L.

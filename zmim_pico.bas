@@ -692,7 +692,18 @@ Function ci$(p$,r)
  If Not(csc And &b10)Then
    Line Input s$
    cx=1
-   If Pos <> 1 Then Print ' Workaround PicoCalc bug
+   If PICO_CALC Then
+     ' Workaround PicoCalc firmware bugs.
+     If Pos <> 1 Then Print
+     Local i% = 1
+     Do While i% <= Len(s$)
+       If Peek(Var s$, i%) > 127 Then
+         s$ = Left$(s$, i% - 1) + Mid$(s$, i% + 1)
+       Else
+         Inc i%
+       EndIf
+     Loop
+   EndIf
  EndIf
  If (r=1)And(csc And &b01)And(s$<>"")Then Print #2,s$
  ci$=s$
