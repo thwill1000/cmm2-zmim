@@ -7,6 +7,6 @@
 
 Z-MIM: a Z-Machine Interpreter for MMBasic
 
-Release 3.2 for PicoMite, MMBasic 6.00
+Version 3.2.0 for PicoMite, MMBasic 6.00
 Copyright (c) 2019-2025 Thomas Hugo Williams
 

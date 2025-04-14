@@ -10,7 +10,7 @@ If MM.Device$<>"Colour Maximite"Then
  Option Default Integer
 EndIf
 'Mode 1
-Dim m(64*1024/8+16)
+Dim m(128*1024/8+16)
 Dim MAD=Peek(VarAddr m())+8
 Dim fsz
 Dim bst
