@@ -54,6 +54,33 @@ Function fi_choose$(d$, fspec$)
   Next i
 
   f$ = cin$("File number? ")
-  If Val(f$) > 0 And Val(f$) <= sz Then fi_choose$ = d$ + "\" + all$(Val(f$) - 1)
+  If Val(f$) > 0 And Val(f$) <= sz Then fi_choose$ = file.resolve$(d$, all$(Val(f$) - 1))
 
+End Function
+
+Function file.resolve$(parent$, f$)
+  file.resolve$ = parent$ + "/" + f$
+End Function
+
+' Gets the parent directory of 'f$', or the empty string if it does not have one.
+Function file.get_parent$(f$)
+  Select Case Len(f$)
+    Case 1
+      If f$ = "/" Or f$ = "\" Then Exit Function
+    Case 2
+      If Mid$(f$, 2, 1) = ":" Then Exit Function
+    Case 3
+      Select Case Right$(f$, 2)
+        Case ":/", ":\"
+          Exit Function
+      End Select
+  End Select
+  Local i%
+  For i% = Len(f$) To 1 Step -1
+    If InStr("/\", Mid$(f$, i%, 1)) > 0 Then Exit For
+  Next
+  If i% > 0 Then file.get_parent$ = Left$(f$, i% - 1)
+  If file.get_parent$ = "" Then
+    If InStr("/\", Left$(f$, 1)) Then file.get_parent$ = Left$(f$, 1)
+  EndIf
 End Function

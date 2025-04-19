@@ -25,7 +25,11 @@ If InStr(Mm.Device$, "Colour Maximite 2") Then Mode 1
 '!endif
 
 ' String "constants" that I don't want to take up 256 bytes
-Dim ss$(5) Length 20
+If Mm.Info(Device X) = "MMB4L" Then
+  Dim ss$(5)
+Else
+  Dim ss$(5) Length 20
+EndIf
 
 '!comment_if INLINE_CONSTANTS
 Const INSTALL_DIR = 0
@@ -50,7 +54,7 @@ Sub main_init()
   Local i, x
 
   endl()
-  mem_init(ss$(STORY_DIR) + "\" + ss$(STORY_FILE) + ".z3")
+  mem_init(file.resolve$(ss$(STORY_DIR), ss$(STORY_FILE) + ".z3"))
   di_init()
   endl()
   GLOBAL_VAR = rw(&h0C)
@@ -73,15 +77,15 @@ End Sub
 Sub main()
   Local i, old_dir$, old_pc, state, s$
 
-  ss$(INSTALL_DIR)   = "\zmim"
-  ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resources"
-  ss$(SAVE_DIR)      = ss$(INSTALL_DIR) + "\saves"
-  ss$(SCRIPT_DIR)    = ss$(INSTALL_DIR) + "\scripts"
-  ss$(STORY_DIR)     = ss$(INSTALL_DIR) + "\stories"
+  ss$(INSTALL_DIR) = get_install_dir$()
+  ss$(RESOURCES_DIR) = file.resolve$(ss$(INSTALL_DIR), "resources")
+  ss$(SAVE_DIR)   = file.resolve$(ss$(INSTALL_DIR), "saves")
+  ss$(SCRIPT_DIR) = file.resolve$(ss$(INSTALL_DIR), "scripts")
+  ss$(STORY_DIR)  = file.resolve$(ss$(INSTALL_DIR), "stories")
 
   Cls
 
-  cecho(ss$(RESOURCES_DIR) + "\title.txt")
+  cecho(file.resolve$(ss$(RESOURCES_DIR), "title.txt"))
 
   de_init()
 '!comment_if NO_DEBUG
@@ -96,7 +100,7 @@ Sub main()
   s$ = Mid$(s$, Len(ss$(STORY_DIR)) + 2)
   ss$(STORY_FILE) = Left$(s$, Len(s$) - 3)
 
-  ' Ensure subdirectories for the current story exist in "saves\" and "scripts\"
+  ' Ensure subdirectories for the current story exist in "saves/" and "scripts/"
   old_dir$ = Cwd$
   ChDir(ss$(SAVE_DIR))
   s$ = Dir$(ss$(STORY_FILE), File) : If s$ <> "" Then Error "Unexpected file: " + s$
@@ -114,7 +118,8 @@ Sub main()
 '     state = E_OK
 '  EndIf
 
-  s$ = ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE) + "\" + script_file_name$()
+  s$ = file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE))
+  s$ = file.resolve$(s$, script_file_name$())
   If LCase$(cin$("Write script to '" + s$ + "' [y|N] ")) = "y" Then
     Open s$ For Output As #2
     script = S_WRITE
@@ -162,3 +167,11 @@ End Sub
 
 main()
 End
+
+Function get_install_dir$()
+  get_install_dir$ = Left$(Mm.Info(Path), Len(Mm.Info(Path)) - 1)
+  If get_install_dir$ = "NON" Then get_install_dir$ = Cwd$
+  If Not Mm.Info(Exists Dir file.resolve$(get_install_dir$, "resources")) Then
+    get_install_dir$ = file.get_parent$(get_install_dir$)
+  EndIf
+End Function

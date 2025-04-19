@@ -525,16 +525,16 @@ Function ex_special(cmd$)
 '!endif
 
   ElseIf cmd$ = "*credits" Then
-    cecho(ss$(RESOURCES_DIR) + "\credits.txt")
+    cecho(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"))
 
   ElseIf cmd$ = "*replay" Then
     If script AND S_READ Then
       cout("IGNORED '*replay' command read from script")
     Else
       cout("Select a script file from '")
-      cout(ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE) + "':")
+      cout(file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE)) + "':")
       endl()
-      f$ = fi_choose$(ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE), "*.scr")
+      f$ = fi_choose$(file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE)), "*.scr")
       If f$ <> "" Then
         Open f$ For Input As #3
         script = script Or S_READ

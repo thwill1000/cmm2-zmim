@@ -19,7 +19,7 @@ Function zsave(res)
   EndIf
 
   old_dir$ = Cwd$
-  ChDir ss$(SAVE_DIR) + "\" + ss$(STORY_FILE)
+  ChDir file.resolve$(ss$(SAVE_DIR), ss$(STORY_FILE))
   For i = 1 To 10
     s$ = Dir$("game" + Str$(i) + ".sav")
     cout("  [" + Format$(i, "%2g") + "] ")
@@ -57,7 +57,8 @@ Function zsave(res)
 
   If i = 0 Then cout("Cancelled") : endl() : Exit Function
   
-  s2$(0) = ss$(SAVE_DIR) + "\" + ss$(STORY_FILE) + "\game" + Str$(i) + ".sav"
+  s2$(0) = file.resolve$(ss$(SAVE_DIR), ss$(STORY_FILE))
+  s2$(0) = file.resolve$(s2$(0), "game" + Str$(i) + ".sav")
 
   If res Then
     Open s2$(0) For Input As #1

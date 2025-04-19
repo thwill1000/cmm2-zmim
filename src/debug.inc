@@ -102,7 +102,7 @@ Function debug()
       dmp_global(Val(cmd$(1)), Val(cmd$(2)))
 
     ElseIf cmd$(0) = "h" Then
-      cecho(ss$(RESOURCES_DIR) + "\debug_help.txt")
+      cecho(file.resolve$(ss$(RESOURCES_DIR), "debug_help.txt"))
 
     ElseIf cmd$(0) = "H" Then
       ' Dump header
