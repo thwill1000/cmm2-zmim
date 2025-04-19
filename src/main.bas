@@ -8,6 +8,8 @@ Option Explicit On
 
 If InStr(Mm.Device$, "Colour Maximite 2") Then Mode 1
 
+#Include "splib/system.inc"
+#Include "splib/vt100.inc"
 #Include "mem_cmm2_safe.inc"
 #Include "stack.inc"
 #Include "variable.inc"
@@ -53,10 +55,10 @@ End Function
 Sub main_init()
   Local i, x
 
-  endl()
+  con.endl()
   mem_init(file.resolve$(ss$(STORY_DIR), ss$(STORY_FILE) + ".z3"))
   di_init()
-  endl()
+  con.endl()
   GLOBAL_VAR = rw(&h0C)
 
   ' Hack header bits
@@ -64,8 +66,8 @@ Sub main_init()
   x = x Or  &b00010000 ' set bit 4 - status line not available
   x = x And &b10011111 ' clear bits 5 & 6 - no screen-splitting, fixed-pitch font
   wb(&h01, x)
-  wb(&h20, C_HEIGHT)
-  wb(&h21, C_WIDTH)
+  wb(&h20, con.HEIGHT)
+  wb(&h21, con.WIDTH)
 
   pc = rw(&h06)
   For i = 0 To 511 : stack(i) = 0 : Next i
@@ -85,7 +87,7 @@ Sub main()
 
   Cls
 
-  cecho(file.resolve$(ss$(RESOURCES_DIR), "title.txt"))
+  con.print_file(file.resolve$(ss$(RESOURCES_DIR), "title.txt"))
 
   de_init()
 '!comment_if NO_DEBUG
@@ -93,7 +95,7 @@ Sub main()
 '!endif
 
   ' Select a story file
-  cout("Select a story file from '" + ss$(STORY_DIR) + "':") : endl()
+  con.println("Select a story file from '" + ss$(STORY_DIR) + "':")
   Do While s$ = ""
     s$ = fi_choose$(ss$(STORY_DIR), "*.z3")
   Loop
@@ -112,7 +114,7 @@ Sub main()
 
   main_init()
 
-'  If LCase$(cin$("Start in debugger [Y|n] ")) <> "n" Then
+'  If LCase$(con.in$("Start in debugger [Y|n] ")) <> "n" Then
 '     state = E_BREAK
 '  Else
 '     state = E_OK
@@ -120,13 +122,12 @@ Sub main()
 
   s$ = file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE))
   s$ = file.resolve$(s$, script_file_name$())
-  If LCase$(cin$("Write script to '" + s$ + "' [y|N] ")) = "y" Then
-    Open s$ For Output As #2
-    script = S_WRITE
+  If LCase$(con.in$("Write script to '" + s$ + "' [y|N] ")) = "y" Then
+    con.open_out(2, s$)
   EndIf
 
   ' This will clear the console, see console#endl
-  For i = 0 To 10 : endl() : Next i
+  For i = 0 To 10 : con.endl() : Next i
 
   Timer = 0
 
@@ -136,7 +137,7 @@ Sub main()
     If num_bp > 0 And pc <> old_pc Then
       For i = 0 To 9
         If pc = bp(i) Then
-          cout("[Breakpoint " + Str$(i) + " reached]") : endl()
+          con.println("[Breakpoint " + Str$(i) + " reached]")
           state = E_BREAK
         EndIf
       Next i
@@ -151,18 +152,16 @@ Sub main()
     EndIf
   Loop
 
-  endl()
-  cout("Num instructions processed = " + Str$(num_ops)) : endl()
-  cout("Instructions / second      = ")
-  cout(Format$(1000 * num_ops / Timer, "%.1f"))
-  endl()
+  con.endl()
+  con.println("Num instructions processed = " + Str$(num_ops))
+  con.print("Instructions / second      = ")
+  con.println(Format$(1000 * num_ops / Timer, "%.1f"))
 '!uncomment_if USING_VIRTUAL_MEMORY
-'  cout("Num page faults            = " + Str$(pf)) : endl()
+'  con.println("Num page faults            = " + Str$(pf))
 '!endif
 
-  If script And S_WRITE Then Close #2
-  If script And S_READ Then Close #3
-
+  con.close_out()
+  con.close_in()
 End Sub
 
 main()

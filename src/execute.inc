@@ -40,9 +40,9 @@ Function exec(tr)
   EndIf
 
   If exec = E_UNKNOWN Then
-    cout("Unsupported instruction " + fmt_hex$(op, 2)) : endl()
+    con.println("Unsupported instruction " + fmt_hex$(op, 2))
   ElseIf exec = E_UNIMPLEMENTED Then
-    cout("Unimplemented instruction " + fmt_hex$(op, 2)) : endl()
+    con.println("Unimplemented instruction " + fmt_hex$(op, 2))
   EndIf
 
   If exec <> E_OK Then pc = pc_old : sp = sp_old
@@ -295,7 +295,7 @@ Function ex_0op()
   ElseIf oc = &h3 Then
     ' PRINT_RET
     print_zstring(pc)
-    endl()
+    con.endl()
     ex_return(1)
 
   ElseIf oc = &h4 Then
@@ -303,8 +303,8 @@ Function ex_0op()
 
   ElseIf oc = &h5 Then
     ' SAVE
-    If script AND S_READ Then
-      cout("IGNORED 'save' command read from script") : endl()
+    If con.fd_in Then
+      con.println("IGNORED 'save' command read from script")
     Else
       x = zsave()
       ex_branch(x, br)
@@ -312,19 +312,19 @@ Function ex_0op()
 
   ElseIf oc = &h6 Then
     ' RESTORE
-    If script AND S_READ Then
-      cout("IGNORED 'restore' command read from script") : endl()
+    If con.fd_in Then
+      con.println("IGNORED 'restore' command read from script")
     Else
       x = zsave(1)
     EndIf
 
   ElseIf oc = &h7 Then
     ' RESTART
-    If script AND S_READ Then
-      cout("IGNORED 'restart' command read from script") : endl()
+    If con.fd_in Then
+      con.println("IGNORED 'restart' command read from script")
     Else
       main_init()
-      For x = 0 To 10 : endl() : Next x ' this will clear the console
+      For x = 0 To 10 : con.endl() : Next x ' this will clear the console
     EndIf
 
   ElseIf oc = &h8 Then
@@ -342,7 +342,7 @@ Function ex_0op()
 
   ElseIf oc = &hB Then
     ' NEW_LINE
-    endl()
+    con.endl()
 
   ElseIf oc = &hC Then
     ' SHOW_STATUS
@@ -383,13 +383,13 @@ Function ex_varop()
 
   ElseIf oc = &h5 Then
     ' PRINT_CHAR
-    cout(Chr$(oa(0)))
+    con.print(Chr$(oa(0)))
 
   ElseIf oc = &h6 Then
     ' PRINT_NUM
     x = oa(0)
     If x > 32767 Then x = x - 65536
-    cout(Str$(x))
+    con.print(Str$(x))
 
   ElseIf oc = &h7 Then
     ' RANDOM
@@ -471,7 +471,7 @@ Function ex_read(text_buf, parse_buf)
 
   t = Timer
 
-  s$ = LCase$(cin$("> ", 1))
+  s$ = LCase$(con.in$("> ", 1))
   If Left$(s$, 1) = "*" Then ex_read = ex_special(s$)
 
   Timer = t
@@ -525,22 +525,18 @@ Function ex_special(cmd$)
 '!endif
 
   ElseIf cmd$ = "*credits" Then
-    cecho(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"))
+    con.print_file(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"))
 
   ElseIf cmd$ = "*replay" Then
-    If script AND S_READ Then
-      cout("IGNORED '*replay' command read from script")
+    If con.fd_in Then
+      con.print("IGNORED '*replay' command read from script")
     Else
-      cout("Select a script file from '")
-      cout(file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE)) + "':")
-      endl()
+      con.print("Select a script file from '")
+      con.println(file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE)) + "':")
       f$ = fi_choose$(file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE)), "*.scr")
-      If f$ <> "" Then
-        Open f$ For Input As #3
-        script = script Or S_READ
-      EndIf
+      If f$ <> "" Then con.open_in(3, f$)
     EndIf
-    endl()
+    con.endl()
 
   ElseIf cmd$ = "*status" Then
     ex_show_status()
@@ -551,7 +547,7 @@ Function ex_special(cmd$)
 
   EndIf
 
-  If ex_special = E_REPEAT Then cout(">")
+  If ex_special = E_REPEAT Then con.print(">")
 
 End Function
 
@@ -576,9 +572,9 @@ End Function
 
 Sub ex_show_status()
   Local x
-  x = vget(&h10) : ob_print(x) : cout(", ")
-  x = vget(&h11) : cout("Score: " + Str$(x) + ", ")
-  x = vget(&h12) : cout("Moves: " + Str$(x))
-  endl()
+  x = vget(&h10) : ob_print(x) : con.print(", ")
+  x = vget(&h11) : con.print("Score: " + Str$(x) + ", ")
+  x = vget(&h12) : con.print("Moves: " + Str$(x))
+  con.endl()
 End Sub
 

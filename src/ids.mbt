@@ -5,7 +5,6 @@
 ' Global variable and function/subroutine name replacements.
 
 ' From "console.inc"
-'!replace script            csc
 '!replace cbuf$             cb$
 '!replace cspace            csp
 '!replace clines            cli
@@ -14,10 +13,11 @@
 '!replace cn_spin           csi
 '!replace C_HEIGHT          CHE
 '!replace C_WIDTH           CWI
-'!replace cflush            cfl
-'!replace cin$              ci$
-'!replace cout              cou
-'!replace endl              cen
+'!replace con.flush         cfl
+'!replace con.in$           ci$
+'!replace con.print         cpr
+'!replace con.println       cpl
+'!replace con.endl          cen
 
 ' From "decode.inc"
 '!replace onum              osz

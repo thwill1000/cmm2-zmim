@@ -113,10 +113,10 @@ Sub mem_init(f$)
 
   MEM_FILE$ = f$
 
-  cout("Loading '" + MEM_FILE$ + "'") : endl()
+  con.println("Loading '" + MEM_FILE$ + "'")
 
   ' Load page 0 which contains the header
-  cout("  Header page: 0") : endl()
+  con.println("  Header page: 0")
   next_page = 0
   If mem_load(0) <> 0 Then Error
 
@@ -128,12 +128,12 @@ Sub mem_init(f$)
   ' Initialise dynamic memory
   FIRST_SWAP_PAGE = BASE_STATIC \ PAGE_SIZE
   If BASE_STATIC Mod PAGE_SIZE > 0 Then FIRST_SWAP_PAGE = FIRST_SWAP_PAGE + 1
-  cout("  Dynamic pages: ")
+  con.print("  Dynamic pages: ")
   For i = 1 To FIRST_SWAP_PAGE - 1
-    If i > 1 Then cout(", ")
-    cout(Str$(i))
+    If i > 1 Then con.print(", ")
+    con.print(Str$(i))
     If mem_load(i) <> i Then Error
   Next i
-  endl()
-  cout("  Paged memory starts at page " + Str$(FIRST_SWAP_PAGE)) : endl()
+  con.endl()
+  con.println("  Paged memory starts at page " + Str$(FIRST_SWAP_PAGE))
 End Sub

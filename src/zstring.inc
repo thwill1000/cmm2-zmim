@@ -35,7 +35,7 @@ Sub print_zstring(a)
       c = zc(i)
       If s < 3 Then
         If c = 0 Then
-          cout(" ")
+          con.print(" ")
         ElseIf c < 4 Then
           s = c + 2
         ElseIf c < 6 Then
@@ -44,10 +44,10 @@ Sub print_zstring(a)
           If c = 6 And s = 2 Then
             s = 6
           ElseIf c = 7 And s = 2 Then
-            endl()
+            con.endl()
             s = 0
           Else
-            cout(Mid$(ALPHABET$(s), c + 1, 1))
+            con.print(Mid$(ALPHABET$(s), c + 1, 1))
             s = 0
           EndIf
         EndIf
@@ -59,7 +59,7 @@ Sub print_zstring(a)
       ElseIf s = 6 Then
         s = c + 7
       Else
-        cout(Chr$((s - 7) * 32 + c))
+        con.print(Chr$((s - 7) * 32 + c))
         s = 0
       EndIf
     Next i

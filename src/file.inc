@@ -19,7 +19,7 @@ Function fi_choose$(d$, fspec$)
     f$ = Dir$()
   Loop
 
-  If sz = 0 Then cout("No files found") : endl() : ChDir old_dir$ : Exit Function
+  If sz = 0 Then con.println("No files found") : ChDir old_dir$ : Exit Function
 
   ' Create sorted array of entries 'all$'.
   ' Once again ignore all files prefixed with full-stop.
@@ -43,17 +43,17 @@ Function fi_choose$(d$, fspec$)
   width = width + 10
   For i = 0 To nr - 1
     For j = 0 to nc - 1
-      cflush()
+      con.flush()
       x = (j * nr) + i
       If x < sz Then
-        If j * width > Pos Then cout(Space$(j * width - Pos))
-        cout("  [" + Format$(x + 1, "%2g") + "] " + all$(x))
+        If j * width > Pos Then con.print(Space$(j * width - Pos))
+        con.print("  [" + Format$(x + 1, "%2g") + "] " + all$(x))
       EndIf
     Next j
-    endl()
+    con.endl()
   Next i
 
-  f$ = cin$("File number? ")
+  f$ = con.in$("File number? ")
   If Val(f$) > 0 And Val(f$) <= sz Then fi_choose$ = file.resolve$(d$, all$(Val(f$) - 1))
 
 End Function
