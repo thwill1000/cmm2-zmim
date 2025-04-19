@@ -1,5 +1,5 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' For MMBasic 6.00
 
 '!comment_if INLINE_CONSTANTS
 Const E_OK = 0            ' last operation succeeded
@@ -555,7 +555,6 @@ Function ex_special(cmd$)
 End Function
 
 Function ex_random(range)
-'!comment_if TARGET_CMM1
   Static x = 7
   Static a = 1103515245 ' a, c and m are same values as used by glibc
   Static c = 12345
@@ -572,18 +571,6 @@ Function ex_random(range)
   x = (a * x + c) Mod m
 
   ex_random = 1 + CInt((range - 1) * (x / m))
-'!endif
-'!uncomment_if TARGET_CMM1
-'  If range = 0 Then
-'    Randomize Timer
-'    Exit Function
-'  ElseIf range < 0 Then
-'    Randomize Abs(range)
-'    Exit Function
-'  EndIf
-'
-'  ex_random = 1 + CInt((range - 1) * Rnd())
-'!endif
 End Function
 
 Sub ex_show_status()

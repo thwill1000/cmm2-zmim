@@ -1,12 +1,11 @@
-' Copyright (c) 2019-21 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' For MMBasic 6.00
 
-If Mm.Device$ <> "Colour Maximite" Then
-  Option Explicit On
-  Option Default Integer
-EndIf
+Option Base 0
+Option Default Integer
+Option Explicit On
 
-Mode 1
+If InStr(Mm.Device$, "Colour Maximite 2") Then Mode 1
 
 #Include "mem_cmm2_safe.inc"
 #Include "stack.inc"
@@ -36,7 +35,6 @@ Const STORY_DIR = 4
 Const STORY_FILE = 5
 '!endif
 
-'!comment_if TARGET_CMM1
 ' Gets name in format "story-DD-MM-YY-hh-mm-ss.scr"
 Function script_file_name$()
   Local i, s$
@@ -46,21 +44,6 @@ Function script_file_name$()
   Next i
   script_file_name$ = s$
 End Function
-'!endif
-
-'!uncomment_if TARGET_CMM1
-'' Returns name in format "MMDDhhmm.scr"
-'Function script_file_name$()
-'  Local a(7), i, s$(1) Length 20
-'  a(0) = 4  : a(1) = 5  : a(2) = 1  : a(3) = 2
-'  a(4) = 12 : a(5) = 13 : a(6) = 15 : a(7) = 16
-'  s$(0) = Date$ + ":" + Time$
-'  For i = 0 To 7
-'    s$(1) = s$(1) + Mid$(s$(0), a(i), 1)
-'  Next i
-'  script_file_name$ = s$(1) + ".scr"
-'End Function
-'!endif
 
 Sub main_init()
   Local i, x
@@ -90,11 +73,7 @@ Sub main()
   Local i, old_dir$, old_pc, state, s$
 
   ss$(INSTALL_DIR)   = "\zmim"
-  If Mm.Device$ = "Colour Maximite" Then
-    ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resour~1"
-  Else
-    ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resources"
-  EndIf
+  ss$(RESOURCES_DIR) = ss$(INSTALL_DIR) + "\resources"
   ss$(SAVE_DIR)      = ss$(INSTALL_DIR) + "\saves"
   ss$(SCRIPT_DIR)    = ss$(INSTALL_DIR) + "\scripts"
   ss$(STORY_DIR)     = ss$(INSTALL_DIR) + "\stories"
@@ -156,12 +135,6 @@ Sub main()
         EndIf
       Next i
     EndIf
-'!endif
-
-'!uncomment_if TARGET_CMM1
-'    ' On the CMM1 we display a spinning cursor to indicate instruction execution
-'    If cn_spin Then Print Chr$(8); Else cn_spin = 1
-'    Print Mid$("\\\\||||////----", (num_ops Mod 16) + 1, 1);
 '!endif
 
     old_pc = pc

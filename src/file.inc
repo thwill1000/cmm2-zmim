@@ -1,5 +1,5 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' For MMBasic 6.00
 
 Function fi_choose$(d$, fspec$)
   Local f$, i, j, nc, nr, old_dir$, sz, width, x
@@ -32,9 +32,7 @@ Function fi_choose$(d$, fspec$)
     If Left$(f$, 1) <> "." Then all$(i) = f$ : i = i + 1
     f$ = Dir$()
   Loop Until i = sz
-'!comment_if TARGET_CMM1
   Sort all$()
-'!endif
 
   ChDir old_dir$
 

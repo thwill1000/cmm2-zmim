@@ -5,8 +5,7 @@
         / /__     | |  | |_| |_| |  | |
        /_____|    |_|  |_|_____|_|  |_|
 
-Z-MIM: a Z-Machine Interpreter for the Maximite
+A Z-Machine Interpreter for MMBasic
 
-Release 3 for Colour Maximite 2, MMBasic 5.05
-Copyright (c) 2019-20 Thomas Hugo Williams
-
+v3.5.0 for MMBasic 6.00
+Copyright (c) 2019-2025 Thomas Hugo Williams
