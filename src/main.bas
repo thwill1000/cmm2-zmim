@@ -8,7 +8,7 @@ Option Explicit On
 
 #Include "splib/system.inc"
 #Include "splib/vt100.inc"
-#Include "mem_cmm2_safe.inc"
+#Include "memory_safe.inc"
 #Include "stack.inc"
 #Include "variable.inc"
 #Include "decode.inc"

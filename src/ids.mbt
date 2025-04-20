@@ -54,7 +54,7 @@
 '!replace ex_random         era
 '!replace ex_show_status    ess
 
-' From "mem_xxx.inc"
+' From "memory_xxx.inc"
 '!replace FILE_LEN          FSZ
 '!replace BASE_STATIC       BST
 '!replace FIRST_SWAP_PAGE   FSP

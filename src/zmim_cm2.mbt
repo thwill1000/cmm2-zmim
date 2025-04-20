@@ -9,7 +9,7 @@
 '!indent       1
 '!spacing      minimal
 '!define       NO_DEBUG
-'!replace      "mem_cmm2_safe.inc"  "mem_cmm2_fast.inc"
+'!replace      "memory_safe.inc"  "memory_fast.inc"
 
 #Include "constants.mbt"
 #Include "ids.mbt"
