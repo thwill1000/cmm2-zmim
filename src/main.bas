@@ -6,8 +6,6 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
-If InStr(Mm.Device$, "Colour Maximite 2") Then Mode 1
-
 #Include "splib/system.inc"
 #Include "splib/vt100.inc"
 #Include "mem_cmm2_safe.inc"
@@ -26,12 +24,18 @@ If InStr(Mm.Device$, "Colour Maximite 2") Then Mode 1
 #Include "debug.inc"
 '!endif
 
-' String "constants" that I don't want to take up 256 bytes
-If Mm.Info(Device X) = "MMB4L" Then
-  Dim ss$(5)
+' ss$ is for string "constants" that I don't want to take up 256 bytes on the
+' micro-controller devices.
+If InStr(Mm.Info(Device), "PicoMite") Then
+  Dim ss$(5) Length 32
 Else
-  Dim ss$(5) Length 20
+  Dim ss$(5)
 EndIf
+
+On Error Ignore
+Mode 1
+Font 1
+On Error Abort
 
 '!comment_if INLINE_CONSTANTS
 Const INSTALL_DIR = 0
@@ -176,10 +180,14 @@ Sub main.init_console()
     ' Platform already supplied explicitly, do nothing.
   ElseIf Mm.HRes = 320 And (Mm.VRes = 480 Or Mm.VRes = 320) Then
     Cat cmdline$, " --platform=picocalc"
+  ElseIf Mm.Device$ = "MMBasic for Windows" Or InStr(Mm.Device$, "Colour Maximite 2") Then
+    Cat cmdline$, " --platform=cmm2"
   EndIf
 
   If InStr(cmdline$, "--platform=picocalc") Then
     con.init(40, 26)
+  ElseIf InStr(cmdline$, "--platform=cmm2") Then
+    con.init(100, 50)
   ElseIf Mm.Info(Device X) = "MMB4L" Then
     Local w%, h%
     Console GetSize w%, h%

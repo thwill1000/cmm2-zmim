@@ -8,7 +8,6 @@
 '!empty-lines  single
 '!indent       1
 '!spacing      minimal
-'!define       TARGET_CMM2
 '!define       NO_DEBUG
 '!replace      "mem_cmm2_safe.inc"  "mem_cmm2_fast.inc"
 
