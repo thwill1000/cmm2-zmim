@@ -98,7 +98,7 @@ Sub main()
 
   Cls
 
-  con.print_file(file.resolve$(ss$(RESOURCES_DIR), "title.txt"))
+  con.print_file(file.resolve$(ss$(RESOURCES_DIR), "title.txt"), 1)
 
   de_init()
 '!comment_if NO_DEBUG

@@ -533,7 +533,7 @@ Function ex_special(cmd$)
 '!endif
 
   ElseIf cmd$ = "*credits" Then
-    con.print_file(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"))
+    con.print_file(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"), 1)
 
   ElseIf Left$(cmd$, 5) = "*more" Then
     Select Case str.trim$(Mid$(cmd$, 6))
