@@ -27,11 +27,6 @@
 '!replace STORY_DIR      4
 '!replace STORY_FILE     5
 
-' From "memory_virtual.inc"
-'!replace PAGE_SIZE           512
-'!replace NUM_PHYSICAL_PAGES  88
-'!replace NUM_VIRTUAL_PAGES   256
-
 ' From "objects.inc"
 '!replace PARENT   4
 '!replace SIBLING  5
