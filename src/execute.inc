@@ -2,6 +2,14 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 6.00
 
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
+sys.requires("string")
+sys.provides("execute")
+If sys.err$ <> "" Then Error sys.err$
+'!endif
+
 '!comment_if INLINE_CONSTANTS
 Const E_OK = 0            ' last operation succeeded
 Const E_UNKNOWN = 1       ' last operation unkown
@@ -526,6 +534,18 @@ Function ex_special(cmd$)
 
   ElseIf cmd$ = "*credits" Then
     con.print_file(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"))
+
+  ElseIf Left$(cmd$, 5) = "*more" Then
+    Select Case str.trim$(Mid$(cmd$, 6))
+      Case "", "on"
+        con.more = 1
+        con.println("MORE on")
+      Case "off"
+        con.more = 0
+        con.println("MORE off")
+      Case Else
+        con.println("Invalid '*more' command")
+    End Select
 
   ElseIf cmd$ = "*replay" Then
     If con.fd_in Then

@@ -11,6 +11,7 @@ Option Explicit On
 '!endif
 
 #Include "splib/system.inc"
+#Include "splib/string.inc"
 #Include "splib/vt100.inc"
 #Include "memory_safe.inc"
 #Include "stack.inc"
