@@ -57,9 +57,9 @@ Function fi_choose$(d$, fspec$)
         If j * width > Pos Then con.print(Space$(j * width - Pos))
         con.print("  [" + Format$(x + 1, "%2g") + "] " + all$(x))
       EndIf
-    Next j
+    Next
     con.endl()
-  Next i
+  Next
 
   f$ = con.in$("File number? ")
   If Val(f$) > 0 And Val(f$) <= sz Then fi_choose$ = file.resolve$(d$, all$(Val(f$) - 1))

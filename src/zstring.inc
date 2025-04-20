@@ -62,10 +62,10 @@ Sub print_zstring(a)
         con.print(Chr$((s - 7) * 32 + c))
         s = 0
       EndIf
-    Next i
+    Next i ' Variable is required for this to work in recursive function.
 
     a = a + 2
-  Next x
+  Next x ' Variable is required for this to work in recursive function.
 
 End Sub
 

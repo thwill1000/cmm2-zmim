@@ -17,7 +17,7 @@ Function debug()
   Do
     ' Read line of input and parse into space separated commands/arguments.
     cn = 0
-    For i = 0 To 9 : cmd$(i) = "" : Next i
+    For i = 0 To 9 : cmd$(i) = "" : Next
     t = Timer
     s$ = con.in$("DEBUG >> ") + " "
     Timer = t
@@ -29,7 +29,7 @@ Function debug()
       Else
         cmd$(cn) = cmd$(cn) + Chr$(c)
       EndIf
-    Next i
+    Next
 
     debug = E_DEBUG
 
@@ -46,7 +46,7 @@ Function debug()
             a = -1
             Exit For
           EndIf
-        Next i
+        Next
         For i = 0 To 9
           If a = -1 Then
             ' Duplicate breakpoint previously reported
@@ -58,7 +58,7 @@ Function debug()
             Exit For
           EndIf
           If i = 9 Then con.println("No free address breakpoints")
-        Next i
+        Next
       Else
         con.println("Invalid breakpoint address")
       EndIf
@@ -72,7 +72,7 @@ Function debug()
           If bp(i) <> -1 Then
             con.println("[" + Str$(i) + "] " + fmt_hex$(bp(i)))
           EndIf
-        Next i
+        Next
       EndIf
 
     ElseIf cmd$(0) = "c" Then
@@ -158,7 +158,7 @@ Function debug()
 
     ElseIf cmd$(0) = "z" Then
       ' Clear all breakpoints
-      For i = 0 To 9 : bp(i) = -1 : Next i
+      For i = 0 To 9 : bp(i) = -1 : Next
       num_bp = 0
       con.println("All breakpoints cleared")
 
@@ -187,9 +187,9 @@ Sub dmp_abrv()
         print_abrv(x)
         con.print "}"
       EndIf
-    Next j
+    Next
     con.endl()
-  Next i
+  Next
 
 End Sub
 
@@ -215,9 +215,9 @@ Sub dmp_dict()
         x = rw(a + 2) : con.print(lpad$(Hex$(x), 4, "0") + " ")
         print_zstring(a)
       EndIf
-    Next j
+    Next
     con.endl()
-  Next i
+  Next
 
 End Sub
 
@@ -236,7 +236,7 @@ Sub dmp_global(a, n)
       con.print("  " + Str$(x))
     EndIf
     con.endl()
-  Next i
+  Next
 End Sub
 
 ' Prints Z-machine header.
@@ -253,7 +253,7 @@ Sub dmp_hdr()
   con.println("Base static  = " + fmt_hex$(rw(&h0E)))
   con.println("Flags2       = &b" + lpad$(Bin$(rb(&h10)), 8, "0"))
   con.print("Serial num   = ")
-  For i = &h12 To &h17 : con.print(Chr$(rb(i))) : Next i
+  For i = &h12 To &h17 : con.print(Chr$(rb(i))) : Next
   con.endl()
   con.println("Abbrv tbl    = " + fmt_hex$(rw(&h18)))
   con.println("File length  = " + Str$(2 * rw(&h1A)) + " bytes")
@@ -274,7 +274,7 @@ Sub dmp_mem(a, n)
       con.print("XX ")
     EndIf
     If ((i + 1) Mod 16 = 0) And (i <> n - 1) Then con.endl()
-  Next i
+  Next
   con.endl()
 End Sub
 
@@ -301,9 +301,9 @@ Sub dmp_mmap
         If j * width > Pos Then con.print(Space$(j * width - Pos))
         con.print(lpad$(Str$(x), 3) + " -> " + lpad$(Str$(pp_to_vp(x)), 3))
       EndIf
-    Next j
+    Next
     con.endl()
-  Next i
+  Next
 
   con.endl()
 
@@ -317,9 +317,9 @@ Sub dmp_mmap
         If j * width > Pos Then con.print(Space$(j * width - Pos))
         con.print(lpad$(Str$(x), 3) + " -> " + lpad$(Str$(vp_to_pp(x)), 3))
       EndIf
-    Next j
+    Next
     con.endl()
-  Next i
+  Next
 
 End Sub
 
@@ -335,7 +335,7 @@ Sub dmp_obj(o)
       con.print(lpad$(Hex$(x), 4, "0") + " ")
       If (i + 1) Mod 10 = 0 Then con.endl()
       ad = ad + 2
-    Next i
+    Next
     con.endl()
     Exit Sub
   EndIf
@@ -345,7 +345,7 @@ Sub dmp_obj(o)
   For i = 0 To 31
     x = ob_attr(o, i)
     If x <> 0 Then con.print(Str$(i))
-  Next i
+  Next
   con.endl()
 
   x = ob_rel(o, PARENT)
@@ -374,7 +374,7 @@ Sub dmp_obj(o)
         x = rb(ad)
         ad = ad + 1
         con.print(lpad$(Hex$(x), 2, "0") + " ")
-      Next i
+      Next
       con.endl()
     EndIf
   Loop Until p = 0
@@ -415,7 +415,7 @@ Sub dmp_routine(new_pc)
     If i > 0 Then con.print(", ")
     x = rw(new_pc + 1 + i * 2)
     con.print(lpad$(Hex$(x), 4, "0"))
-  Next i
+  Next
   con.println(")")
 End Sub
 
@@ -459,7 +459,7 @@ Sub dmp_stack(a)
     EndIf
     con.endl()
     If a = 0 And i = fp Then Exit For
-  Next i
+  Next
 End Sub
 
 Function fmt_operand$(i)
@@ -491,7 +491,7 @@ Function fmt_call_operands$()
   For i = 1 To onum - 1
     If i > 1 Then a$ = a$ + ", "
     a$ = a$ + fmt_operand$(i)
-  Next i
+  Next
   a$ = a$ + ")"
   fmt_call_operands$ = a$
 End Function
@@ -520,7 +520,7 @@ Function fmt_store_operands$()
   a$ = a$ + fmt_store_value$(ov(0))
   For i = 1 To onum - 1
     a$ = a$ + ", " + fmt_operand$(i)
-  Next i
+  Next
   fmt_store_operands$ = a$
 End Function
 
@@ -529,6 +529,6 @@ Function fmt_normal_operands$()
   For i = 0 To onum - 1
     If i > 0 Then a$ = a$ + ", "
     a$ = a$ + fmt_operand$(i)
-  Next i
+  Next
   fmt_normal_operands$ = a$
 End Function

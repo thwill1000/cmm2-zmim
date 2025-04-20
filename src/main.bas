@@ -57,7 +57,7 @@ Function script_file_name$()
   s$ = ss$(STORY_FILE) + "-" + Date$ + "-" + Time$ + ".scr"
   For i = 1 To Len(s$)
     If Peek(Var s$, i) = Asc(":") Then Poke Var s$, i, Asc("-")
-  Next i
+  Next
   script_file_name$ = s$
 End Function
 
@@ -79,7 +79,7 @@ Sub main_init()
   wb(&h21, con.WIDTH)
 
   pc = rw(&h06)
-  For i = 0 To 511 : stack(i) = 0 : Next i
+  For i = 0 To 511 : stack(i) = 0 : Next
   sp = 0
   fp = &hFFFF
 
@@ -102,7 +102,7 @@ Sub main()
 
   de_init()
 '!comment_if NO_DEBUG
-  For i = 0 To 9 : bp(i) = -1 : Next i
+  For i = 0 To 9 : bp(i) = -1 : Next
 '!endif
 
   ' Select a story file
@@ -137,8 +137,8 @@ Sub main()
     con.open_out(2, s$)
   EndIf
 
-  ' This will clear the console, see console#endl
-  For i = 0 To 10 : con.endl() : Next i
+  ' This will clear the console, see con.endl()
+  For i = 0 To 10 : con.endl() : Next
 
   Timer = 0
 
@@ -151,7 +151,7 @@ Sub main()
           con.println("[Breakpoint " + Str$(i) + " reached]")
           state = E_BREAK
         EndIf
-      Next i
+      Next
     EndIf
 '!endif
 

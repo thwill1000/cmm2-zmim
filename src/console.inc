@@ -159,7 +159,7 @@ Sub con.endl()
     ' If the story outputs 10 or more empty lines then we assume it was trying
     ' to clear the screen
     Local i
-    For i = 0 To con.HEIGHT - con.count - 1 : Print : Next i
+    For i = 0 To con.HEIGHT - con.count - 1 : Print : Next
     con.count = -999 ' to avoid any unnecessary additional empty lines
     con.lines = 0
     Exit Sub

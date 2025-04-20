@@ -18,19 +18,19 @@ Sub de_init()
 
   Read x
   Dim OP0$(x - 1) LENGTH 12
-  For i = 0 To x - 1 : Read s$ : OP0$(i) = de_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : OP0$(i) = de_format$(s$) : Next
 
   Read x
   Dim OP1$(x - 1) LENGTH 14
-  For i = 0 To x - 1 : Read s$ : OP1$(i) = de_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : OP1$(i) = de_format$(s$) : Next
 
   Read x
   Dim OP2$(x - 1) LENGTH 15
-  For i = 0 To x - 1 : Read s$ : OP2$(i) = de_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : OP2$(i) = de_format$(s$) : Next
 
   Read x
   Dim OPV$(x - 1) LENGTH 14
-  For i = 0 To x - 1 : Read s$ : OPV$(i) = de_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : OPV$(i) = de_format$(s$) : Next
 End Sub
 
 ' Decode next instruction into global variables.
@@ -128,7 +128,7 @@ Sub de_var(op)
       onum = onum - 1
     EndIf
     x = x * 4
-  Next i
+  Next
 End Sub
 
 ' Reads branch offset.

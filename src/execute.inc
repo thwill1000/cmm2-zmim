@@ -332,7 +332,7 @@ Function ex_0op()
       con.println("IGNORED 'restart' command read from script")
     Else
       main_init()
-      For x = 0 To 10 : con.endl() : Next x ' this will clear the console
+      For x = 0 To 10 : con.endl() : Next ' this will clear the console
     EndIf
 
   ElseIf oc = &h8 Then
@@ -469,7 +469,7 @@ Sub ex_call(st)
   For i = 1 To nl
     x = rp() * 256 + rp()
     If i < onum Then st_push(oa(i)) Else st_push(x)
-  Next i
+  Next
 
   If ztrace Then dmp_routine(2 * oa(0)) : dmp_stack()
 End Sub
@@ -488,7 +488,7 @@ Function ex_read(text_buf, parse_buf)
 
   n = Len(s$)
   ' TODO: check for input too long
-  For i = 1 To n : wb(text_buf + i, Peek(Var s$, i)) : Next i
+  For i = 1 To n : wb(text_buf + i, Peek(Var s$, i)) : Next
   wb(text_buf + n + 1, 0)
   s$ = s$ + " "
 
@@ -513,7 +513,7 @@ Function ex_read(text_buf, parse_buf)
     Else
       word$ = word$ + Chr$(c)
     EndIf
-  Next i
+  Next
 
   wb(parse_buf + 1, wc)
 

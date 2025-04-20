@@ -15,7 +15,7 @@ Sub di_init()
   DICT_AD = rw(&h08)
   ns = rb(DICT_AD) ' number of word separators
   Poke Var DICT_SEP$(0), 0, ns
-  For i = 1 To ns : Poke Var DICT_SEP$(0), i, rb(DICT_AD + i) : Next i
+  For i = 1 To ns : Poke Var DICT_SEP$(0), i, rb(DICT_AD + i) : Next
   DICT_ENTRY_LEN = rb(DICT_AD + ns + 1)
   DICT_ENTRY_COUNT = rw(DICT_AD + ns + 2)
   DICT_ENTRY_AD = DICT_AD + ns + 4

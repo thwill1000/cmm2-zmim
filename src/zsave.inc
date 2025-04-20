@@ -36,7 +36,7 @@ Function zsave(res)
       con.println(s2$(2) + " - " + s$)
       Close #1
     EndIf
-  Next i
+  Next
   ChDir old_dir$
 
   s$ = con.in$("Game number? ")
@@ -102,7 +102,7 @@ Function zsave(res)
     For i = 0 To stack_sz - 1
       s$ = Input$(2, #1)
       st_push(Peek(Var s$, 1) * 256 + Peek(Var s$, 2))
-    Next i
+    Next
 
     ' Read dynamic memory
     Do
@@ -110,7 +110,7 @@ Function zsave(res)
       For i = 1 To Len(s$)
         wb(ad, Peek(Var s$, i))
         ad = ad + 1
-      Next i
+      Next
     Loop Until Len(s$) = 0
 
     If ad <> BASE_STATIC Then Error "Unrecoverable restore error!"
@@ -138,12 +138,12 @@ Function zsave(res)
     ' Write stack (2 bytes / entry)
     For i = 0 To sp - 1
       Print #1, Chr$(st_peek(i) \ 256); Chr$(st_peek(i) Mod 256);
-    Next i
+    Next
 
     ' Write dynamic memory
     For i = 0 To BASE_STATIC - 1
        Print #1, Chr$(rb(i));
-    Next i
+    Next
   EndIf
 
   Close #1
