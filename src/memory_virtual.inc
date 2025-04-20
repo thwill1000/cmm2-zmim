@@ -2,11 +2,13 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 6.00
 
-'!define USING_VIRTUAL_MEMORY
+'!if !defined(USE_VIRTUAL_MEMORY)
+  '!define USE_VIRTUAL_MEMORY
+'!endif
 
 '!comment_if INLINE_CONSTANTS
 Const PAGE_SIZE = 512
-Const NUM_PHYSICAL_PAGES = 88
+Const NUM_PHYSICAL_PAGES = 75
 Const NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
 '!endif
 

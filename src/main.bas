@@ -6,6 +6,10 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
+'!if defined USE_VIRTUAL_MEMORY
+  '!replace "memory_safe.inc" "memory_virtual.inc"
+'!endif
+
 #Include "splib/system.inc"
 #Include "splib/vt100.inc"
 #Include "memory_safe.inc"
@@ -162,7 +166,7 @@ Sub main()
   con.println("Num instructions processed = " + Str$(num_ops))
   con.print("Instructions / second      = ")
   con.println(Format$(1000 * num_ops / Timer, "%.1f"))
-'!uncomment_if USING_VIRTUAL_MEMORY
+'!uncomment_if USE_VIRTUAL_MEMORY
 '  con.println("Num page faults            = " + Str$(pf))
 '!endif
 
@@ -182,20 +186,28 @@ Sub main.init_console()
     Cat cmdline$, " --platform=picocalc"
   ElseIf Mm.Device$ = "MMBasic for Windows" Or InStr(Mm.Device$, "Colour Maximite 2") Then
     Cat cmdline$, " --platform=cmm2"
+  ElseIf InStr(Mm.Device$, "PicoMiteVGA") Then
+    Cat cmdline$, " --platform=pmvga"
+  ElseIf InStr(Mm.Device$, "PicoMiteHDMI") Then
+    Cat cmdline$, " --platform=pmhdmi"
   EndIf
 
   If InStr(cmdline$, "--platform=picocalc") Then
     con.init(40, 26)
   ElseIf InStr(cmdline$, "--platform=cmm2") Then
     con.init(100, 50)
+  ElseIf InStr(cmdline$, "--platform=pmvga") Then
+    con.init(80, 40)
+  ElseIf InStr(cmdline$, "--platform=pmhdmi") Then
+    con.init(80, 40)
+  ElseIf InStr(cmdline$, "--platform") Then
+    Error "Unknown platform"
   ElseIf Mm.Info(Device X) = "MMB4L" Then
     Local w%, h%
     Console GetSize w%, h%
     w% = Max(w%, 40)
     h% = Max(h%, 20)
     con.init(w%, h%)
-  ElseIf InStr(cmdline$, "--platform") Then
-    Error "Unknown platform"
   Else
     con.init(80, 40)
   EndIf
