@@ -40,12 +40,12 @@ Function ob_next_prop(o, p)
     Exit Function ' return 0
   ElseIf p = 0 Then
     ad = ob_prop_base(o)
-    ad = ad + 1 + 2 * rb(ad) ' skip length & description
+    Inc ad, 1 + 2 * rb(ad) ' skip length & description
   Else
     ad = ob_prop_addr(o, p)
     If ad = 0 Then Error "Property does not exist"
     x = rb(ad - 1)
-    ad = ad + 1 + x\32
+    Inc ad, 1 + x\32
   EndIf
 
   x = rb(ad)
@@ -68,13 +68,13 @@ End Function
 Function ob_prop_addr(o, p)
   Local ad, x
   ad = ob_prop_base(o)
-  ad = ad + 1 + 2 * rb(ad) ' Skip length & description
+  Inc ad, 1 + 2 * rb(ad) ' Skip length & description
   Do
     x = rb(ad)
     ' Mask with bottom 5 bits
     If (x And &b11111) = p Then ob_prop_addr = ad + 1 : Exit Function
     If (x And &b11111) < p Then ob_prop_addr = 0 : Exit Function
-    ad = ad + 2 + x\32
+    Inc ad, 2 + x\32
   Loop
 End Function
 

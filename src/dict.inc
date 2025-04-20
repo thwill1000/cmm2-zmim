@@ -30,31 +30,31 @@ Function di_lookup(w$)
   i = 1 ' the index into w$ that is being processed
   Do While i < 7 And nz < 7
     If i > sz Then
-      z(nz) = 5 : nz = nz + 1 ' pad with Z-char 5
+      z(nz) = 5 : Inc nz ' pad with Z-char 5
     Else
       c = Asc(Mid$(w$, i, 1))
       j = Instr(ALPHABET$(0), Chr$(c)) - 1
       If j > -1 Then
         ' Character is in Alphabet 0
-        z(nz) = j : nz = nz + 1
+        z(nz) = j : Inc nz
       Else
         ' Because we know w$ is in lower-case we never have to search Alphabet 1
         ' which contains only upper-case A-Z
         j = Instr(ALPHABET$(2), Chr$(c)) - 1
         If j > -1 Then
           ' Character is in Alphabet 2
-          z(nz) = 5 : nz = nz + 1 ' shift into Alphabet 2
-          z(nz) = j : nz = nz + 1
+          z(nz) = 5 : Inc nz ' shift into Alphabet 2
+          z(nz) = j : Inc nz
         Else
           ' Encode character in ZSCII
-          z(nz) = 5 : nz = nz + 1 ' shift into Alphabet 2
-          z(nz) = 6 : nz = nz + 1 ' indicate ZSCII encoding
-          z(nz) = c \ 32 : nz = nz + 1 ' top 5 bits
-          z(nz) = c And &b11111 : nz = nz + 1 ' bottom 5 bits
+          z(nz) = 5 : Inc nz ' shift into Alphabet 2
+          z(nz) = 6 : Inc nz ' indicate ZSCII encoding
+          z(nz) = c \ 32 : Inc nz ' top 5 bits
+          z(nz) = c And &b11111 : Inc nz ' bottom 5 bits
         EndIf
       EndIf
     EndIf
-    i = i + 1
+    Inc i
   Loop
 
   ' Copy the first 6 Z-chars into 2 x 16-bit words x(0) and x(1)

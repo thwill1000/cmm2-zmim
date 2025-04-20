@@ -334,7 +334,7 @@ Sub dmp_obj(o)
       x = rw(ad)
       con.print(lpad$(Hex$(x), 4, "0") + " ")
       If (i + 1) Mod 10 = 0 Then con.endl()
-      ad = ad + 2
+      Inc ad, 2
     Next
     con.endl()
     Exit Sub
@@ -372,7 +372,7 @@ Sub dmp_obj(o)
       con.print("             [" + Str$(p) + "] ")
       For i = 1 To sz
         x = rb(ad)
-        ad = ad + 1
+        Inc ad, 1
         con.print(lpad$(Hex$(x), 2, "0") + " ")
       Next
       con.endl()

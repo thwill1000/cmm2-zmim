@@ -168,7 +168,7 @@ Function de_format$(a$)
   EndIf
   p = Instr(a$, " ")
   If p = 0 Then p = Len(a$) + 1
-  s$ = s$ + Left$(a$, p - 1)
+  Cat s$, Left$(a$, p - 1)
   de_format$ = s$
 End Function
 

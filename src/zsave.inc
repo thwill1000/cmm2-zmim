@@ -109,7 +109,7 @@ Function zsave(res)
       s$ = Input$(255, #1)
       For i = 1 To Len(s$)
         wb(ad, Peek(Var s$, i))
-        ad = ad + 1
+        Inc ad
       Next
     Loop Until Len(s$) = 0
 

@@ -21,7 +21,7 @@ Function fi_choose$(d$, fspec$)
   f$ = Dir$(fspec$)
   Do While f$ <> ""
     If Left$(f$, 1) <> "." Then
-      sz = sz + 1
+      Inc sz
       If Len(f$) > width Then width = Len(f$)
     EndIf
     f$ = Dir$()
@@ -38,7 +38,7 @@ Function fi_choose$(d$, fspec$)
   f$ = Dir$(fspec$)
   i = 0
   Do
-    If Left$(f$, 1) <> "." Then all$(i) = f$ : i = i + 1
+    If Left$(f$, 1) <> "." Then all$(i) = f$ : Inc i
     f$ = Dir$()
   Loop Until i = sz
   Sort all$()
@@ -48,7 +48,7 @@ Function fi_choose$(d$, fspec$)
   ' Display entries in one column if < 8, otherwise 2 columns.
   If (sz < 8 Or con.WIDTH <= 40) Then nc = 1 Else nc = 2
   nr = CInt(sz / nc + 0.4999)
-  width = width + 10
+  Inc width, 10
   For i = 0 To nr - 1
     For j = 0 to nc - 1
       con.flush()

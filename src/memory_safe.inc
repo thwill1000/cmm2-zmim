@@ -12,7 +12,7 @@ Dim BASE_STATIC
 Function rp()
   If pc < 0 Or pc >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(pc)
   rp = LGetByte(m(), pc)
-  pc = pc + 1
+  Inc pc
 End Function
 
 ' Reads a byte from 'a' but DOES NOT increment a
@@ -57,8 +57,8 @@ Sub mem_init(f$)
     s$ = Input$(255, #1)
     If Len(s$) = 0 Then Exit Do
     LongString Append m(), s$
-    ad = ad + Len(s$)
-    If ad > j * sz \ 10 Then con.print(Str$(j * 10) + "% ... ") : j = j + 1
+    Inc ad, Len(s$)
+    If ad > j * sz \ 10 Then con.print(Str$(j * 10) + "% ... ") : Inc j
   Loop
   con.println("100%")
   con.println("Read " + Str$(ad) + " bytes")

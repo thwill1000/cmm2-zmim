@@ -132,12 +132,12 @@ Sub con.flush()
 
     If con.x + Len(con.buf$) > con.WIDTH + 1 Then
       Print
-      con.lines = con.lines + 1
+      Inc con.lines
       con.x = 1
       If con.space Then con.buf$ = "" : Exit Do
     Else
       Print con.buf$;
-      con.x = con.x + Len(con.buf$)
+      Inc con.x, Len(con.buf$)
       con.buf$ = ""
       Exit Do
     EndIf

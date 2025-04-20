@@ -64,7 +64,7 @@ Sub print_zstring(a)
       EndIf
     Next i ' Variable is required for this to work in recursive function.
 
-    a = a + 2
+    Inc a, 2
   Next x ' Variable is required for this to work in recursive function.
 
 End Sub

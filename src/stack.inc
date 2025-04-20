@@ -9,14 +9,14 @@ Dim sp          ' stack pointer; points to the *next* element in the stack.
 
 ' Pops a 16-bit word from the stack.
 Function st_pop()
-  sp = sp - 1
+  Inc sp, -1
   st_pop = stack(sp)
 End Function
 
 ' Pushes a 16-bit word to the stack.
 Sub st_push(x)
   stack(sp) = x
-  sp = sp + 1
+  Inc sp
 End Sub
 
 ' Peeks at a value in the stack.

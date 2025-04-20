@@ -34,7 +34,7 @@ Function exec(tr)
   pc_old = pc : sp_old = sp
 
   op = decode(tr)
-  num_ops = num_ops + 1
+  Inc num_ops
   If op < &h80 Then
     exec = ex_2op()
   ElseIf op < &hB0 Then
@@ -72,35 +72,35 @@ Function ex_2op()
 
   ElseIf oc = &h2 Then
     ' JL
-    If a > 32767 Then a = a - 65536
-    If b > 32767 Then b = b - 65536
+    If a > 32767 Then Inc a, -65536
+    If b > 32767 Then Inc b, -65536
     ex_branch(a < b, br)
 
   ElseIf oc = &h3 Then
     ' JG
-    If a > 32767 Then a = a - 65536
-    If b > 32767 Then b = b - 65536
+    If a > 32767 Then Inc a, -65536
+    If b > 32767 Then Inc b, -65536
     ex_branch(a > b, br)
 
   ElseIf oc = &h4 Then
     ' DEC_CHK
     x = vget(a)
-    If x > 32767 Then x = x - 65536
-    If b > 32767 Then b = b - 65536
-    x = x - 1
+    If x > 32767 Then Inc x, -65536
+    If b > 32767 Then Inc b, -65536
+    Inc x, -1
     y = x < b
-    If x < 0 Then x = 65536 + x
+    If x < 0 Then Inc x, 65536
     vset(a, x)
     ex_branch(y, br)
 
   ElseIf oc = &h5 Then
     ' INC_CHK
     x = vget(a)
-    If x > 32767 Then x = x - 65536
-    If b > 32767 Then b = b - 65536
-    x = x + 1
+    If x > 32767 Then Inc x, -65536
+    If b > 32767 Then Inc b, -65536
+    Inc x
     y = x > b
-    If x < 0 Then x = 65536 + x
+    If x < 0 Then Inc x, 65536
     vset(a, x)
     ex_branch(y, br)
 
@@ -169,8 +169,8 @@ Function ex_2op()
     vset(st, x)
 
   ElseIf oc < &h19 Then
-    If a > 32767 Then a = a - 65536
-    If b > 32767 Then b = b - 65536
+    If a > 32767 Then Inc a, -65536
+    If b > 32767 Then Inc b, -65536
 
     If oc = &h14 Then
       ' ADD
@@ -189,7 +189,7 @@ Function ex_2op()
       x = a Mod b
     EndIf
 
-    If x < 0 Then x = 65536 + x
+    If x < 0 Then Inc x, 65536
     vset(st, x)
 
   Else
@@ -231,17 +231,17 @@ Function ex_1op()
   ElseIf oc = &h5 Then
     ' INC
     x = vget(a)
-    If x > 32767 Then x = x - 65536
-    x = x + 1
-    If x < 0 Then x = 65536 + x
+    If x > 32767 Then Inc x, -65536
+    Inc x
+    If x < 0 Then Inc x, 65536
     vset(a, x)
 
   ElseIf oc = &h6 Then
     ' DEC
     x = vget(a)
-    If x > 32767 Then x = x - 65536
-    x = x - 1
-    If x < 0 Then x = 65536 + x
+    If x > 32767 Then Inc x, -65536
+    Inc x, -1
+    If x < 0 Then Inc x, 65536
     vset(a, x)
 
   ElseIf oc = &h7 Then
@@ -262,8 +262,8 @@ Function ex_1op()
 
   ElseIf oc = &hC Then
     ' JUMP
-    If a And &h8000 Then a = a - 65536
-    pc = pc + a - 2
+    If a And &h8000 Then Inc a, -65536
+    Inc pc, a - 2
 
   ElseIf oc = &hD Then
     ' PRINT_PADDR
@@ -342,7 +342,7 @@ Function ex_0op()
 
   ElseIf oc = &h9 Then
     ' POP - discards top item in stack
-    sp = sp - 1
+    Inc sp, -1
 
   ElseIf oc = &hA Then
     ' QUIT
@@ -396,13 +396,13 @@ Function ex_varop()
   ElseIf oc = &h6 Then
     ' PRINT_NUM
     x = oa(0)
-    If x > 32767 Then x = x - 65536
+    If x > 32767 Then Inc x, -65536
     con.print(Str$(x))
 
   ElseIf oc = &h7 Then
     ' RANDOM
     x = oa(0)
-    If x > 32767 Then x = x - 65536
+    If x > 32767 Then Inc x, -65536
     x = ex_random(x)
     vset(st, x)
 
@@ -490,7 +490,7 @@ Function ex_read(text_buf, parse_buf)
   ' TODO: check for input too long
   For i = 1 To n : wb(text_buf + i, Peek(Var s$, i)) : Next
   wb(text_buf + n + 1, 0)
-  s$ = s$ + " "
+  Cat s$, " "
 
   For i = 1 To n + 1
     c = Peek(Var s$, i)
@@ -500,7 +500,7 @@ Function ex_read(text_buf, parse_buf)
         ww(parse_buf + 2 + wc * 4, ad)
         wb(parse_buf + 4 + wc * 4, Len(word$))
         wb(parse_buf + 5 + wc * 4, i - Len(word$)) ' position in 'text_buf'
-        wc = wc + 1
+        Inc wc
         word$ = ""
       EndIf
       If c <> &h20 Then ' ASCII code for space
@@ -508,10 +508,10 @@ Function ex_read(text_buf, parse_buf)
         ww(parse_buf + 2 + wc * 4, ad)
         wb(parse_buf + 4 + wc * 4, 1)
         wb(parse_buf + 5 + wc * 4, i - 1) ' position in 'text_buf'
-        wc = wc + 1
+        Inc wc
       EndIf
     Else
-      word$ = word$ + Chr$(c)
+      Cat word$, Chr$(c)
     EndIf
   Next
 
