@@ -561,6 +561,16 @@ Function ex_special(cmd$)
   ElseIf cmd$ = "*status" Then
     ex_show_status()
 
+  ElseIf cmd$ = "*save" Then
+    ' Change to canonical 'save' command and let the game's parser deal with the command.
+    cmd$ = "save"
+    ex_special = E_OK
+
+  ElseIf cmd$ = "*restore" Then
+    ' Change to canonical 'restore' command and let the game's parser deal with the command.
+    cmd$ = "restore"
+    ex_special = E_OK
+
   Else
     ' Let the game's parser deal with the command
     ex_special = E_OK
