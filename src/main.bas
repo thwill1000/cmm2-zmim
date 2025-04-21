@@ -26,7 +26,7 @@ Option Explicit On
 #Include "util.inc"
 #Include "dict.inc"
 #Include "zsave.inc"
-#Include "file.inc"
+#Include "zfile.inc"
 '!comment_if NO_DEBUG
 #Include "debug.inc"
 '!endif
