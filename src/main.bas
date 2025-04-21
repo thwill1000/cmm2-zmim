@@ -11,14 +11,16 @@ Option Explicit On
 '!endif
 
 #Include "splib/system.inc"
+#Include "splib/file.inc"
 #Include "splib/string.inc"
 #Include "splib/vt100.inc"
 #Include "memory_safe.inc"
 #Include "stack.inc"
 #Include "variable.inc"
 #Include "decode.inc"
-#Include "execute.inc"
 #Include "console.inc"
+#Include "script.inc"
+#Include "execute.inc"
 #Include "zstring.inc"
 #Include "objects.inc"
 #Include "util.inc"
@@ -50,16 +52,6 @@ Const SCRIPT_DIR = 3
 Const STORY_DIR = 4
 Const STORY_FILE = 5
 '!endif
-
-' Gets name in format "story-DD-MM-YY-hh-mm-ss.scr"
-Function script_file_name$()
-  Local i, s$
-  s$ = ss$(STORY_FILE) + "-" + Date$ + "-" + Time$ + ".scr"
-  For i = 1 To Len(s$)
-    If Peek(Var s$, i) = Asc(":") Then Poke Var s$, i, Asc("-")
-  Next
-  script_file_name$ = s$
-End Function
 
 Sub main_init()
   Local i, x
@@ -131,11 +123,7 @@ Sub main()
 '     state = E_OK
 '  EndIf
 
-  s$ = file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE))
-  s$ = file.resolve$(s$, script_file_name$())
-  If LCase$(con.in$("Write script to '" + s$ + "' [y|N] ")) = "y" Then
-    con.open_out(2, s$)
-  EndIf
+  Pause 1000
 
   ' This will clear the console, see con.endl()
   For i = 0 To 10 : con.endl() : Next

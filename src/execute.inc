@@ -6,6 +6,7 @@
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("string")
+sys.requires("script")
 sys.provides("execute")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -535,27 +536,43 @@ Function ex_special(cmd$)
   ElseIf cmd$ = "*credits" Then
     con.print_file(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"), 1)
 
-  ElseIf Left$(cmd$, 5) = "*more" Then
-    Select Case str.trim$(Mid$(cmd$, 6))
+  ElseIf cmd$ = "*eof" Then
+    con.println("End of script.")
+    con.endl()
+
+  ElseIf InStr(cmd$, "*more") = 1 Then
+    Select Case str.trim$(Mid$(cmd$, Len("*more") + 1))
       Case "", "on"
         con.more = 1
-        con.println("MORE on")
+        con.println("MORE on.")
       Case "off"
         con.more = 0
-        con.println("MORE off")
+        con.println("MORE off.")
       Case Else
-        con.println("Invalid '*more' command")
+        con.println("Invalid '*more' command.")
     End Select
+    con.endl()
 
-  ElseIf cmd$ = "*replay" Then
-    If con.fd_in Then
-      con.print("IGNORED '*replay' command read from script")
-    Else
-      con.print("Select a script file from '")
-      con.println(file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE)) + "':")
-      f$ = fi_choose$(file.resolve$(ss$(SCRIPT_DIR), ss$(STORY_FILE)), "*.scr")
-      If f$ <> "" Then con.open_in(3, f$)
-    EndIf
+  ElseIf InStr(cmd$, "*record") = 1 Then
+    Select Case str.trim$(Mid$(cmd$, Len("*record") + 1))
+      Case "", "on"
+        script.record_on()
+      Case "off"
+        script.record_off()
+      Case Else
+        con.println("Invalid '*record' command.")
+    End Select
+    con.endl()
+
+  ElseIf InStr(cmd$, "*replay") = 1 Then
+    Select Case str.trim$(Mid$(cmd$, Len("*replay") + 1))
+      Case "", "on"
+        script.replay_on()
+      Case "off"
+        script.replay_off()
+      Case Else
+        con.println("Invalid '*replay' command.")
+    End Select
     con.endl()
 
   ElseIf cmd$ = "*status" Then

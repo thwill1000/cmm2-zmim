@@ -41,8 +41,13 @@ Function con.in$(p$, echo)
   con.flush()
 
   If con.fd_in Then
-    Line Input #con.fd_in, s$
-    If s$ <> "" Then con.history_put(con.history%(), s$)
+    Do While s$ = "" And Not Eof(con.fd_in)
+      Line Input #con.fd_in, s$
+      ' Ignore comments and *record commands.
+      If InStr(s$, "#") = 1 Or InStr(LCase$(s$), "*record") = 1 Then s$ = ""
+      If s$ <> "" Then con.history_put(con.history%(), s$)
+    Loop
+    If Eof(con.fd_in) And s$ = "" Then s$ = "*replay off"
   Else
     s$ = con.readln$("", con.WIDTH - con.x - Len(p$), con.history%())
   EndIf
@@ -54,9 +59,6 @@ Function con.in$(p$, echo)
   If Not con.fd_in Then con.lines = 0 : con.count = 1
 
   con.x = 1
-  If con.fd_in Then
-    If Eof(#con.fd_in) Then Close #con.fd_in : con.fd_in = 0
-  EndIf
 
   If echo Then
     If con.fd_out Then
