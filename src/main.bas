@@ -85,6 +85,8 @@ Sub main()
   ss$(SCRIPT_DIR) = file.resolve$(ss$(INSTALL_DIR), "scripts")
   ss$(STORY_DIR)  = file.resolve$(ss$(INSTALL_DIR), "stories")
 
+  main.init_console()
+
   Cls
 
   con.print_file(file.resolve$(ss$(RESOURCES_DIR), "title.txt"))
@@ -166,6 +168,32 @@ End Sub
 
 main()
 End
+
+Sub main.init_console()
+  Local cmdline$ = LCase$(Mm.CmdLine$)
+
+  If InStr(cmdline$, "--platform") Then
+    ' Platform already supplied explicitly, do nothing.
+  ElseIf Mm.HRes = 320 And (Mm.VRes = 480 Or Mm.VRes = 320) Then
+    Cat cmdline$, " --platform=picocalc"
+  EndIf
+
+  If InStr(cmdline$, "--platform=picocalc") Then
+    con.init(40, 26)
+  ElseIf Mm.Info(Device X) = "MMB4L" Then
+    Local w%, h%
+    Console GetSize w%, h%
+    w% = Max(w%, 40)
+    h% = Max(h%, 20)
+    con.init(w%, h%)
+  ElseIf InStr(cmdline$, "--platform") Then
+    Error "Unknown platform"
+  Else
+    con.init(80, 40)
+  EndIf
+
+  If Mm.Info(Device X) = "MMB4L" Then Console Resize con.WIDTH, con.HEIGHT
+End Sub
 
 Function get_install_dir$()
   get_install_dir$ = Left$(Mm.Info(Path), Len(Mm.Info(Path)) - 1)

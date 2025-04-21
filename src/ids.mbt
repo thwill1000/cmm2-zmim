@@ -11,8 +11,8 @@
 '!replace cn_count          cco
 '!replace cn_x              cx
 '!replace cn_spin           csi
-'!replace C_HEIGHT          CHE
-'!replace C_WIDTH           CWI
+'!replace con.HEIGHT        CHE
+'!replace con.WIDTH         CWI
 '!replace con.flush         cfl
 '!replace con.in$           ci$
 '!replace con.print         cpr

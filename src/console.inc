@@ -13,6 +13,9 @@ If sys.err$ <> "" Then Error sys.err$
 Const con.SCREEN% = &h01
 Const con.SERIAL% = &h02
 
+Dim con.HEIGHT = 50
+Dim con.WIDTH = 100
+
 Dim con.buf$     ' console write buffer
 Dim con.space    ' was the last character written to con.buf$ a space?
 Dim con.lines    ' number of lines that have been output since the last prompt
@@ -25,12 +28,10 @@ Dim con.more = 1 ' show the [MORE] prompt if more than a page of output
                  ' (approx con.HEIGHT lines) is written without a prompt
 Dim con.history%(255) ' history buffer for user input.
 
-'!comment_if INLINE_CONSTANTS
-Const con.CR$ = Chr$(13)
-Const con.LF$ = Chr$(10)
-Dim con.HEIGHT = 50
-Dim con.WIDTH = 100
-'!endif
+Sub con.init(width%, height%)
+  con.WIDTH = width%
+  con.HEIGHT = height%
+End Sub
 
 ' @param  p$  prompt
 Function con.in$(p$, echo)
@@ -78,10 +79,10 @@ Sub con.print(s$)
   For i = 1 To Len(s$)
     c$ = Mid$(s$, i, 1)
     Select Case c$
-      Case con.CR$ :
+      Case Chr$(13) : ' CR
         ' Ignore carriage returns
 
-      Case con.LF$ :
+      Case Chr$(10) : ' LF
         con.endl()
         con.space = 0
 
@@ -111,11 +112,12 @@ End Sub
 Sub con.flush()
   If con.spin Then Print Chr$(8); " "; Chr$(8); : con.spin = 0
 
-  ' If the buffer is wider than the console then clip the buffer.
-  ' An alternative would be to insert a newline, but in reality the only time
-  ' this can happen is if we try to print a very long string with no spaces,
-  ' e.g. a file-path.
-  con.buf$ = Left$(con.buf$, con.WIDTH)
+  ' If the buffer is wider than the console then split the buffer.
+  Local remainder$
+  If Len(con.buf$) > con.WIDTH Then
+    remainder$ = "..." + Mid$(con.buf$, con.WIDTH + 1)
+    con.buf$ = Left$(con.buf$, con.WIDTH)
+  EndIf
 
   Do
     If con.x = 1 And con.lines > con.HEIGHT - 2 Then
@@ -132,14 +134,19 @@ Sub con.flush()
       Print
       con.lines = con.lines + 1
       con.x = 1
-      If con.space Then con.buf$ = "" : Exit Sub
+      If con.space Then con.buf$ = "" : Exit Do
     Else
       Print con.buf$;
       con.x = con.x + Len(con.buf$)
       con.buf$ = ""
-      Exit Sub
+      Exit Do
     EndIf
   Loop
+
+  If Len(remainder$) Then
+    con.buf$ = remainder$
+    con.flush()
+  EndIf
 End Sub
 
 ' Flushes con.buf$ to the console and then writes CRLF.

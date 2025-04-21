@@ -2,6 +2,14 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 6.00
 
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
+sys.requires("console")
+sys.provides("zmim_file")
+If sys.err$ <> "" Then Error sys.err$
+'!endif
+
 Function fi_choose$(d$, fspec$)
   Local f$, i, j, nc, nr, old_dir$, sz, width, x
 
@@ -38,7 +46,7 @@ Function fi_choose$(d$, fspec$)
   ChDir old_dir$
 
   ' Display entries in one column if < 8, otherwise 2 columns.
-  If sz < 8 Then nc = 1 Else nc = 2
+  If (sz < 8 Or con.WIDTH <= 40) Then nc = 1 Else nc = 2
   nr = CInt(sz / nc + 0.4999)
   width = width + 10
   For i = 0 To nr - 1
