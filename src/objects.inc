@@ -2,11 +2,21 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 6.00
 
-' Constants for ob_rel()
-'!comment_if INLINE_CONSTANTS
-Const PARENT = 4
-Const SIBLING = 5
-Const CHILD = 6
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
+sys.provides("objects")
+If sys.err$ <> "" Then Error sys.err$
+'!endif
+
+'!if 1
+  '!replace PARENT 4
+  '!replace SIBLING 5
+  '!replace CHILD 6
+'!else
+  Const PARENT = 4
+  Const SIBLING = 5
+  Const CHILD = 6
 '!endif
 
 ' Gets/sets object attribute.

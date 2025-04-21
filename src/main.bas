@@ -20,9 +20,9 @@ Option Explicit On
 #Include "decode.inc"
 #Include "console.inc"
 #Include "script.inc"
+#Include "objects.inc"
 #Include "execute.inc"
 #Include "zstring.inc"
-#Include "objects.inc"
 #Include "util.inc"
 #Include "dict.inc"
 #Include "zsave.inc"
@@ -44,14 +44,12 @@ Mode 1
 Font 1
 On Error Abort
 
-'!comment_if INLINE_CONSTANTS
 Const INSTALL_DIR = 0
 Const RESOURCES_DIR = 1
 Const SAVE_DIR = 2
 Const SCRIPT_DIR = 3
 Const STORY_DIR = 4
 Const STORY_FILE = 5
-'!endif
 
 Sub main_init()
   Local i, x

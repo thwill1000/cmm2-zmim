@@ -7,11 +7,11 @@ On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("string")
 sys.requires("script")
+sys.requires("objects")
 sys.provides("execute")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-'!comment_if INLINE_CONSTANTS
 Const E_OK = 0            ' last operation succeeded
 Const E_UNKNOWN = 1       ' last operation unkown
 Const E_UNIMPLEMENTED = 2 ' last operation implemented
@@ -19,7 +19,6 @@ Const E_BREAK = 3         ' TODO: document
 Const E_QUIT = 4          ' last operation was a "Quit"
 Const E_DEBUG = 5         ' TODO: document
 Const E_REPEAT = 6        ' repeat last operation
-'!endif
 
 Dim fp      ' frame pointer; points to the stack element that is the first
             ' element for the current routine. This has the value &FFFF if
