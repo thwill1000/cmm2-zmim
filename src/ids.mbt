@@ -84,8 +84,6 @@
 '!replace st_poke           spk
 
 ' From "util.inc"
-'!replace lpad$             lp$
-'!replace rpad$             rd$
 '!replace fmt_hex$          hx$
 
 ' From "variable.inc"

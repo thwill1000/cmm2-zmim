@@ -154,7 +154,7 @@ Function debug()
       a = Val(cmd$(1))
       con.print(Str$(a))
       con.print("  " + fmt_hex$(a))
-      con.println("  &b" + LPad$(Bin$(a), 16, "0"))
+      con.println("  &b" + str.lpad$(Bin$(a), 16, "0"))
 
     ElseIf cmd$(0) = "z" Then
       ' Clear all breakpoints
@@ -183,7 +183,7 @@ Sub dmp_abrv()
       x = (j * nr) + i
       If x < 96 Then
         If j * width > Pos Then con.print(Space$(j * width - Pos))
-        con.print("[" + lpad$(Str$(x), 2) + "] {")
+        con.print("[" + str.lpad$(Str$(x), 2) + "] {")
         print_abrv(x)
         con.print "}"
       EndIf
@@ -209,10 +209,10 @@ Sub dmp_dict()
       x = (j * nr) + i
       If x < DICT_ENTRY_COUNT Then
         If j * width > Pos Then con.print(Space$(j * width - Pos))
-        con.print("[" + lpad$(Str$(x + 1), 4) + "] ")
+        con.print("[" + str.lpad$(Str$(x + 1), 4) + "] ")
         a = x * DICT_ENTRY_LEN + DICT_ENTRY_AD
-        x = rw(a) : con.print(lpad$(Hex$(x), 4, "0"))
-        x = rw(a + 2) : con.print(lpad$(Hex$(x), 4, "0") + " ")
+        x = rw(a) : con.print(str.lpad$(Hex$(x), 4, "0"))
+        x = rw(a + 2) : con.print(str.lpad$(Hex$(x), 4, "0") + " ")
         print_zstring(a)
       EndIf
     Next
@@ -229,7 +229,7 @@ Sub dmp_global(a, n)
   For i = a To a + n - 1
     If i > 239 Then Exit For
     x = vget(i + 16)
-    con.print("G" + lpad$(Str$(i), 2, "0") + " = " + fmt_hex$(x))
+    con.print("G" + str.lpad$(Str$(i), 2, "0") + " = " + fmt_hex$(x))
     If x And &h8000 Then
       con.print("  " + Str$(x - &h10000))
     Else
@@ -243,7 +243,7 @@ End Sub
 Sub dmp_hdr()
   Local i
   con.println("Version      = " + Str$(rb(&h00)))
-  con.println("Flags1       = &b" + lpad$(Bin$(rb(&h01)), 8, "0"))
+  con.println("Flags1       = &b" + str.lpad$(Bin$(rb(&h01)), 8, "0"))
   con.println("Release      = " + Str$(rw(&h02)))
   con.println("Base high    = " + fmt_hex$(rw(&h04)))
   con.println("Initial PC   = " + fmt_hex$(rw(&h06)))
@@ -251,7 +251,7 @@ Sub dmp_hdr()
   con.println("Object tbl   = " + fmt_hex$(rw(&h0A)))
   con.println("Glob var tbl = " + fmt_hex$(rw(&h0C)))
   con.println("Base static  = " + fmt_hex$(rw(&h0E)))
-  con.println("Flags2       = &b" + lpad$(Bin$(rb(&h10)), 8, "0"))
+  con.println("Flags2       = &b" + str.lpad$(Bin$(rb(&h10)), 8, "0"))
   con.print("Serial num   = ")
   For i = &h12 To &h17 : con.print(Chr$(rb(i))) : Next
   con.endl()
@@ -269,7 +269,7 @@ Sub dmp_mem(a, n)
     If i Mod 16 = 0 Then con.print("[" + fmt_hex$(a + i) + "] ")
     If a + i < FILE_LEN Then
       x = rb(a + i)
-      con.print(lpad$(Hex$(x), 2, "0") + " ")
+      con.print(str.lpad$(Hex$(x), 2, "0") + " ")
     Else
       con.print("XX ")
     EndIf
@@ -299,7 +299,7 @@ Sub dmp_mmap
       x = (j * nr) + i
       If x < NUM_PHYSICAL_PAGES Then
         If j * width > Pos Then con.print(Space$(j * width - Pos))
-        con.print(lpad$(Str$(x), 3) + " -> " + lpad$(Str$(pp_to_vp(x)), 3))
+        con.print(str.lpad$(Str$(x), 3) + " -> " + str.lpad$(Str$(pp_to_vp(x)), 3))
       EndIf
     Next
     con.endl()
@@ -315,7 +315,7 @@ Sub dmp_mmap
       x = (j * nr) + i
       If x < NUM_VIRTUAL_PAGES Then
         If j * width > Pos Then con.print(Space$(j * width - Pos))
-        con.print(lpad$(Str$(x), 3) + " -> " + lpad$(Str$(vp_to_pp(x)), 3))
+        con.print(str.lpad$(Str$(x), 3) + " -> " + str.lpad$(Str$(vp_to_pp(x)), 3))
       EndIf
     Next
     con.endl()
@@ -332,7 +332,7 @@ Sub dmp_obj(o)
     ad = rw(&h0A)
     For i = 0 To 30
       x = rw(ad)
-      con.print(lpad$(Hex$(x), 4, "0") + " ")
+      con.print(str.lpad$(Hex$(x), 4, "0") + " ")
       If (i + 1) Mod 10 = 0 Then con.endl()
       Inc ad, 2
     Next
@@ -373,7 +373,7 @@ Sub dmp_obj(o)
       For i = 1 To sz
         x = rb(ad)
         Inc ad, 1
-        con.print(lpad$(Hex$(x), 2, "0") + " ")
+        con.print(str.lpad$(Hex$(x), 2, "0") + " ")
       Next
       con.endl()
     EndIf
@@ -384,7 +384,7 @@ End Sub
 '
 ' @param  m$  instruction mnemonic
 Sub dmp_op(m$)
-  con.print(rpad$(m$, 14))
+  con.print(str.rpad$(m$, 14))
   If m$ = "CALL" Then
     con.print(fmt_call_operands$())
   ElseIf m$ = "JUMP" Then
@@ -414,7 +414,7 @@ Sub dmp_routine(new_pc)
   For i = 0 To locals_sz - 1
     If i > 0 Then con.print(", ")
     x = rw(new_pc + 1 + i * 2)
-    con.print(lpad$(Hex$(x), 4, "0"))
+    con.print(str.lpad$(Hex$(x), 4, "0"))
   Next
   con.println(")")
 End Sub
@@ -434,9 +434,9 @@ Sub dmp_stack(a)
     x = st_peek(i)
 
     If x And &h8000 Then
-      con.print(fmt_hex$(x) + "  " + lpad$(Str$(x - &h10000), 6, " ") + "  ")
+      con.print(fmt_hex$(x) + "  " + str.lpad$(Str$(x - &h10000), 6, " ") + "  ")
     Else
-      con.print(fmt_hex$(x) + "  " + lpad$(Str$(x), 6, " ") + "  ")
+      con.print(fmt_hex$(x) + "  " + str.lpad$(Str$(x), 6, " ") + "  ")
     EndIf
 
     If tmp_fp = &hFFFF Then
@@ -454,7 +454,7 @@ Sub dmp_stack(a)
     ElseIf i = tmp_fp + 4 Then
       con.print("num locals")
     Else
-      con.print("L" + lpad$(Str$(i - tmp_fp - 5), 2, "0"))
+      con.print("L" + str.lpad$(Str$(i - tmp_fp - 5), 2, "0"))
       ' TODO: Not everything on top of the stack is a local variable
     EndIf
     con.endl()
@@ -466,15 +466,15 @@ Function fmt_operand$(i)
   Local a$, x
   x = ov(i)
   If ot(i) <> &b10 Then ' &b10 = VARIABLE
-    fmt_operand$ = "#" + lpad$(Hex$(x), 2, "0")
+    fmt_operand$ = "#" + str.lpad$(Hex$(x), 2, "0")
     Exit Function
   EndIf
   If x = 0 Then
     a$ = "(SP)+"
   ElseIf x < &h10 Then
-    a$ = "L" + lpad$(Hex$(x - 1), 2, "0")
+    a$ = "L" + str.lpad$(Hex$(x - 1), 2, "0")
   Else
-    a$ = "G" + lpad$(Hex$(x - &h10), 2, "0")
+    a$ = "G" + str.lpad$(Hex$(x - &h10), 2, "0")
   EndIf
   If x > 0 Then a$ = a$ + " (=" + Hex$(vget(x)) + ")"
   fmt_operand$ = a$
@@ -508,9 +508,9 @@ Function fmt_store_value$(st)
   If st = 0 Then
     con.print("-(SP)")
   ElseIf st < &h10 Then
-    con.print("L" + lpad$(Hex$(st - 1), 2, "0"))
+    con.print("L" + str.lpad$(Hex$(st - 1), 2, "0"))
   Else
-    con.print("G" + lpad$(Hex$(st - &h10), 2, "0"))
+    con.print("G" + str.lpad$(Hex$(st - &h10), 2, "0"))
   EndIf
 End Function
 
