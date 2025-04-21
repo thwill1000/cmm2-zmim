@@ -10,7 +10,12 @@
 ' @param  res  set 0 to save and 1 to restore
 ' @return      1 on success, 0 on failure or if cancelled
 Function zsave(res)
-  Local exists(10), i, old_dir$, s$, s2$(2) Length 40
+  Local exists(10), i, old_dir$, s$
+  If InStr(Mm.Info(Device X), "PicoMite") Then
+    Local s2$(2) Length 64
+  Else
+    Local s2$(2)
+  EndIf
 
   If res Then
     con.println("Select game to restore:")
