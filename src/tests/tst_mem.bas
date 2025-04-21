@@ -8,8 +8,7 @@ Option Default Integer
 #Include "../splib/system.inc"
 #Include "../splib/string.inc"
 #Include "../splib/vt100.inc"
-'#Include "../memory_fast.inc"
-#Include "../memory_safe.inc"
+#Include "../memory.inc"
 #Include "../console.inc"
 
 Dim ad, buf$, buf_sz, file$, i, x

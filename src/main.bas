@@ -7,14 +7,14 @@ Option Default Integer
 Option Explicit On
 
 '!if defined USE_VIRTUAL_MEMORY
-  '!replace "memory_safe.inc" "memory_virtual.inc"
+  '!replace "memory.inc" "memory_virtual.inc"
 '!endif
 
 #Include "splib/system.inc"
 #Include "splib/file.inc"
 #Include "splib/string.inc"
 #Include "splib/vt100.inc"
-#Include "memory_safe.inc"
+#Include "memory.inc"
 #Include "stack.inc"
 #Include "variable.inc"
 #Include "decode.inc"
