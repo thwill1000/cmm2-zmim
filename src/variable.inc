@@ -31,4 +31,3 @@ Sub vset(i, x)
     Error "Unknown variable " + Str$(i)
   EndIf
 End Sub
-
