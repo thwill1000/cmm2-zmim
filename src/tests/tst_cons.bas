@@ -2,11 +2,15 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 6.00
 
+Option Explicit On
+
+#Include "../splib/system.inc"
+#Include "../splib/vt100.inc"
 #Include "../console.inc"
 
 Cls
 
-C_WIDTH = 50
+con.WIDTH = 50
 
 Print "-- Expected --------------------------------------"
 Print
@@ -18,11 +22,11 @@ Print
 Print "-- Actual ----------------------------------------"
 Print
 
-cout("Moses supposes his toeses are roses, but Moses supposes eroneously.")
-endl()
-cout("For Moses he knowses his toeses aren't roses as Moses supposes his ")
-cout("toeses to be.")
-endl()
+con.print("Moses supposes his toeses are roses, but Moses supposes eroneously.")
+con.endl()
+con.print("For Moses he knowses his toeses aren't roses as Moses supposes his ")
+con.print("toeses to be.")
+con.endl()
 
 Print
 
@@ -34,10 +38,10 @@ Print "bar"
 Print
 Print "-- Actual ----------------------------------------"
 Print
-cout( "    foo          bar")
-endl()
-cout( "                                             foo              bar")
-endl()
+con.print( "    foo          bar")
+con.endl()
+con.print( "                                             foo              bar")
+con.endl()
 
 Print
 
@@ -48,8 +52,8 @@ Print "foobar"
 Print
 Print "-- Actual ----------------------------------------"
 Print
-cout( "                                               foobar")
-endl()
+con.print( "                                               foobar")
+con.endl()
 
 Print
 Print "-- End --"

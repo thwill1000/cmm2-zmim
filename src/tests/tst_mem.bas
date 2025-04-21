@@ -5,63 +5,66 @@
 Option Explicit On
 Option Default Integer
 
-'#Include "../mem_cmm2_fast.inc"
-#Include "../mem_cmm2_safe.inc"
+#Include "../splib/system.inc"
+#Include "../splib/string.inc"
+#Include "../splib/vt100.inc"
+'#Include "../memory_fast.inc"
+#Include "../memory_safe.inc"
 #Include "../console.inc"
 
 Dim ad, buf$, buf_sz, file$, i, x
 
 Cls
 
-file$ = "/zmim/stories/minizork.z3"
+file$ = Mm.Info(Path) + "../../stories/minizork.z3"
 mem_init(file$)
 
-endl()
-cout("Executing memory tests") : endl()
+con.endl()
+con.println("Executing memory tests")
 
 Open file$ For Random As #1
 
-endl()
-cout("Testing sequential access:") : endl()
+con.endl()
+con.println("Testing sequential access:")
 Timer = 0
 Do While ad < FILE_LEN
-  cout(".") : cflush()
+  con.print(".") : con.flush()
   Seek #1, ad + 1
   buf$ = Input$(255, #1)
   buf_sz = Len(buf$)
   For i = 1 To buf_sz
-    If ad = FILE_LEN Then cout("What the hell!") : endl()
+    If ad = FILE_LEN Then con.println("What the hell!")
     If Peek(Var buf$, i) <> rb(ad) Then Error
     ad = ad + 1
   Next i
 Loop
-endl()
-cout("Time taken = " + Str$(Timer) + " ms") : endl()
+con.endl()
+con.println("Time taken = " + Str$(Timer) + " ms")
 
-endl()
-cout("Testing random access:") : endl()
+con.endl()
+con.println("Testing random access:")
 Timer = 0
 For i = 1 To 5000
-  If i Mod 50 = 0 Then cout(".") : cflush()
+  If i Mod 50 = 0 Then con.print(".") : con.flush()
   ad = Fix(Rnd * FILE_LEN)
   Seek #1, ad + 1
   buf$ = Input$(1, #1)
   If Peek(Var buf$, 1) <> rb(ad) Then Error
 Next i
-endl()
-cout("Time taken = " + Str$(Timer) + " ms") : endl()
+con.endl()
+con.println("Time taken = " + Str$(Timer) + " ms")
 
-endl()
-cout("Test read/write:") : endl()
+con.endl()
+con.println("Test read/write:")
 Timer = 0
 For i = 1 To 5000
-  If i Mod 50 = 0 Then cout(".") : cflush()
+  If i Mod 50 = 0 Then con.print(".") : con.flush()
   ad = Fix(Rnd * BASE_STATIC)
   x = Fix(Rnd * 255)
   wb(ad, x)
   If x <> rb(ad) Then Error
 Next i
-endl()
-cout("Time taken = " + Str$(Timer) + " ms") : endl()
+con.endl()
+con.println("Time taken = " + Str$(Timer) + " ms")
 
 Close #1

@@ -5,8 +5,11 @@
 Option Explicit On
 Option Default Integer
 
-'#Include "../mem_cmm2_fast.inc"
-#Include "../mem_cmm2_safe.inc"
+#Include "../splib/system.inc"
+#Include "../splib/string.inc"
+#Include "../splib/vt100.inc"
+'#Include "../memory_fast.inc"
+#Include "../memory_safe.inc"
 #Include "../objects.inc"
 #Include "../debug.inc"
 #Include "../util.inc"
@@ -17,10 +20,10 @@ Dim ad, i, o, x, _
 
 Cls
 
-mem_init("/zmim/stories/minizork.z3")
+mem_init(Mm.Info(Path) + "../../stories/minizork.z3")
 
-endl()
-cout("Executing object tests") : endl()
+con.endl()
+con.println("Executing object tests")
 
 ' Get attributes and properties from object 1
 o = 1
@@ -102,4 +105,4 @@ If ob_attr(o, 27) <> 0 Then Error
 _ = ob_attr(o, 27, 1, 0)
 If ob_attr(o, 27) <> 0 Then Error
 
-cout("PASSED") : endl()
+con.println("PASSED")

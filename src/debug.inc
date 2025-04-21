@@ -353,7 +353,7 @@ Sub dmp_obj(o)
   x = ob_rel(o, SIBLING)
   con.print("Sibling object: " + Str$(x) + "  ")
   x = ob_rel(o, CHILD)
-  con.println("Child object:" + Str$(x))
+  con.println("Child object: " + Str$(x))
 
   ad = ob_prop_base(o)
   con.println("   Property address: " + fmt_hex$(ad))
