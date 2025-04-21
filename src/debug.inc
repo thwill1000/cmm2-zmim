@@ -1,5 +1,6 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
 
 Dim bp(9) ' The addresses of up to 10 breakpoints, -1 for unset
           ' execute#num_bp should also be updated when these are changed

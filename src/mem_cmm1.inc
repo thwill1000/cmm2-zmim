@@ -1,5 +1,6 @@
-' Copyright (c) 2019-2023 Thomas Hugo Williams
-' For Colour Maximite 1, MMBasic 4.5
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
 
 '!define USING_VIRTUAL_MEMORY
 

@@ -1,5 +1,6 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
 
 Dim stack(511)  ' storage for the stack  - we only store 16-bit unsigned
                 ' integers 0 .. &hFFFF although they are often interpreted as

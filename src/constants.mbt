@@ -1,5 +1,7 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
-'
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
+
 ' Constant values to inline
 
 '!define INLINE_CONSTANTS

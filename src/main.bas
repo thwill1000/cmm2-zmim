@@ -1,4 +1,5 @@
 ' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 6.00
 
 Option Base 0
