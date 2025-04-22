@@ -69,7 +69,7 @@ Sub main_init()
   wb(&h21, con.WIDTH)
 
   pc = rw(&h06)
-  For i = 0 To 511 : stack(i) = 0 : Next
+  For i = Bound(stack(), 0) To Bound(stack(), 1) : stack(i) = 0 : Next
   sp = 0
   fp = &hFFFF
 

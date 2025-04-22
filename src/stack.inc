@@ -15,19 +15,26 @@ End Function
 
 ' Pushes a 16-bit word to the stack.
 Sub st_push(x)
+'!if !defined(NO_EXTRA_CHECKS)
+  If x < 0 Or x > &hFFFF Then Error "Invalid unsigned 16-bit value"
+'!endif
   stack(sp) = x
   Inc sp
 End Sub
 
 ' Peeks at a value in the stack.
 Function st_peek(i)
+'!if !defined(NO_EXTRA_CHECKS)
   If i >= sp Then Error "Attempt to peek beyond stack pointer"
+'!endif
   st_peek = stack(i)
 End Function
 
 ' Pokes a value into the stack.
 Sub st_poke(i, x)
+'!if !defined(NO_EXTRA_CHECKS)
   If i >= sp Then Error "Attempt to poke beyond stack pointer"
   If x < 0 Or x > &hFFFF Then Error "Invalid unsigned 16-bit value"
+'!endif
   stack(i) = x
 End Sub

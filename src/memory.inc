@@ -10,7 +10,7 @@ Dim BASE_STATIC
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
-'!if !defined(NO_MEMORY_DEBUG)
+'!if !defined(NO_EXTRA_CHECKS)
   If pc < 0 Or pc >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(pc)
 '!endif
   rp = LGetByte(m(), pc)
@@ -19,7 +19,7 @@ End Function
 
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
-'!if !defined(NO_MEMORY_DEBUG)
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
 '!endif
   rb = LGetByte(m(), a)
@@ -27,7 +27,7 @@ End Function
 
 ' Reads a 16-bit word from 'a' but DOES NOT increment a
 Function rw(a)
-'!if !defined(NO_MEMORY_DEBUG)
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= FILE_LEN - 1 Then Error "Invalid address: " + fmt_hex$(a)
 '!endif
   rw = LGetByte(m(), a) * 256 + LGetByte(m(), a + 1)
@@ -35,7 +35,7 @@ End Function
 
 ' Writes byte 'x' to 'a'
 Sub wb(a, x)
-'!if !defined(NO_MEMORY_DEBUG)
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= BASE_STATIC Then Error "Invalid address: " + fmt_hex$(a)
   If (x And &hFF) <> x Then Error "Invalid write value: " + Str$(x)
 '!endif
@@ -44,7 +44,7 @@ End Sub
 
 ' Writes 16-bit word 'x' to 'a'
 Sub ww(a, x)
-'!if !defined(NO_MEMORY_DEBUG)
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= BASE_STATIC - 1 Then Error "Invalid address: " + fmt_hex$(a)
   If (x And &hFFFF) <> x Then Error "Invalid write value: " + Str$(x)
 '!endif

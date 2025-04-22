@@ -32,7 +32,7 @@ Dim next_page                         ' next page of physical memory to use on
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
-'!if !defined(NO_MEMORY_DEBUG)
+'!if !defined(NO_EXTRA_CHECKS)
   If pc < 0 Or pc >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
 '!endif
   Const vp = pc \ PAGE_SIZE
@@ -44,7 +44,7 @@ End Function
 
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
-'!if !defined(NO_MEMORY_DEBUG)
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
 '!endif
   If a < BASE_STATIC Then rb = Peek(Var m(0), a) : Exit Function
@@ -61,7 +61,7 @@ End Function
 
 ' Writes byte 'x' to 'a'
 Sub wb(a, x)
-'!if !defined(NO_MEMORY_DEBUG)
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= BASE_STATIC Then Error "Invalid address: " + fmt_hex$(a)
   If (x And &hFF) <> x Then Error "Invalid write value: " + Str$(x)
 '!endif
@@ -70,7 +70,7 @@ End Sub
 
 ' Writes 16-bit word 'x' to 'a'
 Sub ww(a, x)
-'!if !defined(NO_MEMORY_DEBUG)
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= BASE_STATIC - 1 Then Error "Invalid address: " + fmt_hex$(a)
   If (x And &hFFFF) <> x Then Error "Invalid write value: " + Str$(x)
 '!endif
