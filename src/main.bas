@@ -6,8 +6,9 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
-'!if defined USE_VIRTUAL_MEMORY
+'!if defined LOW_MEMORY
   '!replace "memory.inc" "memory_virtual.inc"
+  '!replace "stack.inc" "stack_compact.inc"
 '!endif
 
 #Include "splib/system.inc"

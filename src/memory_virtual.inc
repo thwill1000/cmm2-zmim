@@ -2,9 +2,7 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 6.00
 
-'!if !defined(USE_VIRTUAL_MEMORY)
-  '!define USE_VIRTUAL_MEMORY
-'!endif
+'!define USE_VIRTUAL_MEMORY
 
 '!if 1
   '!replace PAGE_SIZE 512
