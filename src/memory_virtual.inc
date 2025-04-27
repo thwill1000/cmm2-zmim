@@ -4,7 +4,7 @@
 
 '!define USE_VIRTUAL_MEMORY
 
-'!if 1
+'!if defined(INLINE_CONSTANTS)
   '!replace PAGE_SIZE 512
   '!replace NUM_PHYSICAL_PAGES 75
   '!replace NUM_VIRTUAL_PAGES 256

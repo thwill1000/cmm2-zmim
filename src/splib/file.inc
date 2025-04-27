@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2024 Thomas Hugo Williams
+' Copyright (c) 2020-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -9,7 +9,11 @@ sys.provides("file")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-Const file.SEPARATOR = sys.SEPARATOR$()
+'!if defined(INLINE_CONSTANTS)
+  '!replace file.SEPARATOR  sys.SEPARATOR$()
+'!else
+  Const file.SEPARATOR = sys.SEPARATOR$()
+'!endif
 
 ' Gets the number of files in directory d$ whose names match pattern$.
 '

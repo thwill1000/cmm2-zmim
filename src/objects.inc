@@ -9,7 +9,7 @@ sys.provides("objects")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-'!if 1
+'!if defined(INLINE_CONSTANTS)
   '!replace PARENT 4
   '!replace SIBLING 5
   '!replace CHILD 6
