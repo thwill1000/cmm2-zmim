@@ -1,8 +1,11 @@
 # Z-MIM
-A Z-machine interpreter allowing the classic Infocom works of interactive fiction to be played on the [Colour Maximite 2](http://geoffg.net/maximite.html).
+A Z-machine interpreter for playing the classic Infocom works of interactive fiction.
 
-Written in MMBasic 5.05 by Thomas Hugo Williams in 2019-2020
- - Z-machine technical advice was provided by Fredrik Ramsberg, co-author of [Ozmoo](https://github.com/johanberntsson/ozmoo).
+Written in MMBasic v6.00 for the [Colour Maximite 2](http://geoffg.net/maximite.html), [PicoMite VGA/HDMI](https://geoffg.net/picomitevga.html), [PicoCalc](https://www.clockworkpi.com/picocalc), [MMBasic for Linux](https://github.com/thwill1000/mmb4l) and MMBasic for Windows.
+
+Copyright (c) 2019-2025 Thomas Hugo Williams
+* Z-machine technical advice was provided by Fredrik Ramsberg, co-author of [Ozmoo](https://github.com/johanberntsson/ozmoo).
+* PicoCalc testing by Chris Stoddard.
 
 You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> but if you use it then perhaps you would like to buy me a coffee?
 
@@ -10,19 +13,17 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 
 ## How do I run it?
 
- - Download the latest release: https://github.com/thwill1000/zmim/releases/download/r3/zmim-r3.zip
-    - or clone/download the latest work in progress: https://github.com/thwill1000/zmim
- - Extract all the files to ```\ZMIM\```
-    - to run from a different directory you need to edit the ```ss$(0)="\zmim"``` string in the ```main()``` subroutine of ```zmim.bas```.
- - `RUN "\zmim\zmim.bas"`
+ - Download the latest release source code: https://github.com/thwill1000/mmbasic-zmim/releases/latest
+ - Extract and rename folder to `zmim/`.
+ - `RUN "zmim/zmim.bas"`
 
-## Story Files
+## Story files
 
-The games/adventures for Z-machines are called "story files" and come in several versions z1, z2, z3, .. z8
+The games/adventures for the Z-machine are called "story files" and come in several versions z1, z2, z3, ... z8
 
 Z-MIM currently only supports .z3 format as used by the classic 1980's Infocom games.
 
-Z-MIM is distributed with four free story files that Infocom created:
+Z-MIM is distributed with four free story files that were distributed by Infocom:
  - tutorial.z3 - Introduction to interactive fiction and a little bit of Zork I
  - minizork.z3 - A nice big chunk of Zork I that was given away with the British Commodore users’ magazine “Zzap! 64″ no. 67. in 1990.
  - sampler1.z3 - Samples of Planetfall, Infidel, and The Witness.
@@ -66,6 +67,48 @@ The z3 compatible Infocom classic stories are:
  
 *These files can be extracted from the several anthologies that have been published over the years, e.g. "The Lost Treasures of Infocom"*
 
+## Meta-Commands
+
+The interpreter provides a number of internal meta-commands all prefixed with a `*`:
+
+ - `*break`
+     - breaks currently running story into Z-MIM story debugger.
+     - once in the debugger type `h` for a list of debugger commands.
+ - `*credits`
+     - displays Z-MIM credits.
+ - `*more`
+     - enables output paging so that a `[MORE]` prompt is shown whenever more output than can be shown on a single screen is generated; this is only likely to happen when replaying a script, see `*replay` below.
+     - this initially defaults to `on`.
+ - `*more off`
+     - disables output paging.
+ - `*record`
+     - prompts the user to select and name one of 10 script file slots and then starts to echo every subsequent command into the selected file.
+ - `*record off`
+     - halts recording.
+ - `*replay`
+     - prompts the user to select a script file slot and then replays the contents of that file as if the user was typing it at the prompt.
+ - `*replay off`
+     - halts replaying.
+     - only makes sense if inserted manually into a script file to prevent it from replaying to its end.
+ - `*restore`
+     - restores story progress previously saved with the `*save` command.
+     - should work even if the story does not implement its own `restore` command.
+ - `*save`
+     - saves story progress.
+     - should work even if the story does not implement its own `save` command.
+     - the save format is a naive dump of the story's stack and dynamic memory area, see [src/zsave.inc](src/zsave.inc).
+     - __WARNING!__ mixing the use of `*save` and `*restore` with any `save` and `restore` commands implemented by the story may produce "odd" behaviour even though the same format is used by both.
+ - `*screenshot`
+     - generates a .BMP screenshot.
+     - not available on all platforms.
+ - `*spin`
+     - enables progress spinner when the Z-machine is "thinking".
+     - this initially defaults to `on` for PicoMite devices.
+ - `*spin off`
+     - disables progress spinner.
+ - `*status`
+     - prints the current story status.
+
 ## Limitations
 
 Z-MIM currently has the following limitations:
@@ -74,52 +117,34 @@ Z-MIM currently has the following limitations:
 2. No status bar:
     - type `*status` to see current location, score and moves made.
 3. Non standard support for scripts:
-    - user is prompted to write a script when the story starts.
+    - type `*record` to start recording a script.
     - type `*replay` to play-back a script.
 4. No split screen, as used (optionally?) by Seastalker.
 5. No sound support, as used (optionally?) by The Lurking Horror.
 
 ## FAQ
 
-**1. What is the Colour Maximite 2 ?**
-
-The Colour Maximite 2 is a small self contained "Boot to BASIC" computer inspired by the home computers of the early 80's such as the Tandy TRS-80, Commodore 64 and Apple II.
-
-While the concept of the Colour Maximite 2 is borrowed from the computers of the 80's the technology used is very much up to date.  Its CPU is an ARM Cortex-M7 32-bit RISC processor running at 480MHz and it generates a VGA output at resolutions up to 800x600 pixels with up 65,536 colours.
-
-The power of the ARM processor means it is capable of running BASIC at speeds comparable to running native machine-code on an 8-bit home computer with the additional advantage of vastly more memory and superior graphics and audio capabilities.
-
-More information can be found on the official Colour Maximite 2 website at http://geoffg.net/maximite.html
-
-**2. Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?**
-
-The current release includes a Colour Maximite 1 version (which may also work on the Mono Maximite, but it untested) this can be executed with `RUN "\zmim\zmim_cm1.bas"`
-
-However it is 25 times slower (~30 instructions per second) than the Colour Maximite 2 version (~800 instructions per second) and as a result pretty much unplayable.
-
-Pi-cromite and MMBasic for DOS versions are "in progress", watch this space.
-
-**3. Will you be supporting .z4, .z5, etc. story formats ?**
+**1. Will you be supporting .z4, .z5, etc. story formats ?**
 
 Perhaps. It depends on whether anyone finds this useful, or how bored I get.
 
-**4. What possessed you to write this in BASIC ?**
+**2. What possessed you to write this in BASIC ?**
 
 This is currently the only option on the Colour Maximite 2 unless you want to rewrite/replace the firmware to include an ARM Z-machine implementation.
 
-**5. How do I play these games ?**
+**3. How do I play these games ?**
 
 Try playing "tutorial.z3" or read https://www.z-machine-matter.com/playing.html 
 
-**6. How do I find out more about Interactive Fiction ?**
+**4. How do I find out more about Interactive Fiction ?**
 
 Visit https://intfiction.org/
 
-**7. How do I find out more about the Z-machine ?**
+**5. How do I find out more about the Z-machine ?**
 
 The Z-machine standard documents can be found at https://www.inform-fiction.org/zmachine/standards/
 
-**8. How do I contact the author ?**
+**6. How do I contact the author ?**
 
 The author can be contacted via:
  - https://github.com as user "thwill1000"
