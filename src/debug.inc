@@ -261,14 +261,14 @@ Sub dmp_hdr()
   con.println("Std revision = " + Str$(rw(&h32)))
 End Sub
 
-' Prints 'n' bytes from 'mem' starting from 'a'
-Sub dmp_mem(a, n)
+' Prints 'n' bytes from 'mem' starting from 'ad'
+Sub dmp_mem(ad, n)
   Local i, x
   If n = 0 Then n = 128
   For i = 0 To n - 1
-    If i Mod 16 = 0 Then con.print("[" + fmt_hex$(a + i) + "] ")
-    If a + i < FILE_LEN Then
-      x = rb(a + i)
+    If i Mod 16 = 0 Then con.print("[" + fmt_hex$(ad + i) + "] ")
+    If ad + i < FILE_LEN Then
+      x = rb(ad + i)
       con.print(str.lpad$(Hex$(x), 2, "0") + " ")
     Else
       con.print("XX ")

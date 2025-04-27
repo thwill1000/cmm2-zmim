@@ -63,14 +63,14 @@ Function di_lookup(w$)
   x(1) = z(3) * 1024 + z(4) * 32 + z(5) + 32768 ' set bit-15 at end of word
 
   ' Binary search to lookup the Z-string in the dictionary
-  Local a, lb, ub, y(1)
+  Local ad, lb, ub, y(1)
   lb = 0
   ub = DICT_ENTRY_COUNT - 1
   Do
     i = (lb + ub) \ 2
-    a = DICT_ENTRY_AD + DICT_ENTRY_LEN * i
-    y(0) = rw(a)
-    y(1) = rw(a + 2)
+    ad = DICT_ENTRY_AD + DICT_ENTRY_LEN * i
+    y(0) = rw(ad)
+    y(1) = rw(ad + 2)
     If x(0) > y(0) Then
       lb = i + 1
     ElseIf x(0) < y(0) Then
@@ -80,7 +80,7 @@ Function di_lookup(w$)
     ElseIf x(1) < y(1) Then
       ub = i - 1
     Else
-      di_lookup = a
+      di_lookup = ad
       ub = lb - 1
     EndIf
   Loop Until ub < lb

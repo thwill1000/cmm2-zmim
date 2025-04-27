@@ -8,7 +8,7 @@ ALPHABET$(1) = " 123[]ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 ALPHABET$(2) = " 123[]@^0123456789.,!?_#'" + Chr$(34) + "/\-:()"
 
 ' Prints Z-string starting at 'a' incrementing 'a' by the number of bytes read
-Sub print_zstring(a)
+Sub print_zstring(ad)
   Local b, c, i, s, x, zc(2)
 
   ' The state of Z-string processing is recorded in 's':
@@ -22,7 +22,7 @@ Sub print_zstring(a)
   ' in recursive functions.
   For x = 0 To 0 Step 0
 
-    x = rw(a)
+    x = rw(ad)
     zc(0) = (x And &h7C00) \ &h400
     zc(1) = (x And &h3E0) \ &h20
     zc(2) = (x And &h1F)
@@ -52,9 +52,9 @@ Sub print_zstring(a)
           EndIf
         EndIf
       ElseIf s < 6 Then
-        b = a ' Backup the address
+        b = ad ' Backup the address
         print_abrv((s - 3) * 32 + c)
-        a = b ' Restore the address
+        ad = b ' Restore the address
         s = 0
       ElseIf s = 6 Then
         s = c + 7
@@ -64,7 +64,7 @@ Sub print_zstring(a)
       EndIf
     Next i ' Variable is required for this to work in recursive function.
 
-    Inc a, 2
+    Inc ad, 2
   Next x ' Variable is required for this to work in recursive function.
 
 End Sub

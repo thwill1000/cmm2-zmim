@@ -6,7 +6,7 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
-'!if defined LOW_MEMORY
+'!if defined(LOW_MEMORY)
   '!replace "memory.inc" "memory_virtual.inc"
   '!replace "stack.inc" "stack_compact.inc"
 '!endif
@@ -16,7 +16,52 @@ Option Explicit On
 #Include "splib/string.inc"
 #Include "splib/vt100.inc"
 #Include "memory.inc"
+
+'!if defined(LOW_MEMORY)
+  '!replace { rw ( ad ) }              { rb(ad) * 256 + rb(ad + 1) }
+  '!replace { wb ( ad , x ) }          { Poke Var m(0), ad, x }
+  '!replace { wb ( ad , y ) }          { Poke Var m(0), ad, y }
+  '!replace { ww ( ad , x ) }          { Poke Var m(0), ad, x \ 256 : Poke Var m(0), ad + 1, x Mod 256 }
+'!else
+  '!replace { rp ( ) * 256 + rp ( ) }  { LGetByte(m(), pc) * 256 + LGetByte(m(), pc + 1) : Inc pc, 2 }
+  '!replace { rp ( ) }                 { LGetByte(m(), pc) : Inc pc }
+  '!replace { rb ( ad ) }              { LGetByte(m(), ad) }
+  '!replace { rb ( ad - 1 ) }          { LGetByte(m(), ad - 1) }
+  '!replace { rb ( a + b ) }           { LGetByte(m(), a + b) }
+  '!replace { rw ( ad ) }              { LGetByte(m(), ad) * 256 + LGetByte(m(), ad + 1) }
+  '!replace { wb ( ad , x ) }          { Poke Byte mad + ad, x }
+  '!replace { wb ( ad , y ) }          { Poke Byte mad + ad, y }
+  '!replace { ww ( ad , x ) }          { Poke Byte mad + ad, x \ 256 : Poke Byte mad + ad + 1, x Mod 256 }
+'!endif
+
 #Include "stack.inc"
+
+'!if defined(LOW_MEMORY)
+  '!replace { st_pop ( ) }                  { Peek(Short stack.base + sp * 2 - 2) : Inc sp, -1 }
+  '!replace { st_push ( oa ( 0 ) ) }        { Poke Short stack.base + sp * 2, oa(0) : Inc sp }
+  '!replace { st_push ( fp ) }              { Poke Short stack.base + sp * 2, fp : Inc sp }
+  '!replace { st_push ( nl ) }              { Poke Short stack.base + sp * 2, nl : Inc sp }
+  '!replace { st_push ( st ) }              { Poke Short stack.base + sp * 2, st : Inc sp }
+  '!replace { st_push ( v ) }               { Poke Short stack.base + sp * 2, v : Inc sp }
+  '!replace { st_peek ( sp - 1 ) }          { Peek(Short stack.base + sp * 2 - 2) }
+  '!replace { st_peek ( fp + i + 4 ) }      { Peek(Short stack.base + (fp + i + 4) * 2) }
+  '!replace { st_poke ( fp + i + 4 , v ) }  { Poke Short stack.base + (fp + i + 4) * 2, v }
+  '!replace { st_poke ( sp - 1 , b ) }      { Poke Short stack.base + sp * 2 - 2, b }
+  '!replace { st_poke ( sp - 1 , x ) }      { Poke Short stack.base + sp * 2 - 2, x }
+'!else
+  '!replace { st_pop ( ) }                  { stack(sp - 1) : Inc sp, -1 }
+  '!replace { st_push ( oa ( 0 ) ) }        { stack(sp) = oa(0) : Inc sp }
+  '!replace { st_push ( fp ) }              { stack(sp) = fp : Inc sp }
+  '!replace { st_push ( nl ) }              { stack(sp) = nl : Inc sp }
+  '!replace { st_push ( st ) }              { stack(sp) = st : Inc sp }
+  '!replace { st_push ( v ) }               { stack(sp) = v : Inc sp }
+  '!replace { st_peek ( sp - 1 ) }          { stack(sp - 1) }
+  '!replace { st_peek ( fp + i + 4 ) }      { stack(fp + i + 4) }
+  '!replace { st_poke ( fp + i + 4 , v ) }  { stack(fp + i + 4) = v }
+  '!replace { st_poke ( sp - 1 , b ) }      { stack(sp - 1) = b }
+  '!replace { st_poke ( sp - 1 , x ) }      { stack(sp - 1) = x }
+'!endif
+
 #Include "variable.inc"
 #Include "decode.inc"
 #Include "console.inc"

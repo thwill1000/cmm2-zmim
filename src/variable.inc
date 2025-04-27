@@ -20,13 +20,13 @@ End Function
 
 ' Sets variable 'i'.
 ' If i = 0 then pushes the value onto the stack.
-Sub vset(i, x)
+Sub vset(i, v)
   If i = 0 Then
-    st_push(x)
+    st_push(v)
   ElseIf i < &h10 Then
-    st_poke(fp + i + 4, x)
+    st_poke(fp + i + 4, v)
   ElseIf i <= &hFF Then
-    ww(GLOBAL_VAR + 2 * (i - &h10), x)
+    ww(GLOBAL_VAR + 2 * (i - &h10), v)
   Else
     Error "Unknown variable " + Str$(i)
   EndIf

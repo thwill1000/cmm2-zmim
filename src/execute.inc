@@ -445,7 +445,10 @@ End Sub
 Sub ex_return(x)
   Local st, _
   sp = fp + 4
-  pc = st_pop() * &h10000 + st_pop()
+  ' This single line version won't work if inlining st_pop():
+  ' pc = st_pop() * &h10000 + st_pop()
+  pc = &h10000 * st_pop()
+  Inc pc, st_pop()
   st = st_pop()
   fp = st_pop()
   vset(st, x)
