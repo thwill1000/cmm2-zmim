@@ -546,10 +546,10 @@ Function ex_special(cmd$)
     Select Case str.trim$(Mid$(cmd$, Len("*more") + 1))
       Case "", "on"
         con.more = 1
-        con.println("MORE on.")
+        con.println("Paged output enabled.")
       Case "off"
         con.more = 0
-        con.println("MORE off.")
+        con.println("Paged output disabled.")
       Case Else
         con.println("Invalid '*more' command.")
     End Select
