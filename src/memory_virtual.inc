@@ -6,11 +6,11 @@
 
 '!if defined(INLINE_CONSTANTS)
   '!replace PAGE_SIZE 512
-  '!replace NUM_PHYSICAL_PAGES 75
+  '!replace NUM_PHYSICAL_PAGES 80
   '!replace NUM_VIRTUAL_PAGES 256
 '!else
   Const PAGE_SIZE = 512
-  Const NUM_PHYSICAL_PAGES = 75
+  Const NUM_PHYSICAL_PAGES = 80
   Const NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
 '!endif
 
