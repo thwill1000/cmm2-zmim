@@ -580,6 +580,19 @@ Function ex_special(cmd$)
   ElseIf cmd$ = "*screenshot" Then
     ex_screenshot()
 
+  ElseIf InStr(cmd$, "*spin") = 1 Then
+    Select Case str.trim$(Mid$(cmd$, Len("*spin") + 1))
+      Case "", "on"
+        con.spin_enabled = 1
+        con.println("Spinning cursor enabled.")
+      Case "off"
+        con.spin_enabled = 0
+        con.println("Spinning cursor disabled.")
+      Case Else
+        con.println("Invalid '*spin' command.")
+    End Select
+    con.endl()
+
   ElseIf cmd$ = "*status" Then
     ex_show_status()
 

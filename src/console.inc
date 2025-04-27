@@ -21,16 +21,18 @@ Dim con.space    ' was the last character written to con.buf$ a space?
 Dim con.lines    ' number of lines that have been output since the last prompt
 Dim con.count    ' number of newlines without an intervening character being printed
 Dim con.x = 1    ' current horizontal cursor position, indexed from 1
-Dim con.spin     ' is the spinning cursor currently displayed?
 Dim con.fd_in    ' file descriptor to read input from
 Dim con.fd_out   ' file descriptor to echo input to
 Dim con.more = 1 ' show the [MORE] prompt if more than a page of output
                  ' (approx con.HEIGHT lines) is written without a prompt
 Dim con.history%(255) ' history buffer for user input.
+Dim con.spin_enabled  ' is the spinning cursor enabled ?
+Dim con.spin_shown    ' is the spinning cursor currently displayed ?
 
-Sub con.init(width%, height%)
+Sub con.init(width%, height%, spin_enabled%)
   con.WIDTH = width%
   con.HEIGHT = height%
+  con.spin_enabled = spin_enabled%
 End Sub
 
 ' @param  p$  prompt
@@ -112,7 +114,7 @@ End Sub
 ' If con.buf$ does not fit on the current line then first write CRLF and then if
 ' con.buf$ contains non-spaces write con.buf$ to the console.
 Sub con.flush()
-  If con.spin Then Print Chr$(8); " "; Chr$(8); : con.spin = 0
+  If con.spin_shown Then Print Chr$(8); " "; Chr$(8); : con.spin_shown = 0
 
   ' If the buffer is wider than the console then split the buffer.
   Local remainder$
@@ -491,5 +493,18 @@ Sub con.show_cursor(show%)
   If con.get_type%() And con.SCREEN% Then
     Local x% = Mm.Info(HPos), y% = Mm.Info(VPos) + Mm.Info(FontHeight) - 1
     Line x%, y%, x% + Mm.Info(FontWidth), y%, 1, Choice(show%, RGB(White), RGB(Black))
+  EndIf
+End Sub
+
+' Show the spinning cursor.
+Sub con.spin()
+  Static i
+'!if !defined(NO_EXTRA_CHECKS)
+  If Not con.spin_enabled Then Error "Invalid spinner state"
+'!endif
+  If con.x < con.WIDTH - 1 Then
+    If con.spin_shown Then Print Chr$(8); Else con.spin_shown = 1
+    Print Mid$("\|/-", i + 1, 1);
+    i = (i + 1) Mod 4
   EndIf
 End Sub

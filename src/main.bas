@@ -191,6 +191,8 @@ Sub main()
     EndIf
 '!endif
 
+    If con.spin_enabled And num_ops Mod 16 = 0 Then con.spin()
+
     old_pc = pc
     If state = E_OK Or state = E_REPEAT Then
       state = exec(ztrace)
@@ -232,15 +234,15 @@ Sub main.init_console()
   EndIf
 
   If InStr(cmdline$, "--platform=picocalc") Then
-    con.init(40, 26)
+    con.init(40, 26, 1)
   ElseIf InStr(cmdline$, "--platform=cmm2") Then
     con.init(100, 50)
   ElseIf InStr(cmdline$, "--platform=320x240") Then
-    con.init(40, 20)
+    con.init(40, 20, 1)
   ElseIf InStr(cmdline$, "--platform=pmvga") Then
-    con.init(80, 40)
+    con.init(80, 40, 1)
   ElseIf InStr(cmdline$, "--platform=pmhdmi") Then
-    con.init(80, 40)
+    con.init(80, 40, 1)
   ElseIf InStr(cmdline$, "--platform") Then
     Error "Unknown platform"
   ElseIf Mm.Info(Device X) = "MMB4L" Then
