@@ -67,5 +67,5 @@ Function fi_choose$(d$, fspec$)
 End Function
 
 Function file.resolve$(parent$, f$)
-  file.resolve$ = parent$ + "/" + f$
+  file.resolve$ = parent$ + file.SEPARATOR + f$
 End Function

@@ -577,6 +577,9 @@ Function ex_special(cmd$)
     End Select
     con.endl()
 
+  ElseIf cmd$ = "*screenshot" Then
+    ex_screenshot()
+
   ElseIf cmd$ = "*status" Then
     ex_show_status()
 
@@ -627,3 +630,23 @@ Sub ex_show_status()
   con.endl()
 End Sub
 
+Sub ex_screenshot()
+  Local f$, i = 0, root$ = Cwd$
+  Do
+    Inc i
+    f$ = file.resolve$(root$, ss$(STORY_FILE) + "_" + Str$(i) + ".bmp")
+  Loop While file.exists%(f$)
+  If InStr(Mm.Device$, "PicoMite") Then
+    On Error Skip
+    Save Compressed Image f$
+  Else
+    On Error Skip
+    Save Image f$
+  EndIf
+  If Mm.ErrNo Then
+    con.println("Screenshot failed or is not supported.")
+  Else
+    con.println("Saved '" + f$ + "'")
+  EndIf
+  con.endl()
+End Sub
