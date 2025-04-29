@@ -188,7 +188,7 @@ Sub dmp_abrv()
   nc = 3 : nr = CInt(96 / nc + 0.4999) : width = 24
   For i = 0 To nr - 1
     For j = 0 To nc - 1
-      cflush()
+      con.flush()
       x = (j * nr) + i
       If x < 96 Then
         If j * width > Pos Then con.print(Space$(j * width - Pos))
@@ -214,7 +214,7 @@ Sub dmp_dict()
   nc = 3 : nr = CInt(DICT_ENTRY_COUNT / nc + 0.4999) : width = 24
   For i = 0 To nr - 1
     For j = 0 To nc - 1
-      cflush()
+      con.flush()
       x = (j * nr) + i
       If x < DICT_ENTRY_COUNT Then
         If j * width > Pos Then con.print(Space$(j * width - Pos))
@@ -304,7 +304,7 @@ Sub dmp_mmap
   nc = 6 : nr = CInt(NUM_PHYSICAL_PAGES / nc + 0.4999) : width = 15
   For i = 0 To nr - 1
     For j = 0 To nc - 1
-      cflush()
+      con.flush()
       x = (j * nr) + i
       If x < NUM_PHYSICAL_PAGES Then
         If j * width > Pos Then con.print(Space$(j * width - Pos))
@@ -320,7 +320,7 @@ Sub dmp_mmap
   nr = CInt(NUM_VIRTUAL_PAGES / nc + 0.4999)
   For i = 0 To nr - 1
     For j = 0 To nc - 1
-      cflush()
+      con.flush()
       x = (j * nr) + i
       If x < NUM_VIRTUAL_PAGES Then
         If j * width > Pos Then con.print(Space$(j * width - Pos))
