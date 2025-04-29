@@ -598,14 +598,12 @@ Function ex_special(cmd$)
     ex_show_status()
 
   ElseIf cmd$ = "*save" Then
-    ' Change to canonical 'save' command and let the game's parser deal with the command.
-    cmd$ = "save"
-    ex_special = E_OK
+    If zsave(0) Then con.println("Ok.") Else con.println("Save failed.")
+    con.endl()
 
   ElseIf cmd$ = "*restore" Then
-    ' Change to canonical 'restore' command and let the game's parser deal with the command.
-    cmd$ = "restore"
-    ex_special = E_OK
+    If zsave(1) Then con.println("Ok.") Else con.println("Restore failed.")
+    con.endl()
 
   Else
     ' Let the game's parser deal with the command
