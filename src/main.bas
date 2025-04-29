@@ -6,6 +6,10 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
+If InStr(Mm.Device$, "PicoMite") Then
+  If Mm.Ver < 6.0 Then Error "PicoMite firmware v6.0 or later required"
+EndIf
+
 '!if defined(LOW_MEMORY)
   '!replace "memory.inc" "memory_virtual.inc"
   '!replace "stack.inc" "stack_compact.inc"
@@ -217,6 +221,8 @@ Sub main.init_console()
     ' Platform already supplied explicitly, do nothing.
   ElseIf Mm.HRes = 320 And (Mm.VRes = 480 Or Mm.VRes = 320) Then
     Cat cmdline$, " --platform=picocalc"
+  ElseIf Mm.HRes = 320 And Mm.VRes = 240 Then
+    Cat cmdline$, " --platform=320x240"
   ElseIf Mm.Device$ = "MMBasic for Windows" Or InStr(Mm.Device$, "Colour Maximite 2") Then
     Cat cmdline$, " --platform=cmm2"
   ElseIf InStr(Mm.Device$, "PicoMiteVGA") Then
@@ -229,6 +235,8 @@ Sub main.init_console()
     con.init(40, 26)
   ElseIf InStr(cmdline$, "--platform=cmm2") Then
     con.init(100, 50)
+  ElseIf InStr(cmdline$, "--platform=320x240") Then
+    con.init(40, 20)
   ElseIf InStr(cmdline$, "--platform=pmvga") Then
     con.init(80, 40)
   ElseIf InStr(cmdline$, "--platform=pmhdmi") Then
