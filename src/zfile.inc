@@ -65,7 +65,3 @@ Function fi_choose$(d$, fspec$)
   If Val(f$) > 0 And Val(f$) <= sz Then fi_choose$ = file.resolve$(d$, all$(Val(f$) - 1))
 
 End Function
-
-Function file.resolve$(parent$, f$)
-  file.resolve$ = parent$ + file.SEPARATOR + f$
-End Function

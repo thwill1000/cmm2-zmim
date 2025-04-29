@@ -5,6 +5,7 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
+sys.requires("file")
 sys.requires("string")
 sys.requires("script")
 sys.requires("objects")

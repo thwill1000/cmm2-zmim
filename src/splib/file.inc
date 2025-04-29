@@ -580,3 +580,8 @@ Function file.trim_extension$(f$)
   Next
   file.trim_extension$ = f$
 End Function
+
+' Resolves a file against a given parent.
+Function file.resolve$(parent$, f$)
+  file.resolve$ = parent$ + file.SEPARATOR + f$
+End Function

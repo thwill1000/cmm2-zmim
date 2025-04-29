@@ -2,6 +2,15 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 6.00
 
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
+sys.requires("console")
+sys.requires("file")
+sys.provides("debug")
+If sys.err$ <> "" Then Error sys.err$
+'!endif
+
 Dim bp(9) ' The addresses of up to 10 breakpoints, -1 for unset
           ' execute#num_bp should also be updated when these are changed
 

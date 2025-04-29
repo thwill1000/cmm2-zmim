@@ -2,6 +2,14 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 6.00
 
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
+sys.requires("file")
+sys.provides("zsave")
+If sys.err$ <> "" Then Error sys.err$
+'!endif
+
 ' Save/Restore game
 '
 ' NOTE: Use a single subroutine to cover both because of the 50 subroutine
