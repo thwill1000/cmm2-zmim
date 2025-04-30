@@ -1,24 +1,35 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
 
-' Constants for ob_rel()
-'!comment_if INLINE_CONSTANTS
-Const PARENT = 4
-Const SIBLING = 5
-Const CHILD = 6
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
+sys.provides("objects")
+If sys.err$ <> "" Then Error sys.err$
+'!endif
+
+'!if defined(INLINE_CONSTANTS)
+  '!replace PARENT 4
+  '!replace SIBLING 5
+  '!replace CHILD 6
+'!else
+  Const PARENT = 4
+  Const SIBLING = 5
+  Const CHILD = 6
 '!endif
 
 ' Gets/sets object attribute.
 Function ob_attr(o, a, s, x)
-  Local ad, m, y
+  Local ad, mask, y
 
   If o = 0 Then Exit Function ' return 0
 
   ad = rw(&h0A) + 62 + (o - 1) * 9 + a \ 8
   y = rb(ad)
-  m = 2^(7 - a Mod 8) ' mask
-  If s = 0 Then ob_attr = (y And m) > 0 : Exit Function
-  If x = 0 Then y = (y And (m Xor &hFF)) Else y = (y Or m)
+  mask = 2^(7 - a Mod 8) ' mask
+  If s = 0 Then ob_attr = (y And mask) > 0 : Exit Function
+  If x = 0 Then y = (y And (mask Xor &hFF)) Else y = (y Or mask)
   wb(ad, y)
   ob_attr = x
 End Function
@@ -39,12 +50,12 @@ Function ob_next_prop(o, p)
     Exit Function ' return 0
   ElseIf p = 0 Then
     ad = ob_prop_base(o)
-    ad = ad + 1 + 2 * rb(ad) ' skip length & description
+    Inc ad, 1 + 2 * rb(ad) ' skip length & description
   Else
     ad = ob_prop_addr(o, p)
     If ad = 0 Then Error "Property does not exist"
     x = rb(ad - 1)
-    ad = ad + 1 + x\32
+    Inc ad, 1 + x\32
   EndIf
 
   x = rb(ad)
@@ -67,13 +78,13 @@ End Function
 Function ob_prop_addr(o, p)
   Local ad, x
   ad = ob_prop_base(o)
-  ad = ad + 1 + 2 * rb(ad) ' Skip length & description
+  Inc ad, 1 + 2 * rb(ad) ' Skip length & description
   Do
     x = rb(ad)
     ' Mask with bottom 5 bits
     If (x And &b11111) = p Then ob_prop_addr = ad + 1 : Exit Function
     If (x And &b11111) < p Then ob_prop_addr = 0 : Exit Function
-    ad = ad + 2 + x\32
+    Inc ad, 2 + x\32
   Loop
 End Function
 
@@ -93,13 +104,17 @@ Function ob_prop_get(o, p)
 End Function
 
 Sub ob_prop_set(o, p, x)
-  Local a, sz
-  a = ob_prop_addr(o, p)
-  If a = 0 Then Error "Object " + Str$(o) + " does not have property " + Str$(p)
-  sz = ob_prop_len(a)
-  If sz < 0 Or sz > 2 Then Error "Object " + Str$(o) + " has length " + Str$(sz)
-  If sz = 1 Then wb(a, x And &hFF)
-  If sz = 2 Then ww(a, x)
+  Local ad, sz
+  ad = ob_prop_addr(o, p)
+  If ad = 0 Then Error "Object " + Str$(o) + " does not have property " + Str$(p)
+  Select Case ob_prop_len(ad)
+    Case 1
+      wb(ad, x And &hFF)
+    Case 2
+      ww(ad, x)
+    Case Else
+      Error "Object " + Str$(o) + " has length " + Str$(ob_prop_len(ad))
+  End Select
 End Sub
 
 Sub ob_print(o)
@@ -111,7 +126,7 @@ End Sub
 Sub ob_insert(o, d)
   Local c, _
 
-  ob_remove(o)                  ' remove object from its original parent
+  ob_remove(o)                 ' remove object from its original parent
   c = ob_rel(d, CHILD)         ' original child of destination
   _ = ob_rel(d, CHILD, 1, o)   ' object is new child of destination
   _ = ob_rel(o, PARENT, 1, d)  ' destination is new parent of object

@@ -1,5 +1,6 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
 
 Dim DICT_AD               ' base address of the dictionary
 Dim DICT_SEP$(1) Length 5 ' word separators, use an array so as to avoid
@@ -14,7 +15,7 @@ Sub di_init()
   DICT_AD = rw(&h08)
   ns = rb(DICT_AD) ' number of word separators
   Poke Var DICT_SEP$(0), 0, ns
-  For i = 1 To ns : Poke Var DICT_SEP$(0), i, rb(DICT_AD + i) : Next i
+  For i = 1 To ns : Poke Var DICT_SEP$(0), i, rb(DICT_AD + i) : Next
   DICT_ENTRY_LEN = rb(DICT_AD + ns + 1)
   DICT_ENTRY_COUNT = rw(DICT_AD + ns + 2)
   DICT_ENTRY_AD = DICT_AD + ns + 4
@@ -29,31 +30,31 @@ Function di_lookup(w$)
   i = 1 ' the index into w$ that is being processed
   Do While i < 7 And nz < 7
     If i > sz Then
-      z(nz) = 5 : nz = nz + 1 ' pad with Z-char 5
+      z(nz) = 5 : Inc nz ' pad with Z-char 5
     Else
       c = Asc(Mid$(w$, i, 1))
       j = Instr(ALPHABET$(0), Chr$(c)) - 1
       If j > -1 Then
         ' Character is in Alphabet 0
-        z(nz) = j : nz = nz + 1
+        z(nz) = j : Inc nz
       Else
         ' Because we know w$ is in lower-case we never have to search Alphabet 1
         ' which contains only upper-case A-Z
         j = Instr(ALPHABET$(2), Chr$(c)) - 1
         If j > -1 Then
           ' Character is in Alphabet 2
-          z(nz) = 5 : nz = nz + 1 ' shift into Alphabet 2
-          z(nz) = j : nz = nz + 1
+          z(nz) = 5 : Inc nz ' shift into Alphabet 2
+          z(nz) = j : Inc nz
         Else
           ' Encode character in ZSCII
-          z(nz) = 5 : nz = nz + 1 ' shift into Alphabet 2
-          z(nz) = 6 : nz = nz + 1 ' indicate ZSCII encoding
-          z(nz) = c \ 32 : nz = nz + 1 ' top 5 bits
-          z(nz) = c And &b11111 : nz = nz + 1 ' bottom 5 bits
+          z(nz) = 5 : Inc nz ' shift into Alphabet 2
+          z(nz) = 6 : Inc nz ' indicate ZSCII encoding
+          z(nz) = c \ 32 : Inc nz ' top 5 bits
+          z(nz) = c And &b11111 : Inc nz ' bottom 5 bits
         EndIf
       EndIf
     EndIf
-    i = i + 1
+    Inc i
   Loop
 
   ' Copy the first 6 Z-chars into 2 x 16-bit words x(0) and x(1)
@@ -62,14 +63,14 @@ Function di_lookup(w$)
   x(1) = z(3) * 1024 + z(4) * 32 + z(5) + 32768 ' set bit-15 at end of word
 
   ' Binary search to lookup the Z-string in the dictionary
-  Local a, lb, ub, y(1)
+  Local ad, lb, ub, y(1)
   lb = 0
   ub = DICT_ENTRY_COUNT - 1
   Do
     i = (lb + ub) \ 2
-    a = DICT_ENTRY_AD + DICT_ENTRY_LEN * i
-    y(0) = rw(a)
-    y(1) = rw(a + 2)
+    ad = DICT_ENTRY_AD + DICT_ENTRY_LEN * i
+    y(0) = rw(ad)
+    y(1) = rw(ad + 2)
     If x(0) > y(0) Then
       lb = i + 1
     ElseIf x(0) < y(0) Then
@@ -79,7 +80,7 @@ Function di_lookup(w$)
     ElseIf x(1) < y(1) Then
       ub = i - 1
     Else
-      di_lookup = a
+      di_lookup = ad
       ub = lb - 1
     EndIf
   Loop Until ub < lb

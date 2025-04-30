@@ -1,8 +1,14 @@
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
+
 Option Explicit On
 Option Default Integer
 
-'#Include "../mem_cmm2_fast.inc"
-#Include "../mem_cmm2_safe.inc"
+#Include "../splib/system.inc"
+#Include "../splib/string.inc"
+#Include "../splib/vt100.inc"
+#Include "../memory.inc"
 #Include "../dict.inc"
 #Include "../zstring.inc"
 #Include "../console.inc"
@@ -12,10 +18,10 @@ Dim a, s$, x
 
 Cls
 
-mem_init("/zmim/stories/minizork.z3")
+mem_init(Mm.Info(Path) + "../../stories/minizork.z3")
 di_init()
 
-Open "/zmim/src/tests/minizork.dic" For Input As #1
+Open Mm.Info(Path) + "minizork.dic" For Input As #1
 Timer = 0
 Do While Not Eof(#1)
   Line Input #1, s$
@@ -23,9 +29,9 @@ Do While Not Eof(#1)
   s$ = Mid$(s$, 8)
   x = di_lookup(s$)
   If x = a Then
-    cout(rpad$(s$, 8) + "=> " + Str$(x) + " - OK") : endl()
+    con.println(str.rpad$(s$, 8) + "=> " + Str$(x) + " - OK")
   Else
-    cout(rpad$(s$, 8) + "=> " + Str$(x) + " - ERROR") : endl()
+    con.println(str.rpad$(s$, 8) + "=> " + Str$(x) + " - ERROR")
   EndIf
 Loop
-cout("Dictionary test took " + Str$(Timer) + " ms") : endl()
+con.println("Dictionary test took " + Str$(Timer) + " ms")

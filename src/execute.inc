@@ -1,7 +1,18 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
 
-'!comment_if INLINE_CONSTANTS
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
+sys.requires("file")
+sys.requires("string")
+sys.requires("script")
+sys.requires("objects")
+sys.provides("execute")
+If sys.err$ <> "" Then Error sys.err$
+'!endif
+
 Const E_OK = 0            ' last operation succeeded
 Const E_UNKNOWN = 1       ' last operation unkown
 Const E_UNIMPLEMENTED = 2 ' last operation implemented
@@ -9,7 +20,6 @@ Const E_BREAK = 3         ' TODO: document
 Const E_QUIT = 4          ' last operation was a "Quit"
 Const E_DEBUG = 5         ' TODO: document
 Const E_REPEAT = 6        ' repeat last operation
-'!endif
 
 Dim fp      ' frame pointer; points to the stack element that is the first
             ' element for the current routine. This has the value &FFFF if
@@ -25,7 +35,7 @@ Function exec(tr)
   pc_old = pc : sp_old = sp
 
   op = decode(tr)
-  num_ops = num_ops + 1
+  Inc num_ops
   If op < &h80 Then
     exec = ex_2op()
   ElseIf op < &hB0 Then
@@ -39,9 +49,9 @@ Function exec(tr)
   EndIf
 
   If exec = E_UNKNOWN Then
-    cout("Unsupported instruction " + fmt_hex$(op, 2)) : endl()
+    con.println("Unsupported instruction " + fmt_hex$(op, 2))
   ElseIf exec = E_UNIMPLEMENTED Then
-    cout("Unimplemented instruction " + fmt_hex$(op, 2)) : endl()
+    con.println("Unimplemented instruction " + fmt_hex$(op, 2))
   EndIf
 
   If exec <> E_OK Then pc = pc_old : sp = sp_old
@@ -63,35 +73,35 @@ Function ex_2op()
 
   ElseIf oc = &h2 Then
     ' JL
-    If a > 32767 Then a = a - 65536
-    If b > 32767 Then b = b - 65536
+    If a > 32767 Then Inc a, -65536
+    If b > 32767 Then Inc b, -65536
     ex_branch(a < b, br)
 
   ElseIf oc = &h3 Then
     ' JG
-    If a > 32767 Then a = a - 65536
-    If b > 32767 Then b = b - 65536
+    If a > 32767 Then Inc a, -65536
+    If b > 32767 Then Inc b, -65536
     ex_branch(a > b, br)
 
   ElseIf oc = &h4 Then
     ' DEC_CHK
     x = vget(a)
-    If x > 32767 Then x = x - 65536
-    If b > 32767 Then b = b - 65536
-    x = x - 1
+    If x > 32767 Then Inc x, -65536
+    If b > 32767 Then Inc b, -65536
+    Inc x, -1
     y = x < b
-    If x < 0 Then x = 65536 + x
+    If x < 0 Then Inc x, 65536
     vset(a, x)
     ex_branch(y, br)
 
   ElseIf oc = &h5 Then
     ' INC_CHK
     x = vget(a)
-    If x > 32767 Then x = x - 65536
-    If b > 32767 Then b = b - 65536
-    x = x + 1
+    If x > 32767 Then Inc x, -65536
+    If b > 32767 Then Inc b, -65536
+    Inc x
     y = x > b
-    If x < 0 Then x = 65536 + x
+    If x < 0 Then Inc x, 65536
     vset(a, x)
     ex_branch(y, br)
 
@@ -160,8 +170,8 @@ Function ex_2op()
     vset(st, x)
 
   ElseIf oc < &h19 Then
-    If a > 32767 Then a = a - 65536
-    If b > 32767 Then b = b - 65536
+    If a > 32767 Then Inc a, -65536
+    If b > 32767 Then Inc b, -65536
 
     If oc = &h14 Then
       ' ADD
@@ -180,7 +190,7 @@ Function ex_2op()
       x = a Mod b
     EndIf
 
-    If x < 0 Then x = 65536 + x
+    If x < 0 Then Inc x, 65536
     vset(st, x)
 
   Else
@@ -222,17 +232,17 @@ Function ex_1op()
   ElseIf oc = &h5 Then
     ' INC
     x = vget(a)
-    If x > 32767 Then x = x - 65536
-    x = x + 1
-    If x < 0 Then x = 65536 + x
+    If x > 32767 Then Inc x, -65536
+    Inc x
+    If x < 0 Then Inc x, 65536
     vset(a, x)
 
   ElseIf oc = &h6 Then
     ' DEC
     x = vget(a)
-    If x > 32767 Then x = x - 65536
-    x = x - 1
-    If x < 0 Then x = 65536 + x
+    If x > 32767 Then Inc x, -65536
+    Inc x, -1
+    If x < 0 Then Inc x, 65536
     vset(a, x)
 
   ElseIf oc = &h7 Then
@@ -253,8 +263,8 @@ Function ex_1op()
 
   ElseIf oc = &hC Then
     ' JUMP
-    If a And &h8000 Then a = a - 65536
-    pc = pc + a - 2
+    If a And &h8000 Then Inc a, -65536
+    Inc pc, a - 2
 
   ElseIf oc = &hD Then
     ' PRINT_PADDR
@@ -294,7 +304,7 @@ Function ex_0op()
   ElseIf oc = &h3 Then
     ' PRINT_RET
     print_zstring(pc)
-    endl()
+    con.endl()
     ex_return(1)
 
   ElseIf oc = &h4 Then
@@ -302,8 +312,8 @@ Function ex_0op()
 
   ElseIf oc = &h5 Then
     ' SAVE
-    If script AND S_READ Then
-      cout("IGNORED 'save' command read from script") : endl()
+    If con.fd_in Then
+      con.println("IGNORED 'save' command read from script")
     Else
       x = zsave()
       ex_branch(x, br)
@@ -311,19 +321,19 @@ Function ex_0op()
 
   ElseIf oc = &h6 Then
     ' RESTORE
-    If script AND S_READ Then
-      cout("IGNORED 'restore' command read from script") : endl()
+    If con.fd_in Then
+      con.println("IGNORED 'restore' command read from script")
     Else
       x = zsave(1)
     EndIf
 
   ElseIf oc = &h7 Then
     ' RESTART
-    If script AND S_READ Then
-      cout("IGNORED 'restart' command read from script") : endl()
+    If con.fd_in Then
+      con.println("IGNORED 'restart' command read from script")
     Else
       main_init()
-      For x = 0 To 10 : endl() : Next x ' this will clear the console
+      For x = 0 To 10 : con.endl() : Next ' this will clear the console
     EndIf
 
   ElseIf oc = &h8 Then
@@ -333,7 +343,7 @@ Function ex_0op()
 
   ElseIf oc = &h9 Then
     ' POP - discards top item in stack
-    sp = sp - 1
+    Inc sp, -1
 
   ElseIf oc = &hA Then
     ' QUIT
@@ -341,7 +351,7 @@ Function ex_0op()
 
   ElseIf oc = &hB Then
     ' NEW_LINE
-    endl()
+    con.endl()
 
   ElseIf oc = &hC Then
     ' SHOW_STATUS
@@ -382,18 +392,18 @@ Function ex_varop()
 
   ElseIf oc = &h5 Then
     ' PRINT_CHAR
-    cout(Chr$(oa(0)))
+    con.print(Chr$(oa(0)))
 
   ElseIf oc = &h6 Then
     ' PRINT_NUM
     x = oa(0)
-    If x > 32767 Then x = x - 65536
-    cout(Str$(x))
+    If x > 32767 Then Inc x, -65536
+    con.print(Str$(x))
 
   ElseIf oc = &h7 Then
     ' RANDOM
     x = oa(0)
-    If x > 32767 Then x = x - 65536
+    If x > 32767 Then Inc x, -65536
     x = ex_random(x)
     vset(st, x)
 
@@ -436,7 +446,10 @@ End Sub
 Sub ex_return(x)
   Local st, _
   sp = fp + 4
-  pc = st_pop() * &h10000 + st_pop()
+  ' This single line version won't work if inlining st_pop():
+  ' pc = st_pop() * &h10000 + st_pop()
+  pc = &h10000 * st_pop()
+  Inc pc, st_pop()
   st = st_pop()
   fp = st_pop()
   vset(st, x)
@@ -460,7 +473,7 @@ Sub ex_call(st)
   For i = 1 To nl
     x = rp() * 256 + rp()
     If i < onum Then st_push(oa(i)) Else st_push(x)
-  Next i
+  Next
 
   If ztrace Then dmp_routine(2 * oa(0)) : dmp_stack()
 End Sub
@@ -470,7 +483,7 @@ Function ex_read(text_buf, parse_buf)
 
   t = Timer
 
-  s$ = LCase$(cin$("> ", 1))
+  s$ = LCase$(con.in$("> ", 1))
   If Left$(s$, 1) = "*" Then ex_read = ex_special(s$)
 
   Timer = t
@@ -479,9 +492,9 @@ Function ex_read(text_buf, parse_buf)
 
   n = Len(s$)
   ' TODO: check for input too long
-  For i = 1 To n : wb(text_buf + i, Peek(Var s$, i)) : Next i
+  For i = 1 To n : wb(text_buf + i, Peek(Var s$, i)) : Next
   wb(text_buf + n + 1, 0)
-  s$ = s$ + " "
+  Cat s$, " "
 
   For i = 1 To n + 1
     c = Peek(Var s$, i)
@@ -491,7 +504,7 @@ Function ex_read(text_buf, parse_buf)
         ww(parse_buf + 2 + wc * 4, ad)
         wb(parse_buf + 4 + wc * 4, Len(word$))
         wb(parse_buf + 5 + wc * 4, i - Len(word$)) ' position in 'text_buf'
-        wc = wc + 1
+        Inc wc
         word$ = ""
       EndIf
       If c <> &h20 Then ' ASCII code for space
@@ -499,12 +512,12 @@ Function ex_read(text_buf, parse_buf)
         ww(parse_buf + 2 + wc * 4, ad)
         wb(parse_buf + 4 + wc * 4, 1)
         wb(parse_buf + 5 + wc * 4, i - 1) ' position in 'text_buf'
-        wc = wc + 1
+        Inc wc
       EndIf
     Else
-      word$ = word$ + Chr$(c)
+      Cat word$, Chr$(c)
     EndIf
-  Next i
+  Next
 
   wb(parse_buf + 1, wc)
 
@@ -524,25 +537,73 @@ Function ex_special(cmd$)
 '!endif
 
   ElseIf cmd$ = "*credits" Then
-    cecho(ss$(RESOURCES_DIR) + "\credits.txt")
+    con.print_file(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"), 1)
 
-  ElseIf cmd$ = "*replay" Then
-    If script AND S_READ Then
-      cout("IGNORED '*replay' command read from script")
-    Else
-      cout("Select a script file from '")
-      cout(ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE) + "':")
-      endl()
-      f$ = fi_choose$(ss$(SCRIPT_DIR) + "\" + ss$(STORY_FILE), "*.scr")
-      If f$ <> "" Then
-        Open f$ For Input As #3
-        script = script Or S_READ
-      EndIf
-    EndIf
-    endl()
+  ElseIf cmd$ = "*eof" Then
+    con.println("End of script.")
+    con.endl()
+
+  ElseIf InStr(cmd$, "*more") = 1 Then
+    Select Case str.trim$(Mid$(cmd$, Len("*more") + 1))
+      Case "", "on"
+        con.more = 1
+        con.println("Paged output enabled.")
+      Case "off"
+        con.more = 0
+        con.println("Paged output disabled.")
+      Case Else
+        con.println("Invalid '*more' command.")
+    End Select
+    con.endl()
+
+  ElseIf InStr(cmd$, "*record") = 1 Then
+    Select Case str.trim$(Mid$(cmd$, Len("*record") + 1))
+      Case "", "on"
+        script.record_on()
+      Case "off"
+        script.record_off()
+      Case Else
+        con.println("Invalid '*record' command.")
+    End Select
+    con.endl()
+
+  ElseIf InStr(cmd$, "*replay") = 1 Then
+    Select Case str.trim$(Mid$(cmd$, Len("*replay") + 1))
+      Case "", "on"
+        script.replay_on()
+      Case "off"
+        script.replay_off()
+      Case Else
+        con.println("Invalid '*replay' command.")
+    End Select
+    con.endl()
+
+  ElseIf cmd$ = "*screenshot" Then
+    ex_screenshot()
+
+  ElseIf InStr(cmd$, "*spin") = 1 Then
+    Select Case str.trim$(Mid$(cmd$, Len("*spin") + 1))
+      Case "", "on"
+        con.spin_enabled = 1
+        con.println("Spinning cursor enabled.")
+      Case "off"
+        con.spin_enabled = 0
+        con.println("Spinning cursor disabled.")
+      Case Else
+        con.println("Invalid '*spin' command.")
+    End Select
+    con.endl()
 
   ElseIf cmd$ = "*status" Then
     ex_show_status()
+
+  ElseIf cmd$ = "*save" Then
+    If zsave(0) Then con.println("Ok.") Else con.println("Save failed.")
+    con.endl()
+
+  ElseIf cmd$ = "*restore" Then
+    If zsave(1) Then con.println("Ok.") Else con.println("Restore failed.")
+    con.endl()
 
   Else
     ' Let the game's parser deal with the command
@@ -550,12 +611,11 @@ Function ex_special(cmd$)
 
   EndIf
 
-  If ex_special = E_REPEAT Then cout(">")
+  If ex_special = E_REPEAT Then con.print(">")
 
 End Function
 
 Function ex_random(range)
-'!comment_if TARGET_CMM1
   Static x = 7
   Static a = 1103515245 ' a, c and m are same values as used by glibc
   Static c = 12345
@@ -572,25 +632,33 @@ Function ex_random(range)
   x = (a * x + c) Mod m
 
   ex_random = 1 + CInt((range - 1) * (x / m))
-'!endif
-'!uncomment_if TARGET_CMM1
-'  If range = 0 Then
-'    Randomize Timer
-'    Exit Function
-'  ElseIf range < 0 Then
-'    Randomize Abs(range)
-'    Exit Function
-'  EndIf
-'
-'  ex_random = 1 + CInt((range - 1) * Rnd())
-'!endif
 End Function
 
 Sub ex_show_status()
   Local x
-  x = vget(&h10) : ob_print(x) : cout(", ")
-  x = vget(&h11) : cout("Score: " + Str$(x) + ", ")
-  x = vget(&h12) : cout("Moves: " + Str$(x))
-  endl()
+  x = vget(&h10) : ob_print(x) : con.print(", ")
+  x = vget(&h11) : con.print("Score: " + Str$(x) + ", ")
+  x = vget(&h12) : con.print("Moves: " + Str$(x))
+  con.endl()
 End Sub
 
+Sub ex_screenshot()
+  Local f$, i = 0, root$ = Cwd$
+  Do
+    Inc i
+    f$ = file.resolve$(root$, ss$(STORY_FILE) + "_" + Str$(i) + ".bmp")
+  Loop While file.exists%(f$)
+  If InStr(Mm.Device$, "PicoMite") Then
+    On Error Skip
+    Save Compressed Image f$
+  Else
+    On Error Skip
+    Save Image f$
+  EndIf
+  If Mm.ErrNo Then
+    con.println("Screenshot failed or is not supported.")
+  Else
+    con.println("Saved '" + f$ + "'")
+  EndIf
+  con.endl()
+End Sub

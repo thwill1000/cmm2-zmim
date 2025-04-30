@@ -1,12 +1,17 @@
-' Copyright (c) 2019-2023 Thomas Hugo Williams
-' For Colour Maximite 1, MMBasic 4.5
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
 
-'!define USING_VIRTUAL_MEMORY
+'!define USE_VIRTUAL_MEMORY
 
-'!comment_if INLINE_CONSTANTS
-Const PAGE_SIZE = 512
-Const NUM_PHYSICAL_PAGES = 88
-Const NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
+'!if defined(INLINE_CONSTANTS)
+  '!replace PAGE_SIZE 512
+  '!replace NUM_PHYSICAL_PAGES 80
+  '!replace NUM_VIRTUAL_PAGES 256
+'!else
+  Const PAGE_SIZE = 512
+  Const NUM_PHYSICAL_PAGES = 80
+  Const NUM_VIRTUAL_PAGES = 128 * 1024 \ PAGE_SIZE
 '!endif
 
 Dim FILE_LEN                          ' length of z-machine file
@@ -25,27 +30,25 @@ Dim next_page                         ' next page of physical memory to use on
 
 ' Reads a byte from 'pc' and increments 'pc'
 Function rp()
-  Local pp, vp
-'!comment_if NO_DEBUG
+'!if !defined(NO_EXTRA_CHECKS)
   If pc < 0 Or pc >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
 '!endif
-  vp = pc \ PAGE_SIZE
-  pp = vp_to_pp(vp)
-  If pp = 0 Then pp = mem_load(vp) : pf = pf + 1
+  Const vp = pc \ PAGE_SIZE
+  Local pp = vp_to_pp(vp)
+  If pp = 0 Then pp = mem_load(vp) : Inc pf
   rp = Peek(Var m(0), pp * PAGE_SIZE + (pc Mod PAGE_SIZE))
-  pc = pc + 1
+  Inc pc
 End Function
 
 ' Reads a byte from 'a' but DOES NOT increment a
 Function rb(a)
-  Local pp, vp
-'!comment_if NO_DEBUG
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= FILE_LEN Then Error "Invalid address: " + fmt_hex$(a)
 '!endif
   If a < BASE_STATIC Then rb = Peek(Var m(0), a) : Exit Function
-  vp = a \ PAGE_SIZE
-  pp = vp_to_pp(vp)
-  If pp = 0 Then pp = mem_load(vp) : pf = pf + 1
+  Const vp = a \ PAGE_SIZE
+  Local pp = vp_to_pp(vp)
+  If pp = 0 Then pp = mem_load(vp) : Inc pf
   rb = Peek(Var m(0), pp * PAGE_SIZE + (a Mod PAGE_SIZE))
 End Function
 
@@ -56,7 +59,7 @@ End Function
 
 ' Writes byte 'x' to 'a'
 Sub wb(a, x)
-'!comment_if NO_DEBUG
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= BASE_STATIC Then Error "Invalid address: " + fmt_hex$(a)
   If (x And &hFF) <> x Then Error "Invalid write value: " + Str$(x)
 '!endif
@@ -65,7 +68,7 @@ End Sub
 
 ' Writes 16-bit word 'x' to 'a'
 Sub ww(a, x)
-'!comment_if NO_DEBUG
+'!if !defined(NO_EXTRA_CHECKS)
   If a < 0 Or a >= BASE_STATIC - 1 Then Error "Invalid address: " + fmt_hex$(a)
   If (x And &hFFFF) <> x Then Error "Invalid write value: " + Str$(x)
 '!endif
@@ -76,27 +79,27 @@ End Sub
 ' Loads virtual page 'vp' from '$file'.
 ' @return physical page number
 Function mem_load(vp)
-  Local ad, buf$, buf_sz, i, pp, to_read
-  pp = next_page
+  Local buf$, i
+  Local pp = next_page
 
   ' TODO: Implement some form of Least Recently Used algorithm.
-  next_page = next_page + 1
+  Inc next_page
   If next_page = NUM_PHYSICAL_PAGES Then next_page = FIRST_SWAP_PAGE
 
   ' TODO: Should the file be opened once globally and kept open until exit?
   Open MEM_FILE$ For random As #1
   Seek #1, vp * PAGE_SIZE + 1
-  ad = pp * PAGE_SIZE
-  to_read = PAGE_SIZE
-  buf_sz = 255
+  Local ad = pp * PAGE_SIZE
+  Local to_read = PAGE_SIZE
+  Local buf_sz = 255
   Do While to_read > 0
     If to_read < 255 Then buf_sz = to_read
     buf$ = Input$(buf_sz, 1)
     For i = 1 To buf_sz
       Poke Var m(0), ad, Peek(Var buf$, i)
-      ad = ad + 1
-    Next i
-    to_read = to_read - buf_sz
+      Inc ad
+    Next
+    Inc to_read,  -buf_sz
   Loop
   Close #1
 
@@ -112,10 +115,10 @@ Sub mem_init(f$)
 
   MEM_FILE$ = f$
 
-  cout("Loading '" + MEM_FILE$ + "'") : endl()
+  con.println("Loading '" + MEM_FILE$ + "'")
 
   ' Load page 0 which contains the header
-  cout("  Header page: 0") : endl()
+  con.println("  Header page: 0")
   next_page = 0
   If mem_load(0) <> 0 Then Error
 
@@ -127,12 +130,12 @@ Sub mem_init(f$)
   ' Initialise dynamic memory
   FIRST_SWAP_PAGE = BASE_STATIC \ PAGE_SIZE
   If BASE_STATIC Mod PAGE_SIZE > 0 Then FIRST_SWAP_PAGE = FIRST_SWAP_PAGE + 1
-  cout("  Dynamic pages: ")
+  con.print("  Dynamic pages: ")
   For i = 1 To FIRST_SWAP_PAGE - 1
-    If i > 1 Then cout(", ")
-    cout(Str$(i))
+    If i > 1 Then con.print(", ")
+    con.print(Str$(i))
     If mem_load(i) <> i Then Error
-  Next i
-  endl()
-  cout("  Paged memory starts at page " + Str$(FIRST_SWAP_PAGE)) : endl()
+  Next
+  con.endl()
+  con.println("  Paged memory starts at page " + Str$(FIRST_SWAP_PAGE))
 End Sub

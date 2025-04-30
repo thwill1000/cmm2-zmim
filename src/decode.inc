@@ -1,5 +1,6 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
 
 Dim pc       ' the program counter
 
@@ -17,19 +18,19 @@ Sub de_init()
 
   Read x
   Dim OP0$(x - 1) LENGTH 12
-  For i = 0 To x - 1 : Read s$ : OP0$(i) = de_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : OP0$(i) = de_format$(s$) : Next
 
   Read x
   Dim OP1$(x - 1) LENGTH 14
-  For i = 0 To x - 1 : Read s$ : OP1$(i) = de_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : OP1$(i) = de_format$(s$) : Next
 
   Read x
   Dim OP2$(x - 1) LENGTH 15
-  For i = 0 To x - 1 : Read s$ : OP2$(i) = de_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : OP2$(i) = de_format$(s$) : Next
 
   Read x
   Dim OPV$(x - 1) LENGTH 14
-  For i = 0 To x - 1 : Read s$ : OPV$(i) = de_format$(s$) : Next i
+  For i = 0 To x - 1 : Read s$ : OPV$(i) = de_format$(s$) : Next
 End Sub
 
 ' Decode next instruction into global variables.
@@ -38,7 +39,7 @@ End Sub
 Function decode(tr)
   Local op, s$
 
-  If tr Then cout(Hex$(pc) + ": ")
+  If tr Then con.print(Hex$(pc) + ": ")
 
   op = rp()
 
@@ -127,7 +128,7 @@ Sub de_var(op)
       onum = onum - 1
     EndIf
     x = x * 4
-  Next i
+  Next
 End Sub
 
 ' Reads branch offset.
@@ -167,7 +168,7 @@ Function de_format$(a$)
   EndIf
   p = Instr(a$, " ")
   If p = 0 Then p = Len(a$) + 1
-  s$ = s$ + Left$(a$, p - 1)
+  Cat s$, Left$(a$, p - 1)
   de_format$ = s$
 End Function
 

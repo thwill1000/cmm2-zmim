@@ -1,5 +1,6 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-2025 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For MMBasic 6.00
 
 Dim GLOBAL_VAR ' base address for global variables
 
@@ -9,7 +10,7 @@ Function vget(i)
   If i = 0 Then
     vget = st_pop()
   ElseIf i < &h10 Then
-    vget = stack(fp + i + 4)
+    vget = st_peek(fp + i + 4)
   ElseIf i <= &hFF Then
     vget = rw(GLOBAL_VAR + 2 * (i - &h10))
   Else
@@ -19,15 +20,14 @@ End Function
 
 ' Sets variable 'i'.
 ' If i = 0 then pushes the value onto the stack.
-Sub vset(i, x)
+Sub vset(i, v)
   If i = 0 Then
-    st_push(x)
+    st_push(v)
   ElseIf i < &h10 Then
-    stack(fp + i + 4) = x
+    st_poke(fp + i + 4, v)
   ElseIf i <= &hFF Then
-    ww(GLOBAL_VAR + 2 * (i - &h10), x)
+    ww(GLOBAL_VAR + 2 * (i - &h10), v)
   Else
     Error "Unknown variable " + Str$(i)
   EndIf
 End Sub
-

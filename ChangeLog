@@ -1,6 +1,32 @@
 ChangeLog
 ---------
 
+Version 3.5.0 - 1-May-2025:
+ - Added support for new platforms:
+   - MMBasic for Linux.
+   - MMBasic for Windows.
+   - PicoMiteVGA and PicoMiteHDMI including USB versions.
+   - PicoCalc (third party PicoMite variant).
+   - Note that due to RAM limitations a "virtual memory" implementation is
+     used when running on PicoMite RP2040 platforms making them slower.
+ - Added command history to the prompt.
+   - This is accessed via the Up & Down cursor keys.
+   - Under the hood the console support has been replaced with the more
+     advanced version that I developed for the "Scott Adams Adventure
+     Interpreter" (SAAINT).
+ - Added *MORE [ON | OFF] meta-command to enable/disable paged output.
+ - Added *RECORD [ON | OFF] and *REPLAY [ON | OFF] meta-commands for recording
+   and replaying scripts.
+   - Script files recorded by previous versions are now invalid.
+ - Added *SCREENSHOT meta-command for generating .bmp screen-shots.
+   - Not currently supported when running from the MMBasic for Linux console.
+ - Added *SPIN [ON | OFF] meta-command to enable/disable display of spinning
+   cursor when Z-MIM is "thinking". The spinning cursor is enabled by default
+   on PicoMite platforms.
+ - Removed Colour Maximite 1 support; it was much too slow on the CMM1 to be
+   playable and in any case that platform is now long superseded by the CMM2
+   and PicoMite.
+
 Release 3.1:
  - Fixed bug where "Integer array too small" array reported when restarting
    a story (Issue #21).
