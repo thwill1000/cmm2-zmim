@@ -31,8 +31,8 @@ Z-MIM is distributed with four free story files that were distributed by Infocom
 
 Other story files can be found legitimately on the internet:
  - hhgg.z3 - The Hitchikers Guide To The Galaxy
-    - http://www.douglasadams.com/creations/hhgg.z3
-    - link is to a file on the official Douglas Adams website. 
+    - https://github.com/BYU-PCCL/z-machine-games/raw/refs/heads/master/jericho-game-suite/hhgg.z3
+    - __[1-May-2025]__ the old link on the official [Douglas Adams website](http://www.douglasadams.com/creations/hhgg.z3) now seems to be moribund.
  - curses-r10.z3 - Curses, An Interactive Diversion by Graham Nelson.
     - https://ifarchive.org/if-archive/games/zcode/old/curses-r10.z3
     - this is highly regarded.
