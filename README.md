@@ -91,13 +91,13 @@ The interpreter provides a number of internal meta-commands all prefixed with a 
      - halts replaying.
      - only makes sense if inserted manually into a script file to prevent it from replaying to its end.
  - `*restore`
+     - __TAKE NOTE__ that this is provided to support any stories that __DO NOT__ provide their own `restore` command (without the `*` prefix) which should be used in preference.
      - restores story progress previously saved with the `*save` command.
-     - should work even if the story does not implement its own `restore` command.
  - `*save`
+     - __TAKE NOTE__ that this is provided to support any stories that __DO NOT__ provide their own `save` command (without the `*` prefix) which should be used in preference.
      - saves story progress.
-     - should work even if the story does not implement its own `save` command.
      - the save format is a naive dump of the story's stack and dynamic memory area, see [src/zsave.inc](src/zsave.inc).
-     - __WARNING!__ mixing the use of `*save` and `*restore` with any `save` and `restore` commands implemented by the story may produce "odd" behaviour even though the same format is used by both.
+     - __WARNING!__ mixing the use of `*save` and `*restore` with any `save` and `restore` commands provided by the story may produce "odd" behaviour even though the same format is used by both.
  - `*screenshot`
      - generates a .BMP screenshot.
      - not available on all platforms.
