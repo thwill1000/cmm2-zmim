@@ -101,6 +101,12 @@ Const SCRIPT_DIR = 3
 Const STORY_DIR = 4
 Const STORY_FILE = 5
 
+Option Break 4
+On Key 3, end_game()
+
+main()
+end_game()
+
 Sub main_init()
   Local i, x
 
@@ -122,7 +128,6 @@ Sub main_init()
   For i = Bound(stack(), 0) To Bound(stack(), 1) : stack(i) = 0 : Next
   sp = 0
   fp = &hFFFF
-
 End Sub
 
 Sub main()
@@ -213,9 +218,6 @@ Sub main()
   con.close_in()
 End Sub
 
-main()
-End
-
 Sub main.init_console()
   Local cmdline$ = LCase$(Mm.CmdLine$)
 
@@ -265,3 +267,11 @@ Function get_install_dir$()
     get_install_dir$ = file.get_parent$(get_install_dir$)
   EndIf
 End Function
+
+Sub end_game()
+  If InStr(Mm.CmdLine$, "--shell") Then
+    Pause 2000
+    sys.run_shell()
+  EndIf
+  End
+End Sub
