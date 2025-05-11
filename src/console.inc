@@ -512,6 +512,21 @@ Sub con.spin()
   EndIf
 End Sub
 
+' Sets the font and updates the console width and height.
+Sub con.set_font(size%)
+  If size% = Mm.Info(Font) Then Exit Sub
+  con.endl()
+  Font size%
+  con.WIDTH = Mm.Info(HRes) \ Mm.Info(FontWidth)
+  con.HEIGHT = Mm.Info(VRes) \ Mm.Info(FontHeight)
+  wb(&h20, con.HEIGHT)
+  wb(&h21, con.WIDTH)
+  If Mm.Info(Device X) = "MMB4L" Then Console Resize con.WIDTH, con.HEIGHT
+  Local x%, y%
+  con.get_pos(x%, y%)
+  Print @(x% * Mm.Info(FontWidth), (y% - 1) * Mm.Info(FontHeight))
+End Sub
+
 Sub con.get_pos(x%, y%)
   con.flush()
   x% = Mm.Info(HPos) \ Mm.Info(FontWidth)

@@ -545,6 +545,9 @@ Function ex_special(cmd$)
     con.println("End of script.")
     con.endl()
 
+  ElseIf Field$(cmd$, 1, " ") = "*font" Then
+    ex_special = ex_font(cmd$)
+
   ElseIf InStr(cmd$, "*more") = 1 Then
     Select Case str.trim$(Mid$(cmd$, Len("*more") + 1))
       Case "", "on"
@@ -706,3 +709,25 @@ Sub ex_screenshot()
   EndIf
   con.endl()
 End Sub
+
+Function ex_font(cmd$)
+  ex_font = E_REPEAT
+  If Field$(cmd$, 3, " ") <> "" Then
+    con.println("Invalid '*font' command.")
+    con.endl()
+  Else
+    Select Case Field$(cmd$, 2, " ")
+      Case "small"
+        con.set_font(7)
+        ex_font = E_OK
+      Case "medium"
+        con.set_font(1)
+        ex_font = E_OK
+      Case Else
+        con.println("Unknown font.")
+        con.endl()
+    End Select
+  EndIf
+
+  if ex_font = E_OK Then cmd$ = "look"
+End Function
