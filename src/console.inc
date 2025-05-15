@@ -492,7 +492,7 @@ End Function
 Sub con.show_cursor(show%)
   If con.get_type%() And con.SCREEN% Then
     Local x% = Mm.Info(HPos), y% = Mm.Info(VPos) + Mm.Info(FontHeight) - 1
-    Line x%, y%, x% + Mm.Info(FontWidth), y%, 1, Choice(show%, RGB(White), RGB(Black))
+    Line x%, y%, x% + Mm.Info(FontWidth), y%, 1, Choice(show%, Mm.Info(FColour), Mm.Info(BColour))
   EndIf
 End Sub
 
