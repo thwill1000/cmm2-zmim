@@ -1,6 +1,12 @@
 ChangeLog
 ---------
 
+Version 3.6.0 - ??-???-2025:
+ - Added status line.
+ - Added *FONT [SMALL | MEDIUM] meta-command.
+ - Fixed bug where cursor colour reverted was always white rather than using
+   the display foreground colour.
+
 Version 3.5.0 - 1-May-2025:
  - Added support for new platforms:
    - MMBasic for Linux.
