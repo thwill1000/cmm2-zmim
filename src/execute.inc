@@ -481,6 +481,8 @@ End Sub
 Function ex_read(text_buf, parse_buf)
   Local ad, c, i, n, word$, s$, t, wc
 
+  ex_show_status()
+
   t = Timer
 
   s$ = LCase$(con.in$("> ", 1))
@@ -595,7 +597,7 @@ Function ex_special(cmd$)
     con.endl()
 
   ElseIf cmd$ = "*status" Then
-    ex_show_status()
+    ex_show_status(1)
 
   ElseIf cmd$ = "*save" Then
     If zsave(0) Then con.println("Ok.") Else con.println("Save failed.")
@@ -634,12 +636,54 @@ Function ex_random(range)
   ex_random = 1 + CInt((range - 1) * (x / m))
 End Function
 
-Sub ex_show_status()
-  Local x
-  x = vget(&h10) : ob_print(x) : con.print(", ")
-  x = vget(&h11) : con.print("Score: " + Str$(x) + ", ")
-  x = vget(&h12) : con.print("Moves: " + Str$(x))
-  con.endl()
+' @param  on_console%  If 1 then as well as updating the status line also write
+'                      the status to the console.
+Sub ex_show_status(on_console%)
+  Local s$(1) Length 120, x, y
+
+  con.get_pos(x, y)
+
+  ' Capture the room name.
+  con.disable_flush% = 1
+  ob_print(vget(&h10))
+  s$(0) = Left$(con.buf$, 120)
+  con.buf$ = ""
+  con.disable_flush% = 0
+
+  ' Truncate room name to console width.
+  If Len(s$(0)) > con.WIDTH Then s$(0) = Left$(s$(0), con.WIDTH - 3) + "..."
+
+  ' Construct the score/moves/time string.
+  If rb(&h01) And &b00000010 Then
+    s$(1) = "Time: " + Str$(vget(&h11)) + ":" + Str$(vget(&h12))
+  Else
+    s$(1) = "Score: " + Str$(vget(&h11)) + ", Moves: " + Str$(vget(&h12))
+  EndIf
+
+  If on_console% Then
+    con.println(s$(0) + ", " + s$(1))
+    con.println
+  EndIf
+
+  ' If the status line would be too long then try the short form.
+  If Len(s$(0)) + Len(s$(1)) + 1 >= con.WIDTH Then
+    If rb(&h01) And &b00000010 Then
+      s$(1) = Str$(vget(&h11)) + ":" + Str$(vget(&h12))
+    Else
+      s$(1) = Str$(vget(&h11)) + "/" + Str$(vget(&h12))
+    EndIf
+  EndIf
+
+  ' If still too long then don't display score/moves/time.
+  If Len(s$(0)) + Len(s$(1)) + 1 >= con.WIDTH Then s$(1) = ""
+
+  con.set_pos(0, 0)
+  con.invert()
+  con.print(s$(0))
+  con.print(Space$(con.WIDTH - Len(s$(0)) - Len(s$(1))))
+  con.println(s$(1))
+  con.set_pos(x, y)
+  con.invert()
 End Sub
 
 Sub ex_screenshot()

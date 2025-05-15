@@ -10,6 +10,8 @@ If InStr(Mm.Device$, "PicoMite") Then
   If Mm.Ver < 6.0 Then Error "PicoMite firmware v6.0 or later required"
 EndIf
 
+If Mm.Device$ = "MMB4L" Then Option Resolution Pixel
+
 '!if defined(LOW_MEMORY)
   '!replace "memory.inc" "memory_virtual.inc"
   '!replace "stack.inc" "stack_compact.inc"
@@ -83,7 +85,7 @@ EndIf
 
 ' ss$ is for string "constants" that I don't want to take up 256 bytes on the
 ' micro-controller devices.
-If InStr(Mm.Info(Device), "PicoMite") Then
+If InStr(Mm.Info(Device X), "PicoMite") Then
   Dim ss$(5) Length 32
 Else
   Dim ss$(5)
@@ -120,7 +122,7 @@ Sub main_init()
 
   ' Hack header bits
   x = rb(&h01)
-  x = x Or  &b00010000 ' set bit 4 - status line not available
+'  x = x Or  &b00010000 ' set bit 4 - status line not available
   x = x And &b10011111 ' clear bits 5 & 6 - no screen-splitting, fixed-pitch font
   wb(&h01, x)
   wb(&h20, con.HEIGHT)
