@@ -217,44 +217,9 @@ main()
 End
 
 Sub main.init_console()
-  Local cmdline$ = LCase$(Mm.CmdLine$)
-
-  If InStr(cmdline$, "--platform") Then
-    ' Platform already supplied explicitly, do nothing.
-  ElseIf Mm.HRes = 320 And (Mm.VRes = 480 Or Mm.VRes = 320) Then
-    Cat cmdline$, " --platform=picocalc"
-  ElseIf Mm.HRes = 320 And Mm.VRes = 240 Then
-    Cat cmdline$, " --platform=320x240"
-  ElseIf Mm.Device$ = "MMBasic for Windows" Or InStr(Mm.Device$, "Colour Maximite 2") Then
-    Cat cmdline$, " --platform=cmm2"
-  ElseIf InStr(Mm.Device$, "PicoMiteVGA") Then
-    Cat cmdline$, " --platform=pmvga"
-  ElseIf InStr(Mm.Device$, "PicoMiteHDMI") Then
-    Cat cmdline$, " --platform=pmhdmi"
-  EndIf
-
-  If InStr(cmdline$, "--platform=picocalc") Then
-    con.init(40, 26, 1)
-  ElseIf InStr(cmdline$, "--platform=cmm2") Then
-    con.init(100, 50)
-  ElseIf InStr(cmdline$, "--platform=320x240") Then
-    con.init(40, 20, 1)
-  ElseIf InStr(cmdline$, "--platform=pmvga") Then
-    con.init(80, 40, 1)
-  ElseIf InStr(cmdline$, "--platform=pmhdmi") Then
-    con.init(80, 40, 1)
-  ElseIf InStr(cmdline$, "--platform") Then
-    Error "Unknown platform"
-  ElseIf Mm.Info(Device X) = "MMB4L" Then
-    Local w%, h%
-    Console GetSize w%, h%
-    w% = Max(w%, 40)
-    h% = Max(h%, 20)
-    con.init(w%, h%)
-  Else
-    con.init(80, 40)
-  EndIf
-
+  Const w% = Mm.Info(HRes) \ Mm.Info(FontWidth)
+  Const h% = Mm.Info(VRes) \ Mm.Info(FontHeight)
+  con.init(w%, h%, InStr(Mm.Device$, "PicoMite"))
   If Mm.Info(Device X) = "MMB4L" Then Console Resize con.WIDTH, con.HEIGHT
 End Sub
 
