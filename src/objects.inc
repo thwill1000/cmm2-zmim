@@ -95,9 +95,15 @@ Function ob_prop_get(o, p)
     x = rb(ad - 1)
     If (x And &b11111) <> p Then Error ' Mask with bottom 5 bits
     sz = x\32 + 1
-    If sz = 1 Then ob_prop_get = rb(ad) : Exit Function
-    If sz = 2 Then ob_prop_get = rw(ad) : Exit Function
-    Error "Property length > 2"
+    Select Case sz
+      Case 1
+        ob_prop_get = rb(ad)
+      Case 2
+        ob_prop_get = rw(ad)
+      Case Else
+        Error "Property length > 2"
+    End Select
+    Exit Function
   EndIf
   ad = rw(&h0A) + 2 * (p - 1)
   ob_prop_get = rw(ad)

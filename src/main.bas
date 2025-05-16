@@ -203,11 +203,12 @@ Sub main()
     If con.spin_enabled And num_ops Mod 16 = 0 Then con.spin()
 
     old_pc = pc
-    If state = E_OK Or state = E_REPEAT Then
-      state = exec(ztrace)
-    Else
-      state = debug()
-    EndIf
+    Select Case state
+      Case E_OK, E_REPEAT
+        state = exec(ztrace)
+      Case Else
+        state = debug()
+    End Select
   Loop
 
   con.endl()

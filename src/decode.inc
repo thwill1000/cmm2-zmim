@@ -43,30 +43,32 @@ Function decode(tr)
 
   op = rp()
 
-  If op < &h80 Then
-    de_long(op)
-    s$ = OP2$(oc)
-  ElseIf op < &hC0 Then
-    de_short(op)
-    If op < &hB0 Then s$ = OP1$(oc) Else s$ = OP0$(oc)
-  Else
-    de_var(op)
-    If op < &hE0 Then s$ = OP2$(oc) Else s$ = OPV$(oc)
-  EndIf
+  Select Case op
+    Case < &h80
+      de_long(op)
+      s$ = OP2$(oc)
+    Case < &hC0
+      de_short(op)
+      s$ = Choice(op < &hB0, OP1$(oc), OP0$(oc))
+    Case Else
+      de_var(op)
+      s$ = Choice(op < &hE0, OP2$(oc), OPV$(oc))
+  End Select
 
-  If Left$(s$, 1) = "B" Then
-    st = -1
-    br = de_branch()
-  ElseIf Left$(s$, 1) = "S" Then
-    st = rp()
-    br = 0
-  ElseIf Left$(s$, 1) = "X" Then
-    st = rp()
-    br = de_branch()
-  Else
-    st = -1
-    br = 0
-  EndIf
+  Select Case Left$(s$, 1)
+    Case "B"
+      st = -1
+      br = de_branch()
+    Case "S"
+      st = rp()
+      br = 0
+    Case "X"
+      st = rp()
+      br = de_branch()
+    Case Else
+      st = -1
+      br = 0
+  End Select
 
   If tr Then dmp_op(Mid$(s$, 2))
 
@@ -78,33 +80,35 @@ Sub de_long(op)
   onum = 2
   ov(0) = rp()
   ov(1) = rp()
-  If op <= &h1F Then
-    ot(0) = &b01 : oa(0) = ov(0) ' SMALL
-    ot(1) = &b01 : oa(1) = ov(1) ' SMALL
-  ElseIf op <= &h3F Then
-    ot(0) = &b01 : oa(0) = ov(0) ' SMALL
-    ot(1) = &b10 : oa(1) = vget(ov(1)) ' VARIABLE
-  ElseIf op <= &h5F Then
-    ot(0) = &b10 : oa(0) = vget(ov(0)) ' VARIABLE
-    ot(1) = &b01 : oa(1) = ov(1) ' SMALL
-  Else
-    ot(0) = &b10 : oa(0) = vget(ov(0)) ' VARIABLE
-    ot(1) = &b10 : oa(1) = vget(ov(1)) ' VARIABLE
-  EndIf
+  Select Case op
+    Case <= &h1F
+      ot(0) = &b01 : oa(0) = ov(0) ' SMALL
+      ot(1) = &b01 : oa(1) = ov(1) ' SMALL
+    Case <= &h3F
+      ot(0) = &b01 : oa(0) = ov(0) ' SMALL
+      ot(1) = &b10 : oa(1) = vget(ov(1)) ' VARIABLE
+    Case <= &h5F
+      ot(0) = &b10 : oa(0) = vget(ov(0)) ' VARIABLE
+      ot(1) = &b01 : oa(1) = ov(1) ' SMALL
+    Case Else
+      ot(0) = &b10 : oa(0) = vget(ov(0)) ' VARIABLE
+      ot(1) = &b10 : oa(1) = vget(ov(1)) ' VARIABLE
+  End Select
 End Sub
 
 Sub de_short(op)
   oc = op And &b1111 ' bottom 4 bits
   onum = 1
-  If op <= &h8F Then
-    ot(0) = &b00 : ov(0) = rp() * 256 + rp() : oa(0) = ov(0)
-  ElseIf op <= &h9F Then
-    ot(0) = &b01 : ov(0) = rp() : oa(0) = ov(0)
-  ElseIf op <= &hAF Then
-    ot(0) = &b10 : ov(0) = rp() : oa(0) = vget(ov(0))
-  Else
-    onum = 0
-  EndIf
+  Select Case op
+    Case <= &h8F
+      ot(0) = &b00 : ov(0) = rp() * 256 + rp() : oa(0) = ov(0)
+    Case <= &h9F
+      ot(0) = &b01 : ov(0) = rp() : oa(0) = ov(0)
+    Case <= &hAF
+      ot(0) = &b10 : ov(0) = rp() : oa(0) = vget(ov(0))
+    Case Else
+      onum = 0
+  End Select
 End Sub
 
 Sub de_var(op)
@@ -114,19 +118,20 @@ Sub de_var(op)
   x = rp()
   For i = 0 To 3
     ot(i) = (x And &b11000000) \ 64
-    If ot(i) = &b00 Then
-      ' LARGE
-      ov(i) = rp() * 256 + rp() : oa(i) = ov(i)
-    ElseIf ot(i) = &b01 Then
-      ' SMALL
-      ov(i) = rp() : oa(i) = ov(i)
-    ElseIf ot(i) = &b10 Then
-      ' VARIABLE
-      ov(i) = rp() : oa(i) = vget(ov(i))
-    Else ' ot(i) = &b11
-      ' OMITTED
-      onum = onum - 1
-    EndIf
+    Select Case ot(i)
+      Case &b00
+        ' LARGE
+        ov(i) = rp() * 256 + rp() : oa(i) = ov(i)
+      Case &b01
+        ' SMALL
+        ov(i) = rp() : oa(i) = ov(i)
+      Case &b10
+        ' VARIABLE
+        ov(i) = rp() : oa(i) = vget(ov(i))
+      Case Else ' ot(i) = &b11
+        ' OMITTED
+        Inc onum, -1
+    End Select
     x = x * 4
   Next
 End Sub
