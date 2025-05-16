@@ -10,8 +10,8 @@ Else
   Const file$ = Mm.Info$(Path) + "bin/zmim.bas"
 EndIf
 
-If InStr(Mm.Device$, "Colour Maximite 2") Then
-  Execute "Run " + Chr$(34) + file$ + Chr$(34) + ", " + Mm.CmdLine$
-Else
-  Run file$, Mm.CmdLine$
+cmd$ = "Run "
+If Mm.Info(Device X) = "MMB4L" Then
+  If Mm.Info(Version) >= 80000000 Then Cat cmd$, Mm.Info(Option Simulate) + " "
 EndIf
+Execute cmd$ + Chr$(34) + file$ + Chr$(34) + ", " + Mm.CmdLine$
