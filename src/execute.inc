@@ -61,7 +61,7 @@ Function exec(tr)
 End Function
 
 Function ex_2op()
-  Local a, b, x, y, _
+  Local a, b, x, y
 
   a = oa(0)
   b = oa(1)
@@ -132,11 +132,11 @@ Function ex_2op()
 
     Case &hB
       ' SET_ATTR
-      _ = ob_attr(a, b, 1, 1)
+      x = ob_attr(a, b, 1, 1)
 
     Case &hC
       ' CLEAR_ATTR
-      _ = ob_attr(a, b, 1, 0)
+      x = ob_attr(a, b, 1, 0)
 
     Case &hD
       ' STORE
@@ -374,7 +374,7 @@ Function ex_0op()
 End Function
 
 Function ex_varop()
-  Local x, _
+  Local x
 
   Select Case oc
     Case &h0
@@ -442,9 +442,8 @@ Function ex_varop()
 End Function
 
 Sub ex_branch(z, br)
-  Local x
   If Not (z = (br And &h80000) > 0) Then Exit Sub
-  x = br And &h7FFFF ' Bottom 19-bits
+  Const x = br And &h7FFFF ' Bottom 19-bits
   Select Case x
     Case pc - 1
       ex_return(1)
@@ -456,13 +455,12 @@ Sub ex_branch(z, br)
 End Sub
 
 Sub ex_return(x)
-  Local st, _
   sp = fp + 4
   ' This single line version won't work if inlining st_pop():
   ' pc = st_pop() * &h10000 + st_pop()
   pc = &h10000 * st_pop()
   Inc pc, st_pop()
-  st = st_pop()
+  Const st = st_pop()
   fp = st_pop()
   vset(st, x)
   If ztrace Then dmp_stack()
@@ -538,8 +536,6 @@ Function ex_read(text_buf, parse_buf)
 End Function
 
 Function ex_special(cmd$)
-  Local f$, _
-
   ex_special = E_REPEAT
 
   Select Case Field$(cmd$, 1, " ")
