@@ -11,11 +11,12 @@ Const OLD$ = Cwd$
 
 ChDir PATH$
 
-cmd$ = "sptrans -T -DNO_INCLUDE_GUARDS -DNO_EXTRA_CHECKS -DINLINE_CONSTANTS src/main.bas bin/zmim.bas"
+flags$ = "-e=1 -i=1 -n -s=1 -T -DNO_INCLUDE_GUARDS -DNO_EXTRA_CHECKS -DINLINE_CONSTANTS"
+cmd$ = "sptrans " + flags$ + " src/main.bas bin/zmim.bas"
 Print cmd$
 System cmd$
 
-cmd$ = "sptrans -T -DNO_INCLUDE_GUARDS -DLOW_MEMORY -DNO_EXTRA_CHECKS -DINLINE_CONSTANTS src/main.bas bin/zmim_rp2040.bas"
+cmd$ = "sptrans " + flags$ + " -DLOW_MEMORY " + " src/main.bas bin/zmim_rp2040.bas"
 Print cmd$
 System cmd$
 
