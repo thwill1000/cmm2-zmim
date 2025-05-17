@@ -515,11 +515,11 @@ End Function
 
 Function fmt_store_value$(st)
   If st = 0 Then
-    con.print("-(SP)")
+    fmt_store_value$ = "-(SP)"
   ElseIf st < &h10 Then
-    con.print("L" + str.lpad$(Hex$(st - 1), 2, "0"))
+    fmt_store_value$ = "L" + str.lpad$(Hex$(st - 1), 2, "0")
   Else
-    con.print("G" + str.lpad$(Hex$(st - &h10), 2, "0"))
+    fmt_store_value$ = "G" + str.lpad$(Hex$(st - &h10), 2, "0")
   EndIf
 End Function
 
