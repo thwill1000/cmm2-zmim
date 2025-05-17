@@ -1,4 +1,4 @@
-' Transpiled on 17-05-2025 21:12:37
+' Transpiled on 17-05-2025 22:16:40
 ' Copyright (c) 2019-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 Option Base 0
@@ -794,8 +794,8 @@ Sub con.set_font(size%)
  If size%=Mm.Info(Font) Then Exit Sub
  con.endl()
  Font size%
- con.WIDTH=Mm.Info(HRes)\Mm.Info(FontWidth)
- con.HEIGHT=Mm.Info(VRes)\Mm.Info(FontHeight)
+ con.WIDTH=Mm.HRes\Mm.Info(FontWidth)
+ con.HEIGHT=Mm.VRes\Mm.Info(FontHeight)
  wb(&h20,con.HEIGHT)
  wb(&h21,con.WIDTH)
  If Mm.Info(Device X)="MMB4L" Then Console Resize con.WIDTH,con.HEIGHT
@@ -2426,8 +2426,8 @@ Sub main()
 End Sub
 
 Sub main.init_console()
- Const w%=Mm.Info(HRes)\Mm.Info(FontWidth)
- Const h%=Mm.Info(VRes)\Mm.Info(FontHeight)
+ Const w%=Mm.HRes\Mm.Info(FontWidth)
+ Const h%=Mm.VRes\Mm.Info(FontHeight)
  con.init(w%,h%,InStr(Mm.Device$,"PicoMite"))
  If Mm.Info(Device X)="MMB4L" Then Console Resize con.WIDTH,con.HEIGHT
 End Sub
