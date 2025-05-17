@@ -111,7 +111,11 @@ Function debug()
         dmp_global(Val(cmd$(1)), Val(cmd$(2)))
 
       Case "h"
-        con.print_file(file.resolve$(ss$(RESOURCES_DIR), "debug_help.txt"))
+        If con.WIDTH < 80 Then
+          con.print_file(file.resolve$(ss$(RESOURCES_DIR), "debug_help_40col.txt"))
+        Else
+          con.print_file(file.resolve$(ss$(RESOURCES_DIR), "debug_help.txt"))
+        EndIf
 
       Case "H"
         ' Dump header
