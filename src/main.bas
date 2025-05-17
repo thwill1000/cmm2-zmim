@@ -224,8 +224,8 @@ Sub main()
 End Sub
 
 Sub main.init_console()
-  Const w% = Mm.Info(HRes) \ Mm.Info(FontWidth)
-  Const h% = Mm.Info(VRes) \ Mm.Info(FontHeight)
+  Const w% = Mm.HRes \ Mm.Info(FontWidth)
+  Const h% = Mm.VRes \ Mm.Info(FontHeight)
   con.init(w%, h%, InStr(Mm.Device$, "PicoMite"))
   If Mm.Info(Device X) = "MMB4L" Then Console Resize con.WIDTH, con.HEIGHT
 End Sub

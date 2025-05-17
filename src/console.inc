@@ -517,8 +517,8 @@ Sub con.set_font(size%)
   If size% = Mm.Info(Font) Then Exit Sub
   con.endl()
   Font size%
-  con.WIDTH = Mm.Info(HRes) \ Mm.Info(FontWidth)
-  con.HEIGHT = Mm.Info(VRes) \ Mm.Info(FontHeight)
+  con.WIDTH = Mm.HRes \ Mm.Info(FontWidth)
+  con.HEIGHT = Mm.VRes \ Mm.Info(FontHeight)
   wb(&h20, con.HEIGHT)
   wb(&h21, con.WIDTH)
   If Mm.Info(Device X) = "MMB4L" Then Console Resize con.WIDTH, con.HEIGHT
