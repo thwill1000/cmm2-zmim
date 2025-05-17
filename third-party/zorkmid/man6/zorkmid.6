@@ -1,0 +1,208 @@
+.TH ZORKMID 6 "August 8, 2015"
+.SH NAME
+zorkmid \- A debugging and error-checking Z-machine implementation
+.SH SYNOPSIS
+.B zorkmid
+.RI "[" "options" "] " "filename"
+.SH DESCRIPTION
+.B zorkmid
+is an implementation of Infocom's Z-machine.
+(There are different versions of the Z-machine; this implementation is a
+ZIP implementation.
+For EZIP, XZIP, or YZIP, see other programs.)
+This implementation checks for most errors, and can also display warnings
+for several things (optionally).
+A debugger is also included.
+This program uses only dumb terminal I/O; no split screen is supported.
+It also does not automatically display a status line.
+.SH OPTIONS
+Any options with an asterisk mean that a number or filename must
+follow (with a space before the parameter value).
+.IP -b
+Break into the debugger before the game starts.
+.IP -c*
+Number of columns in the screen.
+Used to determine where to wrap long lines.
+.IP -e*
+Set the escape character.
+This must be a single ASCII character.
+If set, allows some escape commands to be used at runtime.
+If not set, escape commands are unavailable.
+See the below section for a list of possible escape commands.
+.IP -g*
+Set the name of the save game file.
+If not set, it asks every time a SAVE or RESTORE instruction is executed.
+.IP -h
+Disable the debugger.
+In case of any error, the program halts immediately.
+.IP -l*
+Number of lines in the screen.
+Used to determine when to pause.
+.IP -q
+Break into the debugger just before any RESTART or QUIT instruction
+is executed.
+.IP -r
+Disables support for save games.
+The SAVE and RESTORE instructions will always result in a FALSE predicate.
+.IP -s*
+If set, transcripts will be saved to a specified file.
+If not set, scripting is not implemented.
+.IP -t
+Tells the game that it is running on a Tandy computer.
+Some games will censor some things if this bit is set.
+.IP -w
+Display non-fatal warnings.
+.IP -x
+Disable line wrapping.
+.IP -y*
+Specify name of a file containing a debugger script to execute.
+This script may be used to set breakpoints and symbolic names.
+.IP -C
+Display a trace of all Z-characters read.
+.IP -F
+Whenever a frequent word is output, braces will be inserted around it.
+.IP -L
+Disable screen pausing.
+.IP -R*
+A name of a file or device to read random numbers from.
+It will break into the debugger if the file runs out of data.
+If not specified, an internal implementation is used.
+.IP -T
+Display a trace of execution.
+.SH ESCAPES
+Escapes are executed by specifying the user-specified escape character
+followed by the command character.
+.IP 1
+When a MORE prompt is displayed, scroll only one line of text, and then
+display another MORE prompt.
+.IP =
+When a MORE prompt is displayed, disable pausing the screen until the next
+READ instruction is executed.
+.IP c
+Tells you how many instructions have been executed between
+READ instructions.
+.IP d
+Break into the debugger.
+.IP q
+Quit the game silently (without asking for confirmation).
+.IP r
+Restart the game immediately (without asking for confirmation).
+.IP s
+Followed by a filename (with no space in between), sets the script file.
+If the filename is omitted, scripting is turned off.
+.IP t
+Displays and flushes any buffered text.
+.SH DEBUGGER
+Anywhere a number can be specified in debugger commands, you can use 0 and
+0x for octal and hexadecimal, or no prefix for decimal.
+.P
+For some commands, an address is optional.
+If not specified, the current dump address is used; this is the address
+needed to continue dumping hex or disassembly from where you left off.
+When the debugger starts, this is set to the address of the beginning of
+the current instruction.
+.P
+The following commands can be used in the debugger:
+.IP a
+Try to execute the current instruction again from the beginning.
+.IP b
+Set a breakpoint at an address.
+If the address starts with a colon, it is a source line number, otherwise
+it is an absolute address into the story file.
+Up to 32 breakpoints can be set.
+.IP c
+Continue execution.
+Note that if the error is unrecoverable, it will just break again unless
+the problem has been fixed before continuing.
+.IP d
+Dump hexadecimal and ASCII data from a specified or default address.
+.IP e
+Takes two numbers, an address and a byte value.
+The value is entered into Z-machine memory.
+.IP g
+Sets the program counter to a specified address so that when you continue
+it will continue from there.
+.IP i
+Toggles an instruction breakpoint.
+The parameter is the lowest opcode number for the instruction that you
+want to set a breakpoint on.
+It then breaks into the debugger just before such an instruction will be
+executed.
+Instruction breakpoints are unlimited.
+.IP k
+Skip the currently executing instruction and continue from the next one.
+.IP o
+Given an object number, displays the address, flags, location, contents,
+and properties of the object.
+.IP p
+Prints a packed string from a specified address.
+.IP q
+Quit the debugger and game silently.
+.IP r
+Restart the game; remain in the debugger.
+.IP s
+Single-step one instruction.
+.IP u
+Dump a disassembly from a specified or default address.
+The parameters for PRINTI and PRINTR are not displayed.
+.IP v
+Clear an address breakpoint, given the breakpoint number.
+.IP x
+Converts a number to unsigned and signed decimal formats and hexadecimal
+format, and displays all three results.
+.IP z
+Clear all breakpoints (of both kinds).
+.IP =
+Reset the dump address to the program counter and display it.
+.IP .
+Display the call stack size, data stack size, program counter, lines,
+cursor position, buffer size, arguments to the current function, and
+stack highwaters.
+.IP \\
+Display and flush the output buffer.
+.IP +
+Add two numbers given.
+.IP -
+Subtract two numbers given.
+.IP *
+Multiply two numbers given.
+.IP /
+Divide two numbers given.
+.IP %
+Modulo two numbers given.
+.IP '
+Given a number, return that number from the currently executing function.
+(Remains in the debugger.)
+.IP [
+Display and discard the top value of the data stack.
+.IP ]
+Push a number onto the data stack.
+.IP B
+List address breakpoints.
+.IP C
+Display the call stack.
+.IP D
+Display the data stack.
+.IP H
+Display the contents of the header.
+.IP I
+List instruction breakpoints.
+.IP O
+Clears the instruction profile.
+.IP P
+Display the instruction profile.
+This consists of how many times each opcode has been executed.
+.IP V
+Follow by a vocabulary word, lookup the word in the game's vocabulary
+table and display the address.
+.IP W
+Clear all stack highwaters.
+.SH ENVIRONMENT
+The
+.B LINES
+and
+.B COLUMNS
+environment variables are used if they exist in order to set the default
+screen size.
+.SH "SEE ALSO"
+.BR ezorkmid (6)
