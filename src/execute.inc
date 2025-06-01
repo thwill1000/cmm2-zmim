@@ -686,12 +686,15 @@ Sub ex_show_status(on_console%)
     con.println
   EndIf
 
+  s$(0) = " " + s$(0)
+  s$(1) = s$(1) + " "
+
   ' If the status line would be too long then try the short form.
   If Len(s$(0)) + Len(s$(1)) + 1 >= con.WIDTH Then
     If rb(&h01) And &b00000010 Then
-      s$(1) = Str$(vget(&h11)) + ":" + Str$(vget(&h12), 2, 0, "0")
+      s$(1) = Str$(vget(&h11)) + ":" + Str$(vget(&h12), 2, 0, "0" + " ")
     Else
-      s$(1) = Str$(vget(&h11)) + "/" + Str$(vget(&h12))
+      s$(1) = Str$(vget(&h11)) + "/" + Str$(vget(&h12) + " ")
     EndIf
   EndIf
 
