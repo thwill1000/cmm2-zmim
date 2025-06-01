@@ -669,7 +669,14 @@ Sub ex_show_status(on_console%)
 
   ' Construct the score/moves/time string.
   If rb(&h01) And &b00000010 Then
-    s$(1) = "Time: " + Str$(vget(&h11)) + ":" + Str$(vget(&h12))
+    Local hours% = vget(&h11) Mod 24
+    Const mins% = vget(&h12) Mod 60
+    Const am% = hours% < 12
+    Select Case hours%
+      Case 0: hours% = 12
+      Case > 12: Inc hours%, -12
+    End Select
+    s$(1) = "Time: " + Str$(hours% Mod 13) + ":" + Str$(mins%, 2, 0, "0") + Choice(am%, "am", "pm")
   Else
     s$(1) = "Score: " + Str$(vget(&h11)) + ", Moves: " + Str$(vget(&h12))
   EndIf
@@ -682,7 +689,7 @@ Sub ex_show_status(on_console%)
   ' If the status line would be too long then try the short form.
   If Len(s$(0)) + Len(s$(1)) + 1 >= con.WIDTH Then
     If rb(&h01) And &b00000010 Then
-      s$(1) = Str$(vget(&h11)) + ":" + Str$(vget(&h12))
+      s$(1) = Str$(vget(&h11)) + ":" + Str$(vget(&h12), 2, 0, "0")
     Else
       s$(1) = Str$(vget(&h11)) + "/" + Str$(vget(&h12))
     EndIf
