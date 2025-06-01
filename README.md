@@ -78,37 +78,36 @@ The interpreter provides a number of internal meta-commands all prefixed with a 
      - Once in the debugger type `h` for a list of debugger commands.
  - `*credits`
      - displays Z-MIM credits.
- - `*font {small | medium}`
+ - `*font [small | medium]`
      - Changes the font size.
      - Defaults to `medium`.
      - __KNOWN BUG__: using *FONT SMALL on the Colour Maximite 2 causes the prompt to "glitch" in a way I have been unable to reproduce in a small example.
- - `*more {on | off}`
+ - `*more [on | off]`
      - `on`: enables output paging so that a `[MORE]` prompt is shown whenever more output than can be shown on a single screen is generated; this is only likely to happen when replaying a script, see `*replay` below.
      - `off`: disables output paging.
      - Defaults to `on`.
- - `*record`
+ - `*record [on | off]`
      - `on`: prompts the user to select and name one of 10 script file slots and then starts to echo every subsequent command into the selected file.
      - `off`: halts recording.
- - `*replay`
+ - `*replay [on | off]`
      - `on`: prompts the user to select a script file slot and then replays the contents of that file as if the user was typing it at the prompt.
     - `off`: halts replaying.
         - Only makes sense if inserted manually into a script file to prevent it from replaying to its end.
  - `*restore`
-     - __TAKE NOTE__: this is provided to support any stories that __DO NOT__ provide their own `restore` command (without the `*` prefix) which should be used in preference.
+     - __NOTE__: this is provided to support any stories that __DO NOT__ provide their own `restore` command (without the `*` prefix) which should be used in preference.
      - Restores story progress previously saved with the `*save` command.
  - `*save`
-     - __TAKE NOTE__: this is provided to support any stories that __DO NOT__ provide their own `save` command (without the `*` prefix) which should be used in preference.
+     - __NOTE__: this is provided to support any stories that __DO NOT__ provide their own `save` command (without the `*` prefix) which should be used in preference.
      - Saves story progress.
      - The save format is a naive dump of the story's stack and dynamic memory area, see [src/zsave.inc](src/zsave.inc).
      - __WARNING!__ mixing the use of `*save` and `*restore` with any `save` and `restore` commands provided by the story may produce "odd" behaviour even though the same format is used by both.
  - `*screenshot`
      - Generates a .BMP screenshot.
      - Not available on all platforms.
- - `*spin`
-     - Enables progress spinner when the Z-machine is "thinking".
-     - This initially defaults to `on` for PicoMite devices.
- - `*spin off`
-     - Disables progress spinner.
+ - `*spin [on | off]`
+     - `on`: enables progress spinner when the Z-machine is "thinking".
+     - `off`: disables progress spinner.
+     - Defaults to `on` for PicoMite devices.
  - `*status`
      - Prints the current story status.
 
