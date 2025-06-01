@@ -7,6 +7,8 @@ Version 3.6.0 - 1-Jun-2025:
      redrawing it (instead of having the text scroll beneath it) is a
      deliberate chocie for performance reasons rather than a bug.
  - Added *FONT [SMALL | MEDIUM] meta-command.
+   - KNOWN BUG: using *FONT SMALL on the Colour Maximite 2 causes the prompt
+     to "glitch" in a way I have been unable to reproduce in a small example.
  - Added '--shell' command-line option which if used will cause Z-MIM to
    RUN the program specified in the "/.mmbasic-shell" file when it exits.
  - Changed code to use SELECT CASE rather than IF .. THEN .. ELSEIF ..

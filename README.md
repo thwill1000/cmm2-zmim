@@ -81,6 +81,7 @@ The interpreter provides a number of internal meta-commands all prefixed with a 
  - `*font {small | medium}`
      - Changes the font size.
      - Defaults to `medium`.
+     - __KNOWN BUG__: using *FONT SMALL on the Colour Maximite 2 causes the prompt to "glitch" in a way I have been unable to reproduce in a small example.
  - `*more {on | off}`
      - `on`: enables output paging so that a `[MORE]` prompt is shown whenever more output than can be shown on a single screen is generated; this is only likely to happen when replaying a script, see `*replay` below.
      - `off`: disables output paging.
@@ -93,10 +94,10 @@ The interpreter provides a number of internal meta-commands all prefixed with a 
     - `off`: halts replaying.
         - Only makes sense if inserted manually into a script file to prevent it from replaying to its end.
  - `*restore`
-     - __TAKE NOTE__ that this is provided to support any stories that __DO NOT__ provide their own `restore` command (without the `*` prefix) which should be used in preference.
+     - __TAKE NOTE__: this is provided to support any stories that __DO NOT__ provide their own `restore` command (without the `*` prefix) which should be used in preference.
      - Restores story progress previously saved with the `*save` command.
  - `*save`
-     - __TAKE NOTE__ that this is provided to support any stories that __DO NOT__ provide their own `save` command (without the `*` prefix) which should be used in preference.
+     - __TAKE NOTE__: this is provided to support any stories that __DO NOT__ provide their own `save` command (without the `*` prefix) which should be used in preference.
      - Saves story progress.
      - The save format is a naive dump of the story's stack and dynamic memory area, see [src/zsave.inc](src/zsave.inc).
      - __WARNING!__ mixing the use of `*save` and `*restore` with any `save` and `restore` commands provided by the story may produce "odd" behaviour even though the same format is used by both.
