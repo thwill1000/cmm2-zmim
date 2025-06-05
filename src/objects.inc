@@ -63,15 +63,13 @@ Function ob_next_prop(o, p)
 End Function
 
 Function ob_prop_len(ad)
-  Local x
   If ad = 0 Then Exit Function ' return 0
-  x = rb(ad - 1)
+  Const x = rb(ad - 1)
   ob_prop_len = x\32 + 1
 End Function
 
 Function ob_prop_base(o)
-  Local ad
-  ad = rw(&h0A) + 62 + (o - 1) * 9 + 7
+  Const ad = rw(&h0A) + 62 + (o - 1) * 9 + 7
   ob_prop_base = rw(ad)
 End Function
 
@@ -95,9 +93,15 @@ Function ob_prop_get(o, p)
     x = rb(ad - 1)
     If (x And &b11111) <> p Then Error ' Mask with bottom 5 bits
     sz = x\32 + 1
-    If sz = 1 Then ob_prop_get = rb(ad) : Exit Function
-    If sz = 2 Then ob_prop_get = rw(ad) : Exit Function
-    Error "Property length > 2"
+    Select Case sz
+      Case 1
+        ob_prop_get = rb(ad)
+      Case 2
+        ob_prop_get = rw(ad)
+      Case Else
+        Error "Property length > 2"
+    End Select
+    Exit Function
   EndIf
   ad = rw(&h0A) + 2 * (p - 1)
   ob_prop_get = rw(ad)
@@ -118,34 +122,33 @@ Sub ob_prop_set(o, p, x)
 End Sub
 
 Sub ob_print(o)
-  Local ad
-  ad = ob_prop_base(o) + 1
+  Const ad = ob_prop_base(o) + 1
   print_zstring(ad)
 End Sub
 
 Sub ob_insert(o, d)
-  Local c, _
+  Local c, x
 
   ob_remove(o)                 ' remove object from its original parent
   c = ob_rel(d, CHILD)         ' original child of destination
-  _ = ob_rel(d, CHILD, 1, o)   ' object is new child of destination
-  _ = ob_rel(o, PARENT, 1, d)  ' destination is new parent of object
-  _ = ob_rel(o, SIBLING, 1, c) ' original child of dest is new sibling of object
+  x = ob_rel(d, CHILD, 1, o)   ' object is new child of destination
+  x = ob_rel(o, PARENT, 1, d)  ' destination is new parent of object
+  x = ob_rel(o, SIBLING, 1, c) ' original child of dest is new sibling of object
 End Sub
 
 Sub ob_remove(o)
-  Local c, p, s, _
+  Local c, p, s, x
 
   p = ob_rel(o, PARENT)        ' parent of object
   s = ob_rel(o, SIBLING)       ' sibling of object
   c = ob_rel(p, CHILD)         ' first child of parent
-  _ = ob_rel(o, PARENT, 1, 0)  ' object no longer has parent
-  _ = ob_rel(o, SIBLING, 1, 0) ' object no longer has sibling
+  x = ob_rel(o, PARENT, 1, 0)  ' object no longer has parent
+  x = ob_rel(o, SIBLING, 1, 0) ' object no longer has sibling
   If o = c Then
-    _ = ob_rel(p, CHILD, 1, s) ' if object was first child then now its sibling is
+    x = ob_rel(p, CHILD, 1, s) ' if object was first child then now its sibling is
   Else
     Do
-      If ob_rel(c, SIBLING) = o Then _ = ob_rel(c, SIBLING, 1, s) : Exit Do
+      If ob_rel(c, SIBLING) = o Then x = ob_rel(c, SIBLING, 1, s) : Exit Do
       c = ob_rel(c, SIBLING)
     Loop Until c = 0
   EndIf

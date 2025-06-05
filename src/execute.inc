@@ -36,166 +36,170 @@ Function exec(tr)
 
   op = decode(tr)
   Inc num_ops
-  If op < &h80 Then
-    exec = ex_2op()
-  ElseIf op < &hB0 Then
-    exec = ex_1op()
-  ElseIf op < &hC0 Then
-    exec = ex_0op()
-  ElseIf op < &hE0 Then
-    exec = ex_2op()
-  Else
-    exec = ex_varop()
-  EndIf
+  Select Case op
+    Case < &h80
+      exec = ex_2op()
+    Case < &hB0
+      exec = ex_1op()
+    Case < &hC0
+      exec = ex_0op()
+    Case < &hE0
+      exec = ex_2op()
+    Case Else
+      exec = ex_varop()
+  End Select
 
-  If exec = E_UNKNOWN Then
-    con.println("Unsupported instruction " + fmt_hex$(op, 2))
-  ElseIf exec = E_UNIMPLEMENTED Then
-    con.println("Unimplemented instruction " + fmt_hex$(op, 2))
-  EndIf
+  Select Case exec
+    Case E_UNKNOWN
+      con.println("Unsupported instruction " + fmt_hex$(op, 2))
+    Case E_UNIMPLEMENTED
+      con.println("Unimplemented instruction " + fmt_hex$(op, 2))
+  End Select
 
   If exec <> E_OK Then pc = pc_old : sp = sp_old
 
 End Function
 
 Function ex_2op()
-  Local a, b, x, y, _
+  Local a, b, x, y
 
   a = oa(0)
   b = oa(1)
 
-  If oc = &h1 Then
-    ' JE
-    x = (a = b)
-    If (Not x) And (onum > 2) Then x = (a = oa(2))
-    If (Not x) And (onum > 3) Then x = (a = oa(3))
-    ex_branch(x, br)
+  Select Case oc
+    Case &h1
+      ' JE
+      x = (a = b)
+      If (Not x) And (onum > 2) Then x = (a = oa(2))
+      If (Not x) And (onum > 3) Then x = (a = oa(3))
+      ex_branch(x, br)
 
-  ElseIf oc = &h2 Then
-    ' JL
-    If a > 32767 Then Inc a, -65536
-    If b > 32767 Then Inc b, -65536
-    ex_branch(a < b, br)
+    Case &h2
+      ' JL
+      If a > 32767 Then Inc a, -65536
+      If b > 32767 Then Inc b, -65536
+      ex_branch(a < b, br)
 
-  ElseIf oc = &h3 Then
-    ' JG
-    If a > 32767 Then Inc a, -65536
-    If b > 32767 Then Inc b, -65536
-    ex_branch(a > b, br)
+    Case &h3
+      ' JG
+      If a > 32767 Then Inc a, -65536
+      If b > 32767 Then Inc b, -65536
+      ex_branch(a > b, br)
 
-  ElseIf oc = &h4 Then
-    ' DEC_CHK
-    x = vget(a)
-    If x > 32767 Then Inc x, -65536
-    If b > 32767 Then Inc b, -65536
-    Inc x, -1
-    y = x < b
-    If x < 0 Then Inc x, 65536
-    vset(a, x)
-    ex_branch(y, br)
+    Case &h4
+      ' DEC_CHK
+      x = vget(a)
+      If x > 32767 Then Inc x, -65536
+      If b > 32767 Then Inc b, -65536
+      Inc x, -1
+      y = x < b
+      If x < 0 Then Inc x, 65536
+      vset(a, x)
+      ex_branch(y, br)
 
-  ElseIf oc = &h5 Then
-    ' INC_CHK
-    x = vget(a)
-    If x > 32767 Then Inc x, -65536
-    If b > 32767 Then Inc b, -65536
-    Inc x
-    y = x > b
-    If x < 0 Then Inc x, 65536
-    vset(a, x)
-    ex_branch(y, br)
+    Case &h5
+      ' INC_CHK
+      x = vget(a)
+      If x > 32767 Then Inc x, -65536
+      If b > 32767 Then Inc b, -65536
+      Inc x
+      y = x > b
+      If x < 0 Then Inc x, 65536
+      vset(a, x)
+      ex_branch(y, br)
 
-  ElseIf oc = &h6 Then
-    ' JIN
-    x = ob_rel(a, PARENT)
-    ex_branch(x = b, br)
+    Case &h6
+      ' JIN
+      x = ob_rel(a, PARENT)
+      ex_branch(x = b, br)
 
-  ElseIf oc = &h7 Then
-    ' TEST
-    ex_branch((a And b) = b, br)
+    Case &h7
+      ' TEST
+      ex_branch((a And b) = b, br)
 
-  ElseIf oc = &h8 Then
-    ' OR
-    vset(st, a Or b)
+    Case &h8
+      ' OR
+      vset(st, a Or b)
 
-  ElseIf oc = &h9 Then
-    ' AND
-    vset(st, a And b)
+    Case &h9
+      ' AND
+      vset(st, a And b)
 
-  ElseIf oc = &hA Then
-    ' TEST_ATTR: a = object, b = attribute
-    x = ob_attr(a, b)
-    ex_branch(x = 1, br)
+    Case &hA
+      ' TEST_ATTR: a = object, b = attribute
+      x = ob_attr(a, b)
+      ex_branch(x = 1, br)
 
-  ElseIf oc = &hB Then
-    ' SET_ATTR
-    _ = ob_attr(a, b, 1, 1)
+    Case &hB
+      ' SET_ATTR
+      x = ob_attr(a, b, 1, 1)
 
-  ElseIf oc = &hC Then
-    ' CLEAR_ATTR
-    _ = ob_attr(a, b, 1, 0)
+    Case &hC
+      ' CLEAR_ATTR
+      x = ob_attr(a, b, 1, 0)
 
-  ElseIf oc = &hD Then
-    ' STORE
-    ' Note special handing for op with indirect reference to the stack pointer
-    If a = 0 Then st_poke(sp - 1, b) Else vset(a, b)
+    Case &hD
+      ' STORE
+      ' Note special handing for op with indirect reference to the stack pointer
+      If a = 0 Then st_poke(sp - 1, b) Else vset(a, b)
 
-  ElseIf oc = &hE Then
-    ' INSERT_OBJ: a = object, b = destination
-    ob_insert(a, b)
+    Case &hE
+      ' INSERT_OBJ: a = object, b = destination
+      ob_insert(a, b)
 
-  ElseIf oc = &hF Then
-    ' LOADW
-    x = rw(a + 2 * b)
-    vset(st, x)
+    Case &hF
+      ' LOADW
+      x = rw(a + 2 * b)
+      vset(st, x)
 
-  ElseIf oc = &h10 Then
-    ' LOADB
-    x = rb(a + b)
-    vset(st, x)
+    Case &h10
+      ' LOADB
+      x = rb(a + b)
+      vset(st, x)
 
-  ElseIf oc = &h11 Then
-    ' GET_PROP
-    x = ob_prop_get(a, b)
-    vset(st, x)
+    Case &h11
+      ' GET_PROP
+      x = ob_prop_get(a, b)
+      vset(st, x)
 
-  ElseIf oc = &h12 Then
-    ' GET_PROP_ADDR
-    x = ob_prop_addr(a, b)
-    vset(st, x)
+    Case &h12
+      ' GET_PROP_ADDR
+      x = ob_prop_addr(a, b)
+      vset(st, x)
 
-  ElseIf oc = &h13 Then
-    ' GET_NEXT_PROP
-    x = ob_next_prop(a, b)
-    vset(st, x)
+    Case &h13
+      ' GET_NEXT_PROP
+      x = ob_next_prop(a, b)
+      vset(st, x)
 
-  ElseIf oc < &h19 Then
-    If a > 32767 Then Inc a, -65536
-    If b > 32767 Then Inc b, -65536
+    Case < &h19
+      If a > 32767 Then Inc a, -65536
+      If b > 32767 Then Inc b, -65536
 
-    If oc = &h14 Then
-      ' ADD
-      x = a + b
-    ElseIf oc = &h15 Then
-      ' SUB
-      x = a - b
-    ElseIf oc = &h16 Then
-      ' MUL
-      x = a * b
-    ElseIf oc = &h17 Then
-      ' DIV
-      x = a \ b
-    Else
-      ' MOD
-      x = a Mod b
-    EndIf
+      Select Case oc
+        Case &h14
+          ' ADD
+          x = a + b
+        Case &h15
+          ' SUB
+          x = a - b
+        Case &h16
+          ' MUL
+          x = a * b
+        Case &h17
+          ' DIV
+          x = a \ b
+        Case Else
+          ' MOD
+          x = a Mod b
+      End Select
 
-    If x < 0 Then Inc x, 65536
-    vset(st, x)
+      If x < 0 Then Inc x, 65536
+      vset(st, x)
 
-  Else
-    ex_2op = E_UNKNOWN
-  EndIf
+    Case Else
+      ex_2op = E_UNKNOWN
+  End Select
 End Function
 
 Function ex_1op()
@@ -203,254 +207,260 @@ Function ex_1op()
 
   a = oa(0)
 
-  If oc = &h0 Then
-    ' JZ
-    ex_branch(a = 0, br)
+  Select Case oc
+    Case &h0
+      ' JZ
+      ex_branch(a = 0, br)
 
-  ElseIf oc = &h1 Then
-    ' GET_SIBLING
-    x = ob_rel(a, SIBLING)
-    vset(st, x)
-    ex_branch(x <> 0, br)
+    Case &h1
+      ' GET_SIBLING
+      x = ob_rel(a, SIBLING)
+      vset(st, x)
+      ex_branch(x <> 0, br)
 
-  ElseIf oc = &h2 Then
-    ' GET_CHILD
-    x = ob_rel(a, CHILD)
-    vset(st, x)
-    ex_branch(x <> 0, br)
+    Case &h2
+      ' GET_CHILD
+      x = ob_rel(a, CHILD)
+      vset(st, x)
+      ex_branch(x <> 0, br)
 
-  ElseIf oc = &h3 Then
-    ' GET_PARENT
-    x = ob_rel(a, PARENT)
-    vset(st, x)
+    Case &h3
+      ' GET_PARENT
+      x = ob_rel(a, PARENT)
+      vset(st, x)
 
-  ElseIf oc = &h4 Then
-    ' GET_PROP_LEN
-    x = ob_prop_len(a)
-    vset(st, x)
+    Case &h4
+      ' GET_PROP_LEN
+      x = ob_prop_len(a)
+      vset(st, x)
 
-  ElseIf oc = &h5 Then
-    ' INC
-    x = vget(a)
-    If x > 32767 Then Inc x, -65536
-    Inc x
-    If x < 0 Then Inc x, 65536
-    vset(a, x)
+    Case &h5
+      ' INC
+      x = vget(a)
+      If x > 32767 Then Inc x, -65536
+      Inc x
+      If x < 0 Then Inc x, 65536
+      vset(a, x)
 
-  ElseIf oc = &h6 Then
-    ' DEC
-    x = vget(a)
-    If x > 32767 Then Inc x, -65536
-    Inc x, -1
-    If x < 0 Then Inc x, 65536
-    vset(a, x)
+    Case &h6
+      ' DEC
+      x = vget(a)
+      If x > 32767 Then Inc x, -65536
+      Inc x, -1
+      If x < 0 Then Inc x, 65536
+      vset(a, x)
 
-  ElseIf oc = &h7 Then
-    ' PRINT_ADDR
-    print_zstring(a)
+    Case &h7
+      ' PRINT_ADDR
+      print_zstring(a)
 
-  ElseIf oc = &h9 Then
-    ' REMOVE_OBJ
-    ob_remove(a)
+    Case &h9
+      ' REMOVE_OBJ
+      ob_remove(a)
 
-  ElseIf oc = &hA Then
-    ' PRINT_OBJECT
-    ob_print(a)
+    Case &hA
+      ' PRINT_OBJECT
+      ob_print(a)
 
-  ElseIf oc = &hB Then
-    ' RET
-    ex_return(a)
+    Case &hB
+      ' RET
+      ex_return(a)
 
-  ElseIf oc = &hC Then
-    ' JUMP
-    If a And &h8000 Then Inc a, -65536
-    Inc pc, a - 2
+    Case &hC
+      ' JUMP
+      If a And &h8000 Then Inc a, -65536
+      Inc pc, a - 2
 
-  ElseIf oc = &hD Then
-    ' PRINT_PADDR
-    print_zstring(a * 2)
+    Case &hD
+      ' PRINT_PADDR
+      print_zstring(a * 2)
 
-  ElseIf oc = &hE Then
-    ' LOAD
-    ' Note special handing for op with indirect reference to the stack pointer
-    If a = 0 Then x = st_peek(sp - 1) Else x = vget(a)
-    vset(st, x)
+    Case &hE
+      ' LOAD
+      ' Note special handing for op with indirect reference to the stack pointer
+      If a = 0 Then x = st_peek(sp - 1) Else x = vget(a)
+      vset(st, x)
 
-  ElseIf oc = &hF Then
-    ' NOT
-    x = a Xor &b1111111111111111
-    vset(st, x)
+    Case &hF
+      ' NOT
+      x = a Xor &b1111111111111111
+      vset(st, x)
 
-  Else
-    ex_1op = E_UNKNOWN
-  EndIf
+    Case Else
+      ex_1op = E_UNKNOWN
+  End Select
 End Function
 
 Function ex_0op()
   Local x
 
-  If oc = &h0 Then
-    ' RTRUE
-    ex_return(1)
+  Select Case oc
+    Case &h0
+      ' RTRUE
+      ex_return(1)
 
-  ElseIf oc = &h1 Then
-    ' RFALSE
-    ex_return(0)
+    Case &h1
+      ' RFALSE
+      ex_return(0)
 
-  ElseIf oc = &h2 Then
-    ' PRINT
-    print_zstring(pc)
+    Case &h2
+      ' PRINT
+      print_zstring(pc)
 
-  ElseIf oc = &h3 Then
-    ' PRINT_RET
-    print_zstring(pc)
-    con.endl()
-    ex_return(1)
+    Case &h3
+      ' PRINT_RET
+      print_zstring(pc)
+      con.endl()
+      ex_return(1)
 
-  ElseIf oc = &h4 Then
-    ' NOP
+    Case &h4
+      ' NOP
 
-  ElseIf oc = &h5 Then
-    ' SAVE
-    If con.fd_in Then
-      con.println("IGNORED 'save' command read from script")
-    Else
-      x = zsave()
-      ex_branch(x, br)
-    EndIf
+    Case &h5
+      ' SAVE
+      If con.fd_in Then
+        con.println("IGNORED 'save' command read from script")
+      Else
+        x = zsave()
+        ex_branch(x, br)
+      EndIf
 
-  ElseIf oc = &h6 Then
-    ' RESTORE
-    If con.fd_in Then
-      con.println("IGNORED 'restore' command read from script")
-    Else
-      x = zsave(1)
-    EndIf
+    Case &h6
+      ' RESTORE
+      If con.fd_in Then
+        con.println("IGNORED 'restore' command read from script")
+      Else
+        x = zsave(1)
+      EndIf
 
-  ElseIf oc = &h7 Then
-    ' RESTART
-    If con.fd_in Then
-      con.println("IGNORED 'restart' command read from script")
-    Else
-      main_init()
-      For x = 0 To 10 : con.endl() : Next ' this will clear the console
-    EndIf
+    Case &h7
+      ' RESTART
+      If con.fd_in Then
+        con.println("IGNORED 'restart' command read from script")
+      Else
+        main_init()
+        For x = 0 To 10 : con.endl() : Next ' this will clear the console
+      EndIf
 
-  ElseIf oc = &h8 Then
-    ' RET_POPPED
-    x = st_pop()
-    ex_return(x)
+    Case &h8
+      ' RET_POPPED
+      x = st_pop()
+      ex_return(x)
 
-  ElseIf oc = &h9 Then
-    ' POP - discards top item in stack
-    Inc sp, -1
+    Case &h9
+      ' POP - discards top item in stack
+      Inc sp, -1
 
-  ElseIf oc = &hA Then
-    ' QUIT
-    ex_0op = E_QUIT
+    Case &hA
+      ' QUIT
+      ex_0op = E_QUIT
 
-  ElseIf oc = &hB Then
-    ' NEW_LINE
-    con.endl()
+    Case &hB
+      ' NEW_LINE
+      con.endl()
 
-  ElseIf oc = &hC Then
-    ' SHOW_STATUS
-    ex_show_status()
+    Case &hC
+      ' SHOW_STATUS
+      ex_show_status()
 
-  ElseIf oc = &hD Then
-    ' VERIFY
-    ' Actually verifying the story checksum is pointless, always branch.
-    ex_branch(1, br)
+    Case &hD
+      ' VERIFY
+      ' Actually verifying the story checksum is pointless, always branch.
+      ex_branch(1, br)
 
-  Else
-    ex_0op = E_UNKNOWN
-  EndIf
+    Case Else
+      ex_0op = E_UNKNOWN
+  End Select
 End Function
 
 Function ex_varop()
-  Local x, _
+  Local x
 
-  If oc = &h0 Then
-    ' CALL
-    ex_call(st)
+  Select Case oc
+    Case &h0
+      ' CALL
+      ex_call(st)
 
-  ElseIf oc = &h1 Then
-    ' STOREW
-    ww(oa(0) + 2 * oa(1), oa(2))
+    Case &h1
+      ' STOREW
+      ww(oa(0) + 2 * oa(1), oa(2))
 
-  ElseIf oc = &h2 Then
-  ' STOREB
-    wb(oa(0) + oa(1), oa(2))
+    Case &h2
+    ' STOREB
+      wb(oa(0) + oa(1), oa(2))
 
-  ElseIf oc = &h3 Then
-    ' PUT_PROP
-    ob_prop_set(oa(0), oa(1), oa(2))
+    Case &h3
+      ' PUT_PROP
+      ob_prop_set(oa(0), oa(1), oa(2))
 
-  ElseIf oc = &h4 Then
-    ' READ
-    ex_varop = ex_read(oa(0), oa(1))
+    Case &h4
+      ' READ
+      ex_varop = ex_read(oa(0), oa(1))
 
-  ElseIf oc = &h5 Then
-    ' PRINT_CHAR
-    con.print(Chr$(oa(0)))
+    Case &h5
+      ' PRINT_CHAR
+      con.print(Chr$(oa(0)))
 
-  ElseIf oc = &h6 Then
-    ' PRINT_NUM
-    x = oa(0)
-    If x > 32767 Then Inc x, -65536
-    con.print(Str$(x))
+    Case &h6
+      ' PRINT_NUM
+      x = oa(0)
+      If x > 32767 Then Inc x, -65536
+      con.print(Str$(x))
 
-  ElseIf oc = &h7 Then
-    ' RANDOM
-    x = oa(0)
-    If x > 32767 Then Inc x, -65536
-    x = ex_random(x)
-    vset(st, x)
+    Case &h7
+      ' RANDOM
+      x = oa(0)
+      If x > 32767 Then Inc x, -65536
+      x = ex_random(x)
+      vset(st, x)
 
-  ElseIf oc = &h8 Then
-    ' PUSH
-    st_push(oa(0))
+    Case &h8
+      ' PUSH
+      st_push(oa(0))
 
-  ElseIf oc = &h9 Then
-    ' PULL
-    x = st_pop()
-    ' Note special handing for op with indirect reference to the stack pointer
-    If oa(0) = 0 Then st_poke(sp - 1, x) Else vset(oa(0), x)
+    Case &h9
+      ' PULL
+      x = st_pop()
+      ' Note special handing for op with indirect reference to the stack pointer
+      If oa(0) = 0 Then st_poke(sp - 1, x) Else vset(oa(0), x)
 
-  ElseIf oc = &h13 Then
-    ' INPUT_STREAM
-    ex_varop = E_UNIMPLEMENTED
+    Case &h13
+      ' INPUT_STREAM
+      ex_varop = E_UNIMPLEMENTED
 
-  ElseIf oc = &h14 Then
-    ' OUTPUT_STREAM
-    ex_varop = E_UNIMPLEMENTED
+    Case &h14
+      ' OUTPUT_STREAM
+      ex_varop = E_UNIMPLEMENTED
 
-  ElseIf oc = &h15 Then
-    ' SOUND_EFFECT
-    ' TODO
+    Case &h15
+      ' SOUND_EFFECT
+      ' TODO
 
-  Else
-    ex_varop = E_UNKNOWN
-  EndIf
+    Case Else
+      ex_varop = E_UNKNOWN
+  End Select
 End Function
 
 Sub ex_branch(z, br)
-  Local x
   If Not (z = (br And &h80000) > 0) Then Exit Sub
-  x = br And &h7FFFF ' Bottom 19-bits
-  If x = pc - 1 Then ex_return(1) : Exit Sub
-  If x = pc - 2 Then ex_return(0) : Exit Sub
-  pc = x
+  Const x = br And &h7FFFF ' Bottom 19-bits
+  Select Case x
+    Case pc - 1
+      ex_return(1)
+    Case pc - 2
+      ex_return(0)
+    Case Else
+      pc = x
+  End Select
 End Sub
 
 Sub ex_return(x)
-  Local st, _
   sp = fp + 4
   ' This single line version won't work if inlining st_pop():
   ' pc = st_pop() * &h10000 + st_pop()
   pc = &h10000 * st_pop()
   Inc pc, st_pop()
-  st = st_pop()
+  Const st = st_pop()
   fp = st_pop()
   vset(st, x)
   If ztrace Then dmp_stack()
@@ -480,6 +490,8 @@ End Sub
 
 Function ex_read(text_buf, parse_buf)
   Local ad, c, i, n, word$, s$, t, wc
+
+  ex_show_status()
 
   t = Timer
 
@@ -524,92 +536,95 @@ Function ex_read(text_buf, parse_buf)
 End Function
 
 Function ex_special(cmd$)
-  Local f$, _
-
   ex_special = E_REPEAT
 
-  If cmd$ = "*break" Then
+  Select Case Field$(cmd$, 1, " ")
+
+    Case "*break"
 '!comment_if NO_DEBUG
-    ex_special = E_BREAK
+      ex_special = E_BREAK
 '!endif
 '!uncomment_if NO_DEBUG
-'    ex_special = E_OK
+'      ex_special = E_OK
 '!endif
 
-  ElseIf cmd$ = "*credits" Then
-    con.print_file(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"), 1)
+    Case "*credits"
+      con.print_file(file.resolve$(ss$(RESOURCES_DIR), "credits.txt"), 1)
 
-  ElseIf cmd$ = "*eof" Then
-    con.println("End of script.")
-    con.endl()
+    Case "*eof"
+      con.println("End of script.")
+      con.endl()
 
-  ElseIf InStr(cmd$, "*more") = 1 Then
-    Select Case str.trim$(Mid$(cmd$, Len("*more") + 1))
-      Case "", "on"
-        con.more = 1
-        con.println("Paged output enabled.")
-      Case "off"
-        con.more = 0
-        con.println("Paged output disabled.")
-      Case Else
-        con.println("Invalid '*more' command.")
-    End Select
-    con.endl()
+    Case "*font"
+      ex_special = ex_font(cmd$)
 
-  ElseIf InStr(cmd$, "*record") = 1 Then
-    Select Case str.trim$(Mid$(cmd$, Len("*record") + 1))
-      Case "", "on"
-        script.record_on()
-      Case "off"
-        script.record_off()
-      Case Else
-        con.println("Invalid '*record' command.")
-    End Select
-    con.endl()
+    Case "*more"
+      Select Case Field$(cmd$, 2, " ")
+        Case "", "on"
+          con.more = 1
+          con.println("Paged output enabled.")
+        Case "off"
+          con.more = 0
+          con.println("Paged output disabled.")
+        Case Else
+          con.println("Invalid '*more' command.")
+      End Select
+      con.endl()
 
-  ElseIf InStr(cmd$, "*replay") = 1 Then
-    Select Case str.trim$(Mid$(cmd$, Len("*replay") + 1))
-      Case "", "on"
-        script.replay_on()
-      Case "off"
-        script.replay_off()
-      Case Else
-        con.println("Invalid '*replay' command.")
-    End Select
-    con.endl()
+    Case "*record"
+      Select Case Field$(cmd$, 2, " ")
+        Case "", "on"
+          script.record_on()
+        Case "off"
+          script.record_off()
+        Case Else
+          con.println("Invalid '*record' command.")
+      End Select
+      con.endl()
 
-  ElseIf cmd$ = "*screenshot" Then
-    ex_screenshot()
+    Case "*replay"
+      Select Case Field$(cmd$, 2, " ")
+        Case "", "on"
+          script.replay_on()
+        Case "off"
+          script.replay_off()
+        Case Else
+          con.println("Invalid '*replay' command.")
+      End Select
+      con.endl()
 
-  ElseIf InStr(cmd$, "*spin") = 1 Then
-    Select Case str.trim$(Mid$(cmd$, Len("*spin") + 1))
-      Case "", "on"
-        con.spin_enabled = 1
-        con.println("Spinning cursor enabled.")
-      Case "off"
-        con.spin_enabled = 0
-        con.println("Spinning cursor disabled.")
-      Case Else
-        con.println("Invalid '*spin' command.")
-    End Select
-    con.endl()
+    Case "*screenshot"
+      ex_screenshot()
 
-  ElseIf cmd$ = "*status" Then
-    ex_show_status()
+    Case "*spin"
+      Select Case Field$(cmd$, 2, " ")
+        Case "", "on"
+          con.spin_enabled = 1
+          con.println("Spinning cursor enabled.")
+        Case "off"
+          con.spin_enabled = 0
+          con.println("Spinning cursor disabled.")
+        Case Else
+          con.println("Invalid '*spin' command.")
+      End Select
+      con.endl()
 
-  ElseIf cmd$ = "*save" Then
-    If zsave(0) Then con.println("Ok.") Else con.println("Save failed.")
-    con.endl()
+    Case "*status"
+      ex_show_status(1)
 
-  ElseIf cmd$ = "*restore" Then
-    If zsave(1) Then con.println("Ok.") Else con.println("Restore failed.")
-    con.endl()
+    Case "*save"
+      If zsave(0) Then con.println("Ok.") Else con.println("Save failed.")
+      con.endl()
 
-  Else
-    ' Let the game's parser deal with the command
-    ex_special = E_OK
+    Case "*restore"
+      If zsave(1) Then con.println("Ok.") Else con.println("Restore failed.")
+      con.endl()
 
-  EndIf
+    Case Else
+      ' Let the game's parser deal with the command
+      ex_special = E_OK
+
+  End Select
 
   If ex_special = E_REPEAT Then con.print(">")
 
@@ -621,25 +636,78 @@ Function ex_random(range)
   Static c = 12345
   Static m = 2^31
 
-  If range = 0 Then
-    x = Timer
-    Exit Function
-  ElseIf range < 0 Then
-    x = Abs(range)
-    Exit Function
-  EndIf
+  Select Case range
+    Case 0
+      x = Timer
+      Exit Function
+    Case < 0
+      x = Abs(range)
+      Exit Function
+  End Select
 
   x = (a * x + c) Mod m
 
   ex_random = 1 + CInt((range - 1) * (x / m))
 End Function
 
-Sub ex_show_status()
-  Local x
-  x = vget(&h10) : ob_print(x) : con.print(", ")
-  x = vget(&h11) : con.print("Score: " + Str$(x) + ", ")
-  x = vget(&h12) : con.print("Moves: " + Str$(x))
-  con.endl()
+' @param  on_console%  If 1 then as well as updating the status line also write
+'                      the status to the console.
+Sub ex_show_status(on_console%)
+  Local s$(1) Length 120, x, y
+
+  con.get_pos(x, y)
+
+  ' Capture the room name.
+  con.disable_flush% = 1
+  ob_print(vget(&h10))
+  s$(0) = Left$(con.buf$, 120)
+  con.buf$ = ""
+  con.disable_flush% = 0
+
+  ' Truncate room name to console width.
+  If Len(s$(0)) > con.WIDTH Then s$(0) = Left$(s$(0), con.WIDTH - 3) + "..."
+
+  ' Construct the score/moves/time string.
+  If rb(&h01) And &b00000010 Then
+    Local hours% = vget(&h11) Mod 24
+    Const mins% = vget(&h12) Mod 60
+    Const am% = hours% < 12
+    Select Case hours%
+      Case 0: hours% = 12
+      Case > 12: Inc hours%, -12
+    End Select
+    s$(1) = "Time: " + Str$(hours% Mod 13) + ":" + Str$(mins%, 2, 0, "0") + Choice(am%, "am", "pm")
+  Else
+    s$(1) = "Score: " + Str$(vget(&h11)) + ", Moves: " + Str$(vget(&h12))
+  EndIf
+
+  If on_console% Then
+    con.println(s$(0) + ", " + s$(1))
+    con.println
+  EndIf
+
+  s$(0) = " " + s$(0)
+  s$(1) = s$(1) + " "
+
+  ' If the status line would be too long then try the short form.
+  If Len(s$(0)) + Len(s$(1)) + 1 >= con.WIDTH Then
+    If rb(&h01) And &b00000010 Then
+      s$(1) = Str$(vget(&h11)) + ":" + Str$(vget(&h12), 2, 0, "0" + " ")
+    Else
+      s$(1) = Str$(vget(&h11)) + "/" + Str$(vget(&h12) + " ")
+    EndIf
+  EndIf
+
+  ' If still too long then don't display score/moves/time.
+  If Len(s$(0)) + Len(s$(1)) + 1 >= con.WIDTH Then s$(1) = ""
+
+  con.set_pos(0, 0)
+  con.invert()
+  con.print(s$(0))
+  con.print(Space$(con.WIDTH - Len(s$(0)) - Len(s$(1))))
+  con.println(s$(1))
+  con.set_pos(x, y)
+  con.invert()
 End Sub
 
 Sub ex_screenshot()
@@ -662,3 +730,25 @@ Sub ex_screenshot()
   EndIf
   con.endl()
 End Sub
+
+Function ex_font(cmd$)
+  ex_font = E_REPEAT
+  If Field$(cmd$, 3, " ") <> "" Then
+    con.println("Invalid '*font' command.")
+    con.endl()
+  Else
+    Select Case Field$(cmd$, 2, " ")
+      Case "small"
+        con.set_font(7)
+        ex_font = E_OK
+      Case "medium"
+        con.set_font(1)
+        ex_font = E_OK
+      Case Else
+        con.println("Unknown font.")
+        con.endl()
+    End Select
+  EndIf
+
+  if ex_font = E_OK Then cmd$ = "look"
+End Function

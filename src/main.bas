@@ -10,6 +10,8 @@ If InStr(Mm.Device$, "PicoMite") Then
   If Mm.Ver < 6.0 Then Error "PicoMite firmware v6.0 or later required"
 EndIf
 
+If Mm.Device$ = "MMB4L" Then Option Resolution Pixel
+
 '!if defined(LOW_MEMORY)
   '!replace "memory.inc" "memory_virtual.inc"
   '!replace "stack.inc" "stack_compact.inc"
@@ -83,7 +85,7 @@ EndIf
 
 ' ss$ is for string "constants" that I don't want to take up 256 bytes on the
 ' micro-controller devices.
-If InStr(Mm.Info(Device), "PicoMite") Then
+If InStr(Mm.Info(Device X), "PicoMite") Then
   Dim ss$(5) Length 32
 Else
   Dim ss$(5)
@@ -101,6 +103,14 @@ Const SCRIPT_DIR = 3
 Const STORY_DIR = 4
 Const STORY_FILE = 5
 
+If InStr(Mm.CmdLine$, "--shell") Then
+  Option Break 4
+  On Key 3, end_game()
+EndIf
+
+main()
+end_game()
+
 Sub main_init()
   Local i, x
 
@@ -112,7 +122,7 @@ Sub main_init()
 
   ' Hack header bits
   x = rb(&h01)
-  x = x Or  &b00010000 ' set bit 4 - status line not available
+'  x = x Or  &b00010000 ' set bit 4 - status line not available
   x = x And &b10011111 ' clear bits 5 & 6 - no screen-splitting, fixed-pitch font
   wb(&h01, x)
   wb(&h20, con.HEIGHT)
@@ -122,7 +132,6 @@ Sub main_init()
   For i = Bound(stack(), 0) To Bound(stack(), 1) : stack(i) = 0 : Next
   sp = 0
   fp = &hFFFF
-
 End Sub
 
 Sub main()
@@ -194,11 +203,12 @@ Sub main()
     If con.spin_enabled And num_ops Mod 16 = 0 Then con.spin()
 
     old_pc = pc
-    If state = E_OK Or state = E_REPEAT Then
-      state = exec(ztrace)
-    Else
-      state = debug()
-    EndIf
+    Select Case state
+      Case E_OK, E_REPEAT
+        state = exec(ztrace)
+      Case Else
+        state = debug()
+    End Select
   Loop
 
   con.endl()
@@ -213,48 +223,10 @@ Sub main()
   con.close_in()
 End Sub
 
-main()
-End
-
 Sub main.init_console()
-  Local cmdline$ = LCase$(Mm.CmdLine$)
-
-  If InStr(cmdline$, "--platform") Then
-    ' Platform already supplied explicitly, do nothing.
-  ElseIf Mm.HRes = 320 And (Mm.VRes = 480 Or Mm.VRes = 320) Then
-    Cat cmdline$, " --platform=picocalc"
-  ElseIf Mm.HRes = 320 And Mm.VRes = 240 Then
-    Cat cmdline$, " --platform=320x240"
-  ElseIf Mm.Device$ = "MMBasic for Windows" Or InStr(Mm.Device$, "Colour Maximite 2") Then
-    Cat cmdline$, " --platform=cmm2"
-  ElseIf InStr(Mm.Device$, "PicoMiteVGA") Then
-    Cat cmdline$, " --platform=pmvga"
-  ElseIf InStr(Mm.Device$, "PicoMiteHDMI") Then
-    Cat cmdline$, " --platform=pmhdmi"
-  EndIf
-
-  If InStr(cmdline$, "--platform=picocalc") Then
-    con.init(40, 26, 1)
-  ElseIf InStr(cmdline$, "--platform=cmm2") Then
-    con.init(100, 50)
-  ElseIf InStr(cmdline$, "--platform=320x240") Then
-    con.init(40, 20, 1)
-  ElseIf InStr(cmdline$, "--platform=pmvga") Then
-    con.init(80, 40, 1)
-  ElseIf InStr(cmdline$, "--platform=pmhdmi") Then
-    con.init(80, 40, 1)
-  ElseIf InStr(cmdline$, "--platform") Then
-    Error "Unknown platform"
-  ElseIf Mm.Info(Device X) = "MMB4L" Then
-    Local w%, h%
-    Console GetSize w%, h%
-    w% = Max(w%, 40)
-    h% = Max(h%, 20)
-    con.init(w%, h%)
-  Else
-    con.init(80, 40)
-  EndIf
-
+  Const w% = Mm.HRes \ Mm.Info(FontWidth)
+  Const h% = Mm.VRes \ Mm.Info(FontHeight)
+  con.init(w%, h%, InStr(Mm.Device$, "PicoMite"))
   If Mm.Info(Device X) = "MMB4L" Then Console Resize con.WIDTH, con.HEIGHT
 End Sub
 
@@ -265,3 +237,12 @@ Function get_install_dir$()
     get_install_dir$ = file.get_parent$(get_install_dir$)
   EndIf
 End Function
+
+Sub end_game()
+  If InStr(Mm.CmdLine$, "--shell") Then
+    Option Break 3
+    Pause 2000
+    sys.run_shell()
+  EndIf
+  End
+End Sub

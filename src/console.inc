@@ -25,9 +25,10 @@ Dim con.fd_in    ' file descriptor to read input from
 Dim con.fd_out   ' file descriptor to echo input to
 Dim con.more = 1 ' show the [MORE] prompt if more than a page of output
                  ' (approx con.HEIGHT lines) is written without a prompt
-Dim con.history%(255) ' history buffer for user input.
-Dim con.spin_enabled  ' is the spinning cursor enabled ?
-Dim con.spin_shown    ' is the spinning cursor currently displayed ?
+Dim con.history%(255)   ' history buffer for user input.
+Dim con.spin_enabled    ' is the spinning cursor enabled ?
+Dim con.spin_shown      ' is the spinning cursor currently displayed ?
+Dim con.disable_flush%  ' set 1 to temporarily disable flushing the console write buffer, buf$.
 
 Sub con.init(width%, height%, spin_enabled%)
   con.WIDTH = width%
@@ -114,6 +115,8 @@ End Sub
 ' If con.buf$ does not fit on the current line then first write CRLF and then if
 ' con.buf$ contains non-spaces write con.buf$ to the console.
 Sub con.flush()
+  If con.disable_flush% Then Exit Sub
+
   If con.spin_shown Then Print Chr$(8); " "; Chr$(8); : con.spin_shown = 0
 
   ' If the buffer is wider than the console then split the buffer.
@@ -492,7 +495,7 @@ End Function
 Sub con.show_cursor(show%)
   If con.get_type%() And con.SCREEN% Then
     Local x% = Mm.Info(HPos), y% = Mm.Info(VPos) + Mm.Info(FontHeight) - 1
-    Line x%, y%, x% + Mm.Info(FontWidth), y%, 1, Choice(show%, RGB(White), RGB(Black))
+    Line x%, y%, x% + Mm.Info(FontWidth), y%, 1, Choice(show%, Mm.Info(FColour), Mm.Info(BColour))
   EndIf
 End Sub
 
@@ -506,5 +509,45 @@ Sub con.spin()
     If con.spin_shown Then Print Chr$(8); Else con.spin_shown = 1
     Print Mid$("\|/-", i + 1, 1);
     i = (i + 1) Mod 4
+  EndIf
+End Sub
+
+' Sets the font and updates the console width and height.
+Sub con.set_font(size%)
+  If size% = Mm.Info(Font) Then Exit Sub
+  con.endl()
+  Font size%
+  con.WIDTH = Mm.HRes \ Mm.Info(FontWidth)
+  con.HEIGHT = Mm.VRes \ Mm.Info(FontHeight)
+  wb(&h20, con.HEIGHT)
+  wb(&h21, con.WIDTH)
+  If Mm.Info(Device X) = "MMB4L" Then Console Resize con.WIDTH, con.HEIGHT
+  Local x%, y%
+  con.get_pos(x%, y%)
+  Print @(x% * Mm.Info(FontWidth), (y% - 1) * Mm.Info(FontHeight))
+End Sub
+
+Sub con.get_pos(x%, y%)
+  con.flush()
+  x% = Mm.Info(HPos) \ Mm.Info(FontWidth)
+  y% = Mm.Info(VPos) \ Mm.Info(FontHeight)
+  if x% <> con.x - 1 Then Error "Mismatched x-values"
+End Sub
+
+Sub con.set_pos(x%, y%)
+  con.flush()
+  Print @(x% * Mm.Info(FontWidth), y% * Mm.Info(FontHeight));
+  con.x = x% + 1
+End Sub
+
+Sub con.invert()
+  Static inverted = 0
+  inverted = Not inverted
+  If con.get_type%() = con.SERIAL% Then
+    Print vt100$(Choice(inverted, "7m", "0m"));
+  Else
+    Const bg% = Mm.Info(BColour)
+    Const fg% = Mm.Info(FColour)
+    Colour bg%, fg%
   EndIf
 End Sub

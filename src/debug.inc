@@ -42,139 +42,144 @@ Function debug()
 
     debug = E_DEBUG
 
-    If cmd$(0) = "abrv" Then
-      dmp_abrv()
+    Select Case cmd$(0)
+      Case "abrv"
+        dmp_abrv()
 
-    ElseIf cmd$(0) = "b" Then
-      ' Set address breakpoint
-      a = Val(cmd$(1))
-      If a >= 0 And a < FILE_LEN Then
-        For i = 0 To 9
-          If bp(i) = a Then
-            con.println("Duplicate breakpoint [" + Str$(i) + "]")
-            a = -1
-            Exit For
-          EndIf
-        Next
-        For i = 0 To 9
-          If a = -1 Then
-            ' Duplicate breakpoint previously reported
-            Exit For
-          ElseIf bp(i) = -1 Then
-            bp(i) = a
-            num_bp = num_bp + 1
-            con.println("Set breakpoint [" + Str$(i) + "] at " + fmt_hex$(bp(i)))
-            Exit For
-          EndIf
-          If i = 9 Then con.println("No free address breakpoints")
-        Next
-      Else
-        con.println("Invalid breakpoint address")
-      EndIf
+      Case "b"
+        ' Set address breakpoint
+        a = Val(cmd$(1))
+        If a >= 0 And a < FILE_LEN Then
+          For i = 0 To 9
+            If bp(i) = a Then
+              con.println("Duplicate breakpoint [" + Str$(i) + "]")
+              a = -1
+              Exit For
+            EndIf
+          Next
+          For i = 0 To 9
+            If a = -1 Then
+              ' Duplicate breakpoint previously reported
+              Exit For
+            ElseIf bp(i) = -1 Then
+              bp(i) = a
+              num_bp = num_bp + 1
+              con.println("Set breakpoint [" + Str$(i) + "] at " + fmt_hex$(bp(i)))
+              Exit For
+            EndIf
+            If i = 9 Then con.println("No free address breakpoints")
+          Next
+        Else
+          con.println("Invalid breakpoint address")
+        EndIf
 
-    ElseIf cmd$(0) = "B" Then
-      ' List address breakpoints
-      If num_bp = 0 Then
-        con.println("No address breakpoints set")
-      Else
-        For i = 0 To 9
-          If bp(i) <> -1 Then
-            con.println("[" + Str$(i) + "] " + fmt_hex$(bp(i)))
-          EndIf
-        Next
-      EndIf
+      Case "B"
+        ' List address breakpoints
+        If num_bp = 0 Then
+          con.println("No address breakpoints set")
+        Else
+          For i = 0 To 9
+            If bp(i) <> -1 Then
+              con.println("[" + Str$(i) + "] " + fmt_hex$(bp(i)))
+            EndIf
+          Next
+        EndIf
 
-    ElseIf cmd$(0) = "c" Then
-      ' Continue
-      con.endl()
-      If oc = &h4 And op >= &hE0 Then con.print(">") ' Display READ prompt
-      debug = E_OK
+      Case "c"
+        ' Continue
+        con.endl()
+        If oc = &h4 And op >= &hE0 Then con.print(">") ' Display READ prompt
+        debug = E_OK
 
-    ElseIf cmd$(0) = "C" Then
-      ' Stack dump
-      dmp_stack(Val(cmd$(1)))
+      Case "C"
+        ' Stack dump
+        dmp_stack(Val(cmd$(1)))
 
-    ElseIf cmd$(0) = "d" Then
-      ' Dump memory
-      If Len(cmd$(1)) = 0 Then a = pc Else a = Val(cmd$(1))
-      dmp_mem(a, Val(cmd$(2)))
+      Case "d"
+        ' Dump memory
+        If Len(cmd$(1)) = 0 Then a = pc Else a = Val(cmd$(1))
+        dmp_mem(a, Val(cmd$(2)))
 
-    ElseIf cmd$(0) = "dict" Then
-      dmp_dict()
+      Case "dict"
+        dmp_dict()
 
-    ElseIf cmd$(0) = "dmap" Then
-      dmp_mmap()
+      Case "dmap"
+        dmp_mmap()
 
-    ElseIf cmd$(0) = "G" Then
-      ' Dump global variables
-      dmp_global(Val(cmd$(1)), Val(cmd$(2)))
+      Case "G"
+        ' Dump global variables
+        dmp_global(Val(cmd$(1)), Val(cmd$(2)))
 
-    ElseIf cmd$(0) = "h" Then
-      con.print_file(file.resolve$(ss$(RESOURCES_DIR), "debug_help.txt"))
+      Case "h"
+        If con.WIDTH < 80 Then
+          con.print_file(file.resolve$(ss$(RESOURCES_DIR), "debug_help_40col.txt"))
+        Else
+          con.print_file(file.resolve$(ss$(RESOURCES_DIR), "debug_help.txt"))
+        EndIf
 
-    ElseIf cmd$(0) = "H" Then
-      ' Dump header
-      dmp_hdr()
+      Case "H"
+        ' Dump header
+        dmp_hdr()
 
-    ElseIf cmd$(0) = "q" Then
-      ' Quit
-      debug = E_QUIT
+      Case "q"
+        ' Quit
+        debug = E_QUIT
 
-    ElseIf cmd$(0) = "o" Then
-      ' Dump object
-      dmp_obj(Val(cmd$(1)))
+      Case "o"
+        ' Dump object
+        dmp_obj(Val(cmd$(1)))
 
-    ElseIf cmd$(0) = "s" Then
-      ' Step
-      If oc = &h4 And op >= &hE0 Then con.print(">") ' Display READ prompt
-      debug = exec(0)
-      If debug = E_OK Then debug = E_BREAK
+      Case "s"
+        ' Step
+        If oc = &h4 And op >= &hE0 Then con.print(">") ' Display READ prompt
+        debug = exec(0)
+        If debug = E_OK Then debug = E_BREAK
 
-    ElseIf cmd$(0) = "troff" Then
-      ' Disable trace
-      con.println("Trace OFF")
-      ztrace = 0
+      Case "troff"
+        ' Disable trace
+        con.println("Trace OFF")
+        ztrace = 0
 
-    ElseIf cmd$(0) = "tron" Then
-      ' Enable trace
-      con.println("Trace ON")
-      ztrace = 1
+      Case "tron"
+        ' Enable trace
+        con.println("Trace ON")
+        ztrace = 1
 
-    ElseIf cmd$(0) = "v" Then
-      ' Clear address breakpoint
-      a = Val(cmd$(1))
-      If a < 0 Or a > 9 Then
-        con.println("Invalid address breakpoint")
-      ElseIf bp(a) = -1 Then
-        con.println("Address breakpoint [" + Str$(a) + "] already cleared")
-      Else
-        bp(a) = -1
-        num_bp = num_bp - 1
-        con.println("Address breakpoint [" + Str$(a) + "] cleared")
-      EndIf
+      Case "v"
+        ' Clear address breakpoint
+        a = Val(cmd$(1))
+        If a < 0 Or a > 9 Then
+          con.println("Invalid address breakpoint")
+        ElseIf bp(a) = -1 Then
+          con.println("Address breakpoint [" + Str$(a) + "] already cleared")
+        Else
+          bp(a) = -1
+          num_bp = num_bp - 1
+          con.println("Address breakpoint [" + Str$(a) + "] cleared")
+        EndIf
 
-    ElseIf cmd$(0) = "V" Then
-      ' Lookup word in dictionary
-      a = di_lookup(LCase$(cmd$(1)))
-      con.println(fmt_hex$(a))
+      Case "V"
+        ' Lookup word in dictionary
+        a = di_lookup(LCase$(cmd$(1)))
+        con.println(fmt_hex$(a))
 
-    ElseIf cmd$(0) = "x" Then
-      ' Parse and print value
-      a = Val(cmd$(1))
-      con.print(Str$(a))
-      con.print("  " + fmt_hex$(a))
-      con.println("  &b" + str.lpad$(Bin$(a), 16, "0"))
+      Case "x"
+        ' Parse and print value
+        a = Val(cmd$(1))
+        con.print(Str$(a))
+        con.print("  " + fmt_hex$(a))
+        con.println("  &b" + str.lpad$(Bin$(a), 16, "0"))
 
-    ElseIf cmd$(0) = "z" Then
-      ' Clear all breakpoints
-      For i = 0 To 9 : bp(i) = -1 : Next
-      num_bp = 0
-      con.println("All breakpoints cleared")
+      Case "z"
+        ' Clear all breakpoints
+        For i = 0 To 9 : bp(i) = -1 : Next
+        num_bp = 0
+        con.println("All breakpoints cleared")
 
-    Else
-      con.println("Unknown debug command")
+      Case Else
+        con.println("Unknown debug command")
 
-    EndIf
+    End Select
 
   Loop While debug = E_DEBUG
 
@@ -515,11 +520,11 @@ End Function
 
 Function fmt_store_value$(st)
   If st = 0 Then
-    con.print("-(SP)")
+    fmt_store_value$ = "-(SP)"
   ElseIf st < &h10 Then
-    con.print("L" + str.lpad$(Hex$(st - 1), 2, "0"))
+    fmt_store_value$ = "L" + str.lpad$(Hex$(st - 1), 2, "0")
   Else
-    con.print("G" + str.lpad$(Hex$(st - &h10), 2, "0"))
+    fmt_store_value$ = "G" + str.lpad$(Hex$(st - &h10), 2, "0")
   EndIf
 End Function
 

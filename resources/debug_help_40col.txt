@@ -1,0 +1,50 @@
+List of debug commands:
+  abrv
+    print contents of abbreviations
+    table
+  b [ad]
+    set breakpoint at address [ad]
+  B
+    list breakpoints
+  c
+    continue normal execution
+  C [x = 0]
+    print contents of stack. If [x] = 0
+    then print only the current stack
+    frame, otherwise print all stack
+    frames
+  d [ad = PC] [sz = 128]
+    print [sz] bytes of memory starting
+    at [ad]
+  dict
+    print contents of the dictionary
+  dmap
+    dump the virtual memory map
+  G [a = 0] [sz = 1]
+    print [sz] global variables starting
+    at [a]
+  h
+    show this help text
+  H
+    print the header data
+  q
+    quit the Z-machine
+  o [a = 0]
+    print object [a]. If <a> = 0 then
+    print the property defaults
+  s
+    single step
+  troff
+    stop instruction trace
+  tron
+    start instruction trace
+  v [a]
+    clear breakpoint [a]
+  V [word = ""]
+    lookup [word] in the dictionary
+  x [a]
+    print number [a] in base-10, binary
+    and hex
+  z
+    clear all breakpoints
+

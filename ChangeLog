@@ -1,6 +1,34 @@
 ChangeLog
 ---------
 
+Version 3.6.0 - 1-Jun-2025:
+ - Added status line.
+   - Having the status line "scroll" off the top of the display and then
+     redrawing it (instead of having the text scroll beneath it) is a
+     deliberate chocie for performance reasons rather than a bug.
+ - Added *FONT [SMALL | MEDIUM] meta-command.
+   - KNOWN BUG: using *FONT SMALL on the Colour Maximite 2 causes the prompt
+     to "glitch" in a way I have been unable to reproduce in a small example.
+ - Added '--shell' command-line option which if used will cause Z-MIM to
+   RUN the program specified in the "/.mmbasic-shell" file when it exits.
+ - Changed code to use SELECT CASE rather than IF .. THEN .. ELSEIF ..
+   constructs.
+   - This should slghtly improve performance.
+ - Changed transpiled versions of Z-MIM to remove comments and unnecessary
+   whitespace.
+   - This should slightly improve performance.
+ - Changed code to no longer use _ as a variable name as this was incompatible
+   with new PicoMite line-continuation feature.
+ - Removed '--platform' command-line flag.
+   - This was specifically for MMB4L and as of MMB4L v0.8 is no longer
+     required due to enhancements to the RUN command.
+ - Fixed *status meta-command to display time instead of score for
+   "time games" such as "Deadline".
+ - Fixed bug where cursor colour was always white rather than using the
+   display foreground colour.
+ - Fixed debug help text for displays <= 40 characters wide.
+ - Fixed formatting of stored values when using interactive debugger.
+
 Version 3.5.0 - 1-May-2025:
  - Added support for new platforms:
    - MMBasic for Linux.
