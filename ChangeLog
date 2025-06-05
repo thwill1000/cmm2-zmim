@@ -5,7 +5,7 @@ Version 3.6.0 - 1-Jun-2025:
  - Added status line.
    - Having the status line "scroll" off the top of the display and then
      redrawing it (instead of having the text scroll beneath it) is a
-     deliberate chocie for performance reasons rather than a bug.
+     deliberate choice for performance reasons rather than a bug.
  - Added *FONT [SMALL | MEDIUM] meta-command.
    - KNOWN BUG: using *FONT SMALL on the Colour Maximite 2 causes the prompt
      to "glitch" in a way I have been unable to reproduce in a small example.
@@ -13,12 +13,12 @@ Version 3.6.0 - 1-Jun-2025:
    RUN the program specified in the "/.mmbasic-shell" file when it exits.
  - Changed code to use SELECT CASE rather than IF .. THEN .. ELSEIF ..
    constructs.
-   - This should slghtly improve performance.
+   - This should slightly improve performance.
  - Changed transpiled versions of Z-MIM to remove comments and unnecessary
    whitespace.
    - This should slightly improve performance.
  - Changed code to no longer use _ as a variable name as this was incompatible
-   with new PicoMite line-continuation feature.
+   with the new PicoMite line-continuation feature.
  - Removed '--platform' command-line flag.
    - This was specifically for MMB4L and as of MMB4L v0.8 is no longer
      required due to enhancements to the RUN command.
