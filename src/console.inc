@@ -26,8 +26,8 @@ Dim con.fd_out   ' file descriptor to echo input to
 Dim con.more = 1 ' show the [MORE] prompt if more than a page of output
                  ' (approx con.HEIGHT lines) is written without a prompt
 Dim con.history%(255)   ' history buffer for user input.
-Dim con.spin_enabled    ' is the spinning cursor enabled ?
-Dim con.spin_shown      ' is the spinning cursor currently displayed ?
+Dim con.spin_enabled    ' is the progress spinner enabled ?
+Dim con.spin_shown      ' is the progress spinner currently displayed ?
 Dim con.disable_flush%  ' set 1 to temporarily disable flushing the console write buffer, buf$.
 
 Sub con.init(width%, height%, spin_enabled%)
@@ -499,11 +499,11 @@ Sub con.show_cursor(show%)
   EndIf
 End Sub
 
-' Show the spinning cursor.
+' Show the progress spinner.
 Sub con.spin()
   Static i
 '!if !defined(NO_EXTRA_CHECKS)
-  If Not con.spin_enabled Then Error "Invalid spinner state"
+  If Not con.spin_enabled Then Error "Invalid progress spinner state"
 '!endif
   If con.x < con.WIDTH - 1 Then
     If con.spin_shown Then Print Chr$(8); Else con.spin_shown = 1

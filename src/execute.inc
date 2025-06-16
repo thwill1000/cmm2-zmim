@@ -600,10 +600,10 @@ Function ex_special(cmd$)
       Select Case Field$(cmd$, 2, " ")
         Case "", "on"
           con.spin_enabled = 1
-          con.println("Spinning cursor enabled.")
+          con.println("Progress spinner enabled.")
         Case "off"
           con.spin_enabled = 0
-          con.println("Spinning cursor disabled.")
+          con.println("Progress spinner disabled.")
         Case Else
           con.println("Invalid '*spin' command.")
       End Select

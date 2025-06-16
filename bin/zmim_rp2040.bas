@@ -1,4 +1,4 @@
-' Transpiled on 01-06-2025 12:06:52
+' Transpiled on 16-06-2025 14:06:38
 ' Copyright (c) 2019-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 Option Base 0
@@ -1502,10 +1502,10 @@ Function ex_special(cmd$)
    Select Case Field$(cmd$,2," ")
     Case "","on"
      con.spin_enabled=1
-     con.println("Spinning cursor enabled.")
+     con.println("Progress spinner enabled.")
     Case "off"
      con.spin_enabled=0
-     con.println("Spinning cursor disabled.")
+     con.println("Progress spinner disabled.")
     Case Else
      con.println("Invalid '*spin' command.")
    End Select
@@ -2479,7 +2479,8 @@ End Sub
 Sub main.init_console()
  Const w%=Mm.HRes\Mm.Info(FontWidth)
  Const h%=Mm.VRes\Mm.Info(FontHeight)
- con.init(w%,h%,InStr(Mm.Device$,"PicoMite"))
+ Const spin_enabled%=InStr(Mm.Device$,"PicoMite") Or InStr(Mm.Device$,"WebMite")
+ con.init(w%,h%,spin_enabled%)
  If Mm.Info(Device X)="MMB4L" Then Console Resize con.WIDTH,con.HEIGHT
 End Sub
 
