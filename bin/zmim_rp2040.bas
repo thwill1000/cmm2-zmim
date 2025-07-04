@@ -1,4 +1,4 @@
-' Transpiled on 16-06-2025 14:06:38
+' Transpiled on 08-07-2025 20:35:13
 ' Copyright (c) 2019-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 Option Base 0
@@ -1570,9 +1570,9 @@ Sub ex_show_status(on_console%)
  s$(1)=s$(1)+" "
  If Len(s$(0))+Len(s$(1))+1>=con.WIDTH Then
   If rb(&h01) And &b00000010 Then
-   s$(1)=Str$(vget(&h11))+":"+Str$(vget(&h12),2,0,"0"+" ")
+   s$(1)=Str$(vget(&h11))+":"+Str$(vget(&h12),2,0,"0")+" "
   Else
-   s$(1)=Str$(vget(&h11))+"/"+Str$(vget(&h12)+" ")
+   s$(1)=Str$(vget(&h11))+"/"+Str$(vget(&h12))+" "
   EndIf
  EndIf
  If Len(s$(0))+Len(s$(1))+1>=con.WIDTH Then s$(1)=""

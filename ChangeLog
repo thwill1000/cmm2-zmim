@@ -1,6 +1,9 @@
 ChangeLog
 ---------
 
+Version 3.6.2 - 8-Jul-2025:
+ - Fixed crash when status line too long.
+
 Version 3.6.1 - 16-Jun-2025:
  - Fixed "progress spinner" so that it is now enabled by default for WebMite.
 
