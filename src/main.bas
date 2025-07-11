@@ -10,8 +10,6 @@ If InStr(Mm.Device$, "PicoMite") Then
   If Mm.Ver < 6.0 Then Error "PicoMite firmware v6.0 or later required"
 EndIf
 
-If Mm.Device$ = "MMB4L" Then Option Resolution Pixel
-
 '!if defined(LOW_MEMORY)
   '!replace "memory.inc" "memory_virtual.inc"
   '!replace "stack.inc" "stack_compact.inc"
