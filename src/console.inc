@@ -194,7 +194,7 @@ End Sub
 
 ' Echos the contents of a (hopefully) text file to the console.
 Sub con.print_file(f$, center)
-  Local s$, w
+  Local p, s$, w
 
   If center Then
     Open f$ For Input As #1
@@ -208,6 +208,12 @@ Sub con.print_file(f$, center)
   Open f$ For Input As #1
   Do
     Line Input #1, s$
+
+    p = InStr(s$, "${version}")
+    If p Then
+      s$ = Left$(s$, p - 1) + sys.format_version$(VERSION) + Mid$(s$, p + Len("${version}"))
+    EndIf
+
     If center Then
       con.println(s$ + Space$(w - Len(s$)), center)
     Else

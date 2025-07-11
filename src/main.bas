@@ -6,6 +6,8 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
+Const VERSION = 306303 ' 3.6.3
+
 If InStr(Mm.Device$, "PicoMite") Then
   If Mm.Ver < 6.0 Then Error "PicoMite firmware v6.0 or later required"
 EndIf
