@@ -247,3 +247,19 @@ Sub end_game()
   EndIf
   End
 End Sub
+
+Function get_cmdline_option$(option$)
+  Local i = 1, s$
+  Do
+    s$ = Field$(Mm.CmdLine$, i, " ", Chr$(34))
+    Select Case s$
+      Case ""
+        Exit Do
+      Case "--shell", "-shell"
+      Case "--version", "-version", "-v"
+      Case Else
+        Error "Unknown command line option: " + s$
+    End Select
+    Inc i
+  Loop
+End Function
